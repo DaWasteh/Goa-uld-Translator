@@ -157,7 +157,7 @@ GLYPH_KEK      = "☓"
 
 # Candidate MD filenames to try automatically
 MD_CANDIDATES = [
-    "opus4.6-en-language-analysis.md",
+    "compass_artifact_wf-a7fb3e11-059a-4f09-8803-4e8b71e5cacb_text_markdown.md",
     "goauld_dictionary.md",
     "dictionary.md",
 ]
@@ -543,6 +543,26 @@ class SentenceAnalyzer:
             clean = tok.strip(".,!?;:")
             if not clean or not self._WORD_RE.match(clean):
                 continue
+
+            # DE→Goa'uld: explizites Wörterbuch zuerst prüfen
+            if direction == "de2goa":
+                de_hit = DE_GOAULD_MAP.get(clean.lower())
+                if de_hit:
+                    synthetic = {
+                        "goauld":  de_hit,
+                        "meaning": clean,
+                        "section": "Deutsch→Goa'uld",
+                        "source":  "DE_MAP",
+                        "lang":    "de",
+                    }
+                    result.append({
+                        "token":        clean,
+                        "primary":      synthetic,
+                        "alternatives": [],
+                        "found":        True,
+                    })
+                    continue
+
             matches = self.engine.search(clean, direction=direction,
                                          max_results=7, lang_pref=lang_pref)
             if matches:
@@ -576,18 +596,19 @@ class SentenceAnalyzer:
                 prim = item["primary"]
 
                 if direction == "de2goa":
-                    # Output: the Goa'uld word itself
-                    word = prim["goauld"].split("/")[0].strip()
+                    # DE_MAP synthetic entries: goauld field IS the translation
+                    word = prim["goauld"].strip()
                     if word:
                         parts.append(word)
                 else:
-                    # Output: the German meaning, prefer DE entries
+                    # Output: German meaning, prefer DE entries
                     best = prim
                     for alt in item["alternatives"]:
                         if alt.get("lang") == "de" and prim.get("lang") != "de":
                             best = alt
                             break
                     m = best["meaning"]
+                    # Nur erste Bedeutung nehmen, deduplizieren
                     m = re.split(r"\s*[;—]\s*", m)[0]
                     m = re.sub(r"\s*\(.*?\)\s*", " ", m).strip()
                     m = re.sub(r"\s+", " ", m).strip()
@@ -596,6 +617,261 @@ class SentenceAnalyzer:
                     if m:
                         parts.append(m)
         return " ".join(parts) if parts else "—"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEUTSCH → GOA'ULD  EXPLIZITES WÖRTERBUCH
+# Priorität vor dem Fuzzy-Engine — direkte 1:1 Übersetzungen
+# ─────────────────────────────────────────────────────────────────────────────
+
+DE_GOAULD_MAP: dict[str, str] = {
+    # ── Pronomen ─────────────────────────────────────────────────────────
+    "ich":                      "ta",
+    "mich":                     "ta",
+    "mir":                      "ta",
+    "du":                       "lo",
+    "dich":                     "lo",
+    "dir":                      "lo",
+    "wir":                      "tap",
+    "uns":                      "tap",
+    "ihr":                      "lop",
+    "euch":                     "lop",
+    "mein":                     "mak",
+    "meine":                    "mak",
+    "meiner":                   "mak",
+    "meinem":                   "mak",
+    "dein":                     "mok",
+    "deine":                    "mok",
+
+    # ── Hilfsverben / Futur ──────────────────────────────────────────────
+    "bin":                      "k",
+    "bist":                     "k",
+    "ist":                      "k",
+    "sind":                     "k",
+    "werde":                    "nok",
+    "werden":                   "nok",
+    "wird":                     "nok",
+    "wirst":                    "nok",
+    "will":                     "nok",
+
+    # ── Verneinung ───────────────────────────────────────────────────────
+    "nicht":                    "ia",
+    "kein":                     "ka",
+    "keine":                    "ka",
+    "keinen":                   "ka",
+    "nein":                     "ka",
+    "ja":                       "arik",
+
+    # ── Basisverben ──────────────────────────────────────────────────────
+    "komm":                     "re",
+    "komme":                    "re",
+    "kommt":                    "re",
+    "kommen":                   "re",
+    "hör":                      "kree",
+    "hört":                     "kree",
+    "höre":                     "kree",
+    "hören":                    "leaa",
+    "zuhören":                  "leaa",
+    "warte":                    "tal",
+    "wartet":                   "tal",
+    "warten":                   "tal",
+    "halt":                     "hol",
+    "haltet":                   "hol",
+    "halte":                    "hol",
+    "stop":                     "hol",
+    "stopp":                    "hol",
+    "stehen":                   "hol",
+    "ergibt":                   "tal bet",
+    "ergib":                    "tal bet",
+    "ergebt":                   "tal bet",
+    "kapituliert":               "tal bet",
+    "kapituliere":              "tal bet",
+    "kapitulieren":             "tal bet",
+    "bitte":                    "quell shak",
+    "danke":                    "tek'ma'te",
+    "zeig":                     "tel ran el",
+    "zeige":                    "tel ran el",
+    "identifiziere":            "kree tal shal mak",
+    "identifiziert":            "kree tal shal mak",
+    "kämpfe":                   "tal shak",
+    "kämpft":                   "tal shak",
+    "kämpfen":                  "tal shak",
+    "folge":                    "kree hol",
+    "folgen":                   "kree hol",
+    "gehorche":                 "kree",
+    "gehorchen":                "kree",
+    "schweig":                  "dal'shak kree",
+    "schweigen":                "dal'shak kree",
+    "schweigt":                 "dal'shak kree",
+    "töte":                     "mol kek",
+    "tötet":                    "mol kek",
+    "töten":                    "mol kek",
+    "vernichte":                "mol kek",
+    "vernichtet":               "mol kek",
+    "vernichten":               "mol kek",
+    "zerstöre":                 "mol kek",
+    "zerstört":                 "mol kek",
+    "zerstören":                "mol kek",
+    "sterbe":                   "mel",
+    "stirb":                    "mel",
+    "sterben":                  "mel",
+    "sterbt":                   "mel",
+    "sterbe frei":              "dal shakka mel",
+    "gehen":                    "kree hol",
+    "geht":                     "kree hol",
+    "los":                      "kree hol",
+    "angreifen":                "tal shak",
+    "bereitmachen":             "kree lo'sehk",
+    "bereit":                   "kree lo'sehk",
+    "evakuieren":               "mel nok tee",
+    "evakuiert":                "mel nok tee",
+    "kniet":                    "benna! ya wan ya duru!",
+    "kniet nieder":             "benna! ya wan ya duru!",
+    "beeil dich":               "shor'wai'e! yas! yas!",
+    "beeilt euch":              "shor'wai'e! yas! yas!",
+    "beeilung":                 "shor'wai'e! yas! yas!",
+    "schnell":                  "shor'wai'e",
+    "bewache":                  "kree shel me'lac",
+    "bewacht":                  "kree shel me'lac",
+    "rückzug":                  "krel'lahk",
+    "zurückziehen":             "krel'lahk",
+
+    # ── Vollständige Phrasen (Priorität) ─────────────────────────────────
+    "ich sterbe frei":          "dal shakka mel",
+    "ich sterbe":               "dal shakka mel",
+    "wir ergeben uns nicht":    "arik tree'ac te kek",
+    "sieg oder tod":            "kalach shal tek",
+    "tötet sie alle":           "mol kek",
+    "alle töten":               "mol kek",
+    "ich bin hier":             "niss trah",
+    "hier bin ich":             "niss trah",
+    "oh mein gott":             "mak lo onak",
+    "oh gott":                  "mak lo onak",
+    "was ist los":              "shin tel",
+    "was geht hier vor":        "shin tel",
+    "kein bündnis":             "mak shel lo koma ashma",
+    "ich bin kein jaffa":       "kel nok shree jaffa",
+    "unsere liebe endet nicht": "pal tiem shree tal ma",
+    "wer bist du":              "kree tal shal mak",
+    "identifiziere dich":       "kree tal shal mak",
+    "feuer einstellen":         "hol mel",
+    "keine bewegung":           "hahl kree",
+    "achtung jetzt":            "kree nok",
+    "viel glück":               "chel nok",
+    "gut getroffen":            "tek'ma'te",
+    "auf wiedersehen":          "lek tol",
+    "wir kommen in frieden":    "tek'ma'tek",
+    "in frieden":               "tek'ma'tek",
+
+    # ── Adjektive ────────────────────────────────────────────────────────
+    "frei":                     "nem ron",
+    "stark":                    "teal'c",
+    "mächtig":                  "onak",
+    "groß":                     "onak",
+    "tot":                      "kek",
+    "tödlich":                  "kek",
+    "schwach":                  "kek",
+    "ehrlos":                   "shol'va",
+    "verdammt":                 "mai'tac",
+    "tapfer":                   "kalach",
+    "früher":                   "nokia",
+    "vorher":                   "nokia",
+
+    # ── Substantive ──────────────────────────────────────────────────────
+    "tod":                      "kek",
+    "schwäche":                 "kek",
+    "schwächling":              "hasshak",
+    "narr":                     "hasshak",
+    "dummkopf":                 "goe'nahk",
+    "idiot":                    "goe'nahk",
+    "verräter":                 "shol'va",
+    "ketzer":                   "shol'va",
+    "verrat":                   "shol'va",
+    "außenseiter":              "kresh'taa",
+    "verbannter":               "kresh'taa",
+    "eindringling":             "shree",
+    "schänder":                 "shree",
+    "gott":                     "onak",
+    "götter":                   "onak",
+    "meister":                  "dis'tra",
+    "herr":                     "dis'tra",
+    "jäger":                    "ashrak",
+    "attentäter":               "ashrak",
+    "krieger":                  "jaffa",
+    "jaffa":                    "jaffa",
+    "sklave":                   "lo'taur",
+    "mensch":                   "tar",
+    "menschlich":               "tar",
+    "erdlinge":                 "tau'ri",
+    "erdbewohner":              "tau'ri",
+    "erdenmenschen":            "tau'ri",
+    "erde":                     "tau'ri",
+    "stärke":                   "teal'c",
+    "asgard":                   "reenlokia",
+    "sieg":                     "kalach shal tek",
+    "ehre":                     "shal tek",
+    "seele":                    "kalach",
+    "freiheit":                 "nel nem ron",
+    "vergeltung":               "kel mar tokeem",
+    "rache":                    "kel mar tokeem",
+    "bund":                     "mak shel",
+    "allianz":                  "mak shel",
+    "befehl":                   "kree",
+    "krieg":                    "kek",
+    "mission":                  "ring kol nok",
+    "plan":                     "ring kol nok",
+    "strategie":                "ring kol nok",
+    "dorf":                     "a'roush",
+    "trick":                    "tak",
+    "lüge":                     "tak",
+    "täuschung":                "tak",
+    "sternentor":               "chappa'ai",
+    "stargate":                 "chappa'ai",
+    "supergate":                "chappa'ko",
+    "mutterschiff":             "ha'tak",
+    "symbionten":               "prim'ta",
+    "symbiont":                 "prim'ta",
+    "larve":                    "prim'ta",
+    "trance":                   "kel'no'reem",
+    "meditation":               "kel'no'reem",
+    "todesgleiter":             "udajeet",
+    "zat":                      "zat'nik'tel",
+    "stabwaffe":                "ma'tok",
+    "heiligtum":                "cal mah",
+    "zufluchtsort":             "cal mah",
+    "hochzeit":                 "shim'roa",
+    "flitterwochen":            "shim'roa",
+    "jenseits":                 "kheb",
+    "erleuchtung":              "kheb",
+    "währung":                  "shesh'ta",
+    "angriff":                  "tal shak",
+    "flankenangriff":           "kel'tesh",
+    "anfang":                   "nokiak",
+
+    # ── Zeitangaben ──────────────────────────────────────────────────────
+    "jetzt":                    "nok",
+    "sofort":                   "nok",
+    "nun":                      "nok",
+    "hier":                     "nok",
+    "da":                       "nok",
+    "so":                       "kel'sha",
+
+    # ── Begrüßungen ──────────────────────────────────────────────────────
+    "hallo":                    "chel hol",
+    "guten tag":                "chel hol",
+    "tschüss":                  "lek tol",
+    "bis dann":                 "lek tol",
+    "prost":                    "shal met",
+    "entschuldigung":           "tel kol",
+    "wie geht es dir":          "nanb'tu'qua",
+    "achtung":                  "kree",
+    "attention":                "kree",
+    "wer":                      "kel",
+    "was":                      "shal",
+    "wo":                       "kel",
+    "wann":                     "kel",
+    "name":                     "shal mak",
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -624,11 +900,18 @@ def build_mapping(entries: list[dict], direction: str) -> dict[str, str]:
     return mapping
 
 
-def translate_text(text: str, mapping: dict[str, str]) -> str:
+def translate_text(text: str, mapping: dict[str, str],
+                   direction: str = "goa2de") -> str:
     """Übersetzt einen Freitext-Satz Wort für Wort."""
-    text_lower = text.strip().lower()
+    text_stripped = text.strip()
+    text_lower = text_stripped.lower()
+
+    # DE→Goa'uld: kompletten Satz zuerst im expliziten Map prüfen
+    if direction == "de2goa" and text_lower in DE_GOAULD_MAP:
+        return DE_GOAULD_MAP[text_lower]
+
     if text_lower in mapping:
-        return preserve_case(text.strip(), mapping[text_lower])
+        return preserve_case(text_stripped, mapping[text_lower])
 
     tokens = re.split(r"([A-Za-zÄÖÜäöüßÀ-ÿ']+)", text)
     result = []
@@ -637,7 +920,9 @@ def translate_text(text: str, mapping: dict[str, str]) -> str:
             continue
         if re.match(r"^[A-Za-zÄÖÜäöüßÀ-ÿ']+$", tok):
             low = tok.lower()
-            if low in mapping:
+            if direction == "de2goa" and low in DE_GOAULD_MAP:
+                result.append(DE_GOAULD_MAP[low])
+            elif low in mapping:
                 result.append(preserve_case(tok, mapping[low]))
             else:
                 result.append(tok)
@@ -742,48 +1027,50 @@ class GoauldApp:
 
     def _build_header_ctk(self) -> None:
         hdr = ctk.CTkFrame(self.root, fg_color=C["bg_panel"],
-                           corner_radius=0, height=76)
+                           corner_radius=0, height=82)
         hdr.pack(fill="x", padx=0, pady=0)
         hdr.pack_propagate(False)
 
-        # Left: gate ring decoration
+        # Left: gate ring + chevron column
         gate_frame = ctk.CTkFrame(hdr, fg_color="transparent", width=54)
         gate_frame.pack(side="left", padx=(14, 0))
         gate_frame.pack_propagate(False)
-        ctk.CTkLabel(gate_frame, text="⊕", font=("Courier", 30, "bold"),
-                     text_color=C["blue_gate"]).pack(pady=12)
+        ctk.CTkLabel(gate_frame, text="⊕", font=("Courier", 34, "bold"),
+                     text_color=C["blue_gate"]).pack(pady=10)
+
+        chev_frame = ctk.CTkFrame(hdr, fg_color="transparent", width=16)
+        chev_frame.pack(side="left")
+        chev_frame.pack_propagate(False)
+        for i in range(7):
+            ctk.CTkLabel(chev_frame, text="◆", font=("Courier", 7),
+                         text_color=C["chevron"]).pack()
 
         # Title block
         title_frame = ctk.CTkFrame(hdr, fg_color="transparent")
-        title_frame.pack(side="left", padx=10)
+        title_frame.pack(side="left", padx=(8, 0))
 
         ctk.CTkLabel(
             title_frame,
             text="GOA'ULD LINGUISTIC INTERFACE",
-            font=("Courier", 18, "bold"),
+            font=("Courier", 19, "bold"),
             text_color=C["gold_bright"],
-        ).pack(anchor="w")
-
-        # Chevron row — 9 chevrons, 7 lit
-        chevrons = "".join(
-            [f" {GLYPH_LOCKED}" for _ in range(7)] +
-            [f" {GLYPH_CHEVRON}" for _ in range(2)]
-        )
-        ctk.CTkLabel(
-            title_frame,
-            text=chevrons,
-            font=("Courier", 10),
-            text_color=C["chevron"],
         ).pack(anchor="w")
 
         ctk.CTkLabel(
             title_frame,
             text="SGC Xenolinguistics Division  ·  Stargate Command  ·  LEVEL 28",
-            font=("Courier", 8),
+            font=("Courier", 9),
             text_color=C["text_blue"],
         ).pack(anchor="w")
 
-        # Right side stats
+        ctk.CTkLabel(
+            title_frame,
+            text='  "Tek\'ma\'te. Jaffa, kree!"  —  Stargate SG-1',
+            font=("Courier", 8, "italic"),
+            text_color=C["gold_dim"],
+        ).pack(anchor="w")
+
+        # Right side: wormhole status + stats
         stats_frame = ctk.CTkFrame(hdr, fg_color="transparent")
         stats_frame.pack(side="right", padx=18)
 
@@ -795,7 +1082,16 @@ class GoauldApp:
             text_color=C["locked_bright"],
         ).pack(anchor="e")
 
-        src_text = (f"MD: {Path(self._md_path).name[:38]}"
+        self._wormhole_var = ctk.StringVar(value="◎  STANDBY")
+        self._wormhole_lbl = ctk.CTkLabel(
+            stats_frame,
+            textvariable=self._wormhole_var,
+            font=("Courier", 10, "bold"),
+            text_color=C["text_mid"],
+        )
+        self._wormhole_lbl.pack(anchor="e")
+
+        src_text = (f"MD: {Path(self._md_path).name[:36]}"
                     if self._md_path else "MD: — (Fallback-Vokabular)")
         ctk.CTkLabel(
             stats_frame,
@@ -805,7 +1101,7 @@ class GoauldApp:
         ).pack(anchor="e")
 
         # Right gate decoration
-        ctk.CTkLabel(hdr, text="⊕", font=("Courier", 30, "bold"),
+        ctk.CTkLabel(hdr, text="⊕", font=("Courier", 34, "bold"),
                      text_color=C["blue_dim"]).pack(side="right", padx=(0, 10))
 
     def _build_controls_ctk(self) -> None:
@@ -814,12 +1110,12 @@ class GoauldApp:
         ctrl.pack(fill="x", padx=0, pady=(1, 0))
         ctrl.pack_propagate(False)
 
-        # Direction toggle
-        self._dir_var = ctk.StringVar(value="goa2de")
+        # Direction toggle — Deutsch→Goa'uld ist Hauptfunktion, steht links
+        self._dir_var = ctk.StringVar(value="de2goa")
         seg = ctk.CTkSegmentedButton(
             ctrl,
-            values=["  Goa'uld  →  DE/EN  ",
-                    "  DE/EN  →  Goa'uld  "],
+            values=["  DE  →  Goa'uld  ",
+                    "  Goa'uld  →  DE  "],
             variable=self._dir_var,
             command=self._on_direction_change,
             fg_color=C["bg_card"],
@@ -832,7 +1128,8 @@ class GoauldApp:
             font=("Courier", 10, "bold"),
         )
         seg.pack(side="left", padx=(14, 8), pady=10)
-        seg.set("  Goa'uld  →  DE/EN  ")
+        seg.set("  DE  →  Goa'uld  ")
+        self._direction = "de2goa"  # Default: Deutsch→Goa'uld
 
         # Language preference toggle (DE / EN)
         self._lang_btn_var = ctk.StringVar(value="🇩🇪 DE")
@@ -864,7 +1161,7 @@ class GoauldApp:
         self._entry = ctk.CTkEntry(
             ctrl,
             textvariable=self._search_var,
-            placeholder_text="Wort suchen oder Satz übersetzen  ·  Goa'uld oder Deutsch  …",
+            placeholder_text="Jaffa, kree!  —  Deutsch oder Goa'uld eingeben …  (Esc = löschen)",
             font=("Courier", 13),
             fg_color=C["bg_input"],
             border_color=C["gold_dim"],
@@ -1394,19 +1691,17 @@ class GoauldApp:
 
         # Sync direction label
         if direction == "goa2de":
-            dir_text  = "Goa'uld  →  Deutsch"
-            in_label  = "Goa'uld"
-            out_label = "Deutsch"
+            dir_text  = "⊕  Goa'uld  →  Deutsch / Englisch"
+            in_hint   = "Goa'uld eingeben …"
         else:
-            dir_text  = "Deutsch  →  Goa'uld"
-            in_label  = "Deutsch"
-            out_label = "Goa'uld"
+            dir_text  = "⊕  Deutsch  →  Goa'uld"
+            in_hint   = "Deutschen Text eingeben …"
 
-        self._trans_dir_lbl.configure(text=f"  {GLYPH_GATE}  {dir_text}")
+        self._trans_dir_lbl.configure(text=f"  {dir_text}")
 
         # Update input echo
         self._trans_input_echo.configure(
-            text=text if text else f"—  Etwas in die Suchleiste eingeben ({in_label})",
+            text=text if text else f"—  {in_hint}",
             text_color=C["gold_bright"] if text else C["text_lo"],
         )
 
@@ -1437,11 +1732,26 @@ class GoauldApp:
             text_color=C["locked_bright"] if found_n == total_n else C["orange"],
         )
 
+        # Wormhole-Status im Header aktualisieren
+        if hasattr(self, "_wormhole_var"):
+            if not text:
+                self._wormhole_var.set("◎  STANDBY")
+                self._wormhole_lbl.configure(text_color=C["text_mid"])
+            elif found_n == total_n:
+                self._wormhole_var.set("◉  WORMHOLE ESTABLISHED")
+                self._wormhole_lbl.configure(text_color=C["locked_bright"])
+            elif found_n > 0:
+                self._wormhole_var.set(f"◎  DIALING  ({found_n}/{total_n})")
+                self._wormhole_lbl.configure(text_color=C["orange"])
+            else:
+                self._wormhole_var.set("✕  NO SIGNAL")
+                self._wormhole_lbl.configure(text_color=C["text_kek"])
+
         # Token breakdown — label columns depend on direction
         if direction == "goa2de":
             col_a_hdr, col_b_hdr = "GOA'ULD", "BEDEUTUNG (DE)"
         else:
-            col_a_hdr, col_b_hdr = "EINGABE", "GOA'ULD"
+            col_a_hdr, col_b_hdr = "EINGABE (DE)", "GOA'ULD"
 
         lines: list[str] = [f"\n  {col_a_hdr:<22}  {col_b_hdr}\n"]
         sep = "─" * 48
@@ -1456,17 +1766,13 @@ class GoauldApp:
             t_icon = GLYPH_LOCKED if found else GLYPH_KEK
 
             if found and prim:
+                is_map = prim.get("source") == "DE_MAP"
                 if direction == "de2goa":
-                    # col_a = input word, col_b = Goa'uld result
-                    result_word = prim["goauld"].split("/")[0].strip()
+                    # col_a = Eingabe, col_b = Goa'uld
+                    result_word = prim["goauld"].strip()
                     lines.append(f"  {t_icon}  {tok:<20}  {result_word}")
-                    # Meaning context below
-                    mea = re.split(r"[;—]", prim["meaning"])[0].strip()[:50]
-                    lines.append(f"       {'':20}  ({mea})")
                 else:
-                    # col_a = Goa'uld input, col_b = German meaning
-                    mea = re.split(r"[;—]", prim["meaning"])[0].strip()[:50]
-                    # prefer DE
+                    # col_a = Goa'uld, col_b = Deutsche Bedeutung
                     best = prim
                     for a in alts:
                         if a.get("lang") == "de" and prim.get("lang") != "de":
@@ -1475,12 +1781,12 @@ class GoauldApp:
                     mea = re.split(r"[;—]", best["meaning"])[0].strip()[:50]
                     lines.append(f"  {t_icon}  {tok:<20}  {mea}")
 
-                # Source
+                # Source (DE_MAP braucht keine Quelle)
                 src = prim.get("source", "")
-                if src:
+                if src and src != "DE_MAP":
                     lines.append(f"       [{src}]")
 
-                # Alternatives compact
+                # Alternativen
                 if alts:
                     for a in alts[:2]:
                         if direction == "de2goa":
@@ -1490,14 +1796,18 @@ class GoauldApp:
                         lines.append(f"       {GLYPH_ARROW}  Alt: {a_out}")
             else:
                 lines.append(f"  {GLYPH_KEK}  {tok:<20}  — nicht gefunden")
-                sug = self._engine.search(tok, direction=direction,
-                                          max_results=2, lang_pref=lang_pref)
-                for s in sug:
-                    if direction == "de2goa":
-                        s_out = s["goauld"].split("/")[0].strip()
-                    else:
+                # DE→Goa'uld: Fuzzy-Vorschläge aus DE_MAP
+                if direction == "de2goa":
+                    close = difflib.get_close_matches(
+                        tok.lower(), DE_GOAULD_MAP.keys(), n=2, cutoff=0.6)
+                    for c in close:
+                        lines.append(f"       {GLYPH_CHEVRON}  Meinten Sie: {c} → {DE_GOAULD_MAP[c]}")
+                else:
+                    sug = self._engine.search(tok, direction=direction,
+                                              max_results=2, lang_pref=lang_pref)
+                    for s in sug:
                         s_out = re.split(r"[;—]", s["meaning"])[0].strip()[:36]
-                    lines.append(f"       {GLYPH_CHEVRON}  Ähnlich: {s_out}")
+                        lines.append(f"       {GLYPH_CHEVRON}  Ähnlich: {s_out}")
 
             lines.append("")
 
@@ -1525,7 +1835,9 @@ class GoauldApp:
     def _on_direction_change(self, *_) -> None:
         if CTK_AVAILABLE:
             val = self._dir_var.get()
-            self._direction = ("goa2de" if "Goa" in val else "de2goa")
+            # "  DE  →  Goa'uld  " → de2goa
+            # "  Goa'uld  →  DE  " → goa2de
+            self._direction = ("de2goa" if "DE  →  Goa" in val else "goa2de")
         else:
             self._direction = self._dir_var.get()
         self._do_search()
@@ -1550,6 +1862,20 @@ class GoauldApp:
             self._sentence_mode = False
             self._display_results([])
             return
+
+        # DE→Goa'uld: kompletten Satz direkt im Wörterbuch nachschlagen
+        if self._direction == "de2goa":
+            direct = DE_GOAULD_MAP.get(query.lower())
+            if direct:
+                self._sentence_mode = False
+                self._display_results([{
+                    "goauld":  direct,
+                    "meaning": query,
+                    "section": "Direktübersetzung",
+                    "source":  "DE_MAP",
+                    "lang":    "de",
+                }])
+                return
 
         if self._analyzer.is_sentence(query):
             self._sentence_mode = True
@@ -1823,29 +2149,47 @@ class GoauldApp:
 
     def _show_welcome_detail(self) -> None:
         total = len(self._engine.entries)
+        de_map_count = len(DE_GOAULD_MAP)
         src = (f"MD-Datei: {Path(self._md_path).name}"
                if self._md_path else "Eingebettetes Fallback-Vokabular")
         welcome = (
             "\n"
             "╔══════════════════════════════════════════════╗\n"
-            "║   GOA'ULD LINGUISTIC INTERFACE               ║\n"
+            "║   GOA'ULD LINGUISTIC INTERFACE  v3.0        ║\n"
             "║   SGC Xenolinguistics Division               ║\n"
+            "║   Stargate Command  ·  LEVEL 28             ║\n"
             "╚══════════════════════════════════════════════╝\n\n"
-            f"  Einträge geladen:  {total}\n"
+            f"  Wörterbuch-Einträge:  {total}\n"
+            f"  DE→Goa'uld direkt:   {de_map_count} Ausdrücke\n"
             f"  Quelle:  {src}\n\n"
-            "  ─────────────────────────────────────────────\n\n"
-            "  Verwende das Suchfeld oben um Wörter oder\n"
-            "  Phrasen zu suchen.\n\n"
-            "  RICHTUNGEN:\n"
-            "    Goa'uld → Deutsch/Englisch\n"
-            "    Deutsch/Englisch → Goa'uld\n\n"
-            "  TIPP: Fuzzy-Matching ist aktiviert — auch\n"
-            "  Tippfehler führen zu Treffern.\n\n"
-            "  ─────────────────────────────────────────────\n\n"
-            '  "Jaffa, Kree!"  --  Achtung, Krieger!\n'
-            '  "Shel kek nem ron."  --  Ich sterbe frei.\n'
-            '  "Tek\'ma\'te."  --  Meister, gut getroffen.\n\n'
-            "  ✦  Kree!  ✦\n"
+            "  ═══════════════════════════════════════════\n\n"
+            "  HAUPTFUNKTION: DEUTSCH → GOA'ULD\n\n"
+            "  Tippe einen deutschen Begriff oder Satz in\n"
+            "  die Suchleiste. Der Übersetzer findet das\n"
+            "  passende Goa'uld-Wort.\n\n"
+            "  BEISPIELE:\n"
+            '    "Ich sterbe frei"  →  Dal shakka mel\n'
+            '    "Verräter"         →  Shol\'va\n'
+            '    "Halt"             →  Hol\n'
+            '    "Ich bin kein Jaffa"  →  Kel nok shree Jaffa\n'
+            '    "Oh mein Gott"     →  Mak lo onak\n'
+            '    "Angriff"          →  Tal shak\n\n'
+            "  ─────────────────────────────────────────\n\n"
+            "  GOA'ULD → DEUTSCH  (zweite Richtung)\n\n"
+            '    "Jaffa, kree!"    →  Achtung, Krieger!\n'
+            '    "Shol\'va"         →  Verräter\n'
+            '    "Tek\'ma\'te"       →  Meister, gut getroffen\n'
+            '    "Dal shakka mel"  →  Ich sterbe frei!\n'
+            '    "Chappa\'ai"       →  Sternentor\n\n'
+            "  ─────────────────────────────────────────\n\n"
+            "  TABS:\n"
+            "    ◈ Detail      — Wort-Detailansicht\n"
+            "    ⊕ Satzanalyse — Token-für-Token Analyse\n"
+            "    ⚡ Übersetzer  — Live-Übersetzung\n\n"
+            "  ─────────────────────────────────────────\n\n"
+            '  "Shel kek nem ron."  —  Widerstandsparole\n'
+            "  der Freien Jaffa. Bedeutung: Ich sterbe frei.\n\n"
+            "  ✦  Tek'ma'te. Jaffa, kree!  ✦\n"
         )
         self._write_detail(welcome)
 
@@ -2214,7 +2558,7 @@ def run_cli(args: argparse.Namespace) -> None:
     dir_name = "Goa'uld → Deutsch/Englisch" if args.dir == "goa2de" else "Deutsch/Englisch → Goa'uld"
 
     if args.text:
-        result = translate_text(args.text, mapping)
+        result = translate_text(args.text, mapping, direction=args.dir)
         print(f"[{dir_name}]  {args.text}  →  {result}")
         return
 
@@ -2229,7 +2573,7 @@ def run_cli(args: argparse.Namespace) -> None:
                 break
             if not user_input:
                 continue
-            result = translate_text(user_input, mapping)
+            result = translate_text(user_input, mapping, direction=args.dir)
             print(f"  →  {result}\n")
         except (KeyboardInterrupt, EOFError):
             print("\nTek'ma'te!")
