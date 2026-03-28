@@ -1,72 +1,127 @@
-Stargate — Goa'uld Linguistic Interface ⬡
+# Stargate — Goa'uld Linguistic Interface ⬡
+### Version 0.2
 
 Ein bidirektionaler Übersetzer für die Goa'uld-Sprache aus dem Stargate-Franchise. Dieses Tool bietet sowohl eine moderne grafische Benutzeroberfläche (GUI) im SGC-Terminal-Design als auch ein Command-Line Interface (CLI).
 
-Das Interface nutzt eine Kombination aus einem eingebetteten Kernvokabular und einer erweiterbaren Markdown-Wörterbuchdatei (z. B. opus4.6-en-language-analysis.md), um einzelne Wörter und ganze Sätze zu analysieren.
-✨ Features
+Das Interface nutzt eine Kombination aus einem eingebetteten Kernvokabular und bis zu vier erweiterbaren Markdown-Wörterbuchdateien, um einzelne Wörter und ganze Sätze zu analysieren.
 
-    Bidirektionale Übersetzung: Übersetzt fließend von Goa'uld nach Deutsch/Englisch und umgekehrt.
+---
 
-    Intelligente Satzanalyse: Analysiert ganze Sätze Token für Token, zeigt primäre Bedeutungen, Alternativen und linguistische Tipps an.
+## ✨ Features
 
-    Fuzzy-Search Engine: Findet Einträge durch exaktes Matching, Präfix-Matching und Fuzzy-Matching – so führen auch Tippfehler zum richtigen Begriff.
+- **Bidirektionale Übersetzung** — Übersetzt fließend von Goa'uld nach Deutsch/Englisch und umgekehrt. Richtung und Zielsprache lassen sich jederzeit umschalten.
 
-    SGC-Design GUI: Eine immersive Oberfläche basierend auf customtkinter im "Dark / Gold / Orange"-Look des Stargate Commands. Ein Fallback auf Standard-tkinter ist ebenfalls integriert.
+- **Intelligente Satzanalyse** — Analysiert ganze Sätze Token für Token und zeigt primäre Bedeutungen, Alternativen und linguistische Tipps im eigenen Tab *⊕ Satzanalyse* an.
 
-    Terminal/CLI-Modus: Für schnelle Übersetzungen direkt in der Konsole (--cli).
+- **Live-Übersetzer-Tab** — Eine Echtzeit-Übersetzungsansicht (*⚡ Übersetzer*) liest direkt aus der Hauptsuchleiste mit verzögerter Aktualisierung — ganz ohne Dialog-Popups.
 
-    Markdown Auto-Parsing: Liest Vokabeln automatisch aus Tabellen in Markdown-Dateien ein. Das Standard-Wörterbuch umfasst dabei rund 250 dokumentierte Einträge aus den Serien und dem RPG.
+- **Detailansicht** — Der Tab *◈ Detail* zeigt strukturierte Bedeutungsabschnitte, Grammatikhinweise, semantische Verwandte und quellenbasierte Alternativen für jeden ausgewählten Eintrag.
 
-🚀 Installation
+- **Fuzzy-Search Engine** — Findet Einträge durch exaktes Matching, Präfix-Matching und Fuzzy-Matching — auch Tippfehler führen zum richtigen Begriff. Enthält Sprachpräferenz-Scoring für Deutsch/Englisch-Einträge.
 
-Stelle sicher, dass Python 3 auf deinem System installiert ist.
+- **SGC-Design GUI** — Eine immersive Oberfläche basierend auf `customtkinter` im *Dark / Gold / Orange*-Look des Stargate Commands, mit verschiebbaren Panels über einen Tor-blauen Sash-Divider. Ein Fallback auf Standard-`tkinter` ist integriert.
+
+- **Terminal / CLI-Modus** — Für schnelle Übersetzungen direkt in der Konsole über das `--cli`-Flag.
+
+- **Markdown Auto-Parsing** — Liest Vokabeln automatisch aus Tabellen in Markdown-Dateien ein. Die vier mitgelieferten Wörterbücher decken das gesamte kanonische und erweiterte Vokabular ab.
+
+- **Auto-Installer** — Versucht bei fehlendem `customtkinter` automatisch eine Hintergrundinstallation mit `ensurepip`-Fallback-Hinweis.
+
+---
+
+## 🚀 Installation
+
+Stelle sicher, dass **Python 3** auf deinem System installiert ist.
 
 Klone das Repository und installiere die benötigte Bibliothek für die moderne GUI:
-Bash
 
+```bash
 git clone https://github.com/DaWasteh/goauld-translator.git
 cd goauld-translator
 pip install customtkinter
+```
 
-    Hinweis: Das Skript versucht bei fehlendem customtkinter eine automatische Installation im Hintergrund durchzuführen.
+> **Hinweis:** Das Skript versucht bei fehlendem `customtkinter` eine automatische Installation im Hintergrund durchzuführen.
 
-💻 Verwendung
-GUI-Modus (Grafische Oberfläche)
+---
+
+## 💻 Verwendung
+
+### GUI-Modus (Grafische Oberfläche)
 
 Starte die Anwendung einfach ohne Parameter, um die GUI zu öffnen:
-Bash
 
+```bash
 python goauld_translator.py
+```
 
 Um direkt eine spezifische Markdown-Wörterbuchdatei zu laden:
-Bash
 
+```bash
 python goauld_translator.py --md pfad/zur/datei.md
+```
 
-CLI-Modus (Kommandozeile)
+### CLI-Modus (Kommandozeile)
 
-Um das Tool ressourcenschonend im Terminal zu nutzen, verwende das --cli Flag. Du kannst direkt einen Text übergeben oder in den interaktiven Modus wechseln:
-Bash
+Verwende das `--cli`-Flag für ressourcenschonende Nutzung im Terminal. Du kannst direkt einen Text übergeben oder in den interaktiven Modus wechseln:
 
+```bash
 # Interaktiver Modus (Goa'uld nach Deutsch)
 python goauld_translator.py --cli --dir goa2de
 
 # Direkte Übersetzung eines Satzes
 python goauld_translator.py --cli --dir goa2de --text "Jaffa kree"
+```
 
-📦 Als .EXE verpacken (Windows)
+---
 
-Wenn du das Skript als eigenständige Windows-Anwendung weitergeben willst, kannst du es mit pyinstaller ganz einfach kompilieren:
-Bash
+## 📦 Als .EXE verpacken (Windows)
 
+Wenn du das Skript als eigenständige Windows-Anwendung weitergeben willst, kompiliere es mit `pyinstaller`:
+
+```bash
 pip install pyinstaller
 pyinstaller --onefile goauld_translator.py
+```
 
-(Die fertige .exe findest du danach im neu erstellten dist-Ordner).
-📚 Vokabular & Daten
+Die fertige `.exe` findest du im neu erstellten `dist`-Ordner.
 
-Dieses Projekt liefert ein eingebettetes Fallback-Vokabular mit den wichtigsten Begriffen mit. Für den vollen Funktionsumfang liest es automatisch beiliegende Markdown-Dateien (wie opus4.6-en-language-analysis.md oder goauld_dictionary.md) aus.
-Das Wörterbuch basiert auf Analysen der Serie, RPG-Sourcebooks und Fan-Wikis.
-🤝 Mitwirken
+---
 
-Kree! Du möchtest das Wörterbuch erweitern oder den Code verbessern? Pull Requests sind jederzeit willkommen. Füge neue Vokabeln einfach als Tabellenzeile in die Markdown-Datei ein – der Parser erledigt den Rest.
+## 📚 Vokabular & Daten
+
+Dieses Projekt liefert vier Markdown-Wörterbuchdateien sowie ein eingebettetes Fallback-Vokabular mit den wichtigsten Begriffen mit. Die Wörterbücher werden beim Start automatisch eingelesen.
+
+### Offizielle Wörterbücher
+
+Diese beiden Wörterbücher dokumentieren das kanonische Vokabular aus dem Stargate-Kinofilm, zehn Staffeln SG-1, *The Ultimate Visual Guide*, dem SG-1-Rollenspiel, dem Mobilspiel *Unleashed* sowie Fan-Community-Analysen. Jedes enthält rund **250 dokumentierte Einträge**.
+
+| Datei | Sprache | Beschreibung |
+|-------|---------|--------------|
+| `Goa_uld-Dictionary.md` | Englisch | Vollständiges kanonisches Goa'uld-Vokabular mit Etymologien, Grammatikhinweisen und Episodenquellen |
+| `Goa_uld-Wörterbuch.md` | Deutsch | Deutschsprachiges Pendant zum kanonischen Wörterbuch |
+
+> **Erstellt von:** Claude Opus 4.6 Erweitert Recherche
+
+---
+
+### Fiktive Wörterbücher (Konstruierte Erweiterungen)
+
+Diese beiden Wörterbücher erweitern das kanonische Vokabular systematisch in Bereiche, die die Serie undokumentiert ließ — Körperteile, Zahlen, Emotionen, Farben, Technologie und abstraktes Denken — ausschließlich auf Basis belegter kanonischer Wurzeln und dokumentierter Morphologieregeln (Swadesh-Rahmen, Kompositionslogik, Vokalverschiebung, Unas-Erbwörter).
+
+| Datei | Sprache | Beschreibung |
+|-------|---------|--------------|
+| `Goa_uld-Fictionary.md` | Englisch | Swadesh-Grundlage, semantische Erweiterungen und moderne Konzepte |
+| `Goa_uld-Neologikum.md` | Deutsch | Deutschsprachige Neologismen für moderne und abstrakte Begriffe |
+
+> **Erstellt durch:** Gemeinschaftsarbeit von **Google Gemini 2.0 Pro Deep Research** und **Claude Opus 4.6 Erweitert Recherche**
+
+---
+
+## 🤝 Mitwirken
+
+**Kree!** Du möchtest das Wörterbuch erweitern oder den Code verbessern? Pull Requests sind jederzeit willkommen.
+
+- Neue Vokabeln einfach als Tabellenzeile in eine der Markdown-Dateien einfügen — der Parser erledigt den Rest.
+- Einträge können Sprach-Tags tragen (`lang: "de"` / `lang: "en"`) für verbessertes Such-Scoring.
+- Die fiktiven Wörterbücher folgen strengen kanonischen Morphologieregeln — bitte die Konsistenz mit belegten Wurzeln wahren.
