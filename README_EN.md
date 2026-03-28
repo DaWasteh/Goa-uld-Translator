@@ -114,7 +114,7 @@ These two dictionaries systematically extend the canonical vocabulary into areas
 | `Goa_uld-Fictionary.md` | English | Swadesh foundation, semantic extensions, and modern concepts |
 | `Goa_uld-Neologikum.md` | German | German-language neologisms for modern and abstract vocabulary |
 
-> **Created by:** Collaborative effort between **Google Gemini 2.0 Pro Deep Research** and **Claude Opus 4.6 Extended Research**
+> **Created by:** Collaborative effort between **Google Gemini 3.1 Pro Deep Research** and **Claude Opus 4.6 Extended Research**
 
 ---
 

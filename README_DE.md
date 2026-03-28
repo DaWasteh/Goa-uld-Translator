@@ -114,7 +114,7 @@ Diese beiden Wörterbücher erweitern das kanonische Vokabular systematisch in B
 | `Goa_uld-Fictionary.md` | Englisch | Swadesh-Grundlage, semantische Erweiterungen und moderne Konzepte |
 | `Goa_uld-Neologikum.md` | Deutsch | Deutschsprachige Neologismen für moderne und abstrakte Begriffe |
 
-> **Erstellt durch:** Gemeinschaftsarbeit von **Google Gemini 2.0 Pro Deep Research** und **Claude Opus 4.6 Erweitert Recherche**
+> **Erstellt durch:** Gemeinschaftsarbeit von **Google Gemini 3.1 Pro Deep Research** und **Claude Opus 4.6 Erweitert Recherche**
 
 ---
 
