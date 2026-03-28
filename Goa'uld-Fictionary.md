@@ -266,6 +266,512 @@ Goa'uld verbs do not inflect for person, number, or tense. Time is conveyed by a
 
 ---
 
+
+---
+
+# Fictionary Extension: 420+ New Entries
+
+The following extension adds systematically new domains not covered by the canonical dictionary or the original Fictionary. All neologisms follow the same three construction strategies — semantic compounding, negation prefix *na-*, and canonical borrowing — using only attested root morphemes.
+
+---
+
+## Governance, Law, and Politics
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **onak'tar** | Ruler, Sovereign | *Onak* (god) + *tar* (person): god-person |
+| **onak'mel** | Throne, Seat of power | *Onak* (god) + *mel* (fire/power): seat of power |
+| **dan'lok** | Law, Rule | *Dan* (true) + *lok* (bond): good bond |
+| **dan'lok'tar** | Judge, Lawgiver | *Dan'lok* (law) + *tar*: person of the law |
+| **tok'dan'lok** | Crime, Lawbreaking | *Tok* (against) + *dan'lok*: against the law |
+| **tok'dan'lok'tar** | Criminal, Outlaw | *Tok'dan'lok* + *tar*: person against the law |
+| **kor'mak'tal** | Prison, Dungeon | *Kor mak* (bracelet) + *tal*: place of binding |
+| **shel'dan** | Oath, Vow | *Shel* (protection) + *dan* (truth): protected truth |
+| **onak'dan'lok** | Court, Tribunal | *Onak* + *dan'lok*: divine law |
+| **na'dan'lok** | Injustice, Wrong | *Na-* + *dan'lok*: not-law |
+| **mak'shel'tar** | Ambassador, Envoy | *Mak shel* (alliance) + *tar*: person of alliance |
+| **onak'lok** | Council, Assembly | *Onak* (lord) + *lok* (bond): bond of lords |
+| **dan'lok'kal** | Justice | *Dan'lok* + *kal*: essence of the law |
+| **shel'tar** | Guardian, Protector | *Shel* (guard) + *tar*: person of protection |
+| **tok'onak** | Uprising, Rebellion | *Tok* + *onak*: against the gods |
+| **kree'dan'lok** | Decree, Edict | *Kree* + *dan'lok*: commanded law |
+| **shesh'dan'lok** | Tax, Tribute | *Shesh* (money) + *dan'lok*: money-law |
+| **na'nem'ron** | Oppression, Tyranny | *Na-* + *nem ron* (freedom): not-freedom |
+
+---
+
+## Medicine and Healing
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **met'dan** | Healing, Recovery | *Met* (health) + *dan* (good): good health |
+| **met'dan'tar** | Healer, Physician | *Met'dan* + *tar*: person of healing |
+| **met'sha** | Illness, Disease, Sickness | *Met* + *sha* (state): body-state |
+| **na'met** | Poison, Toxin | *Na-* + *met*: anti-health |
+| **met'kal** | Medicine, Remedy | *Met* + *kal*: essence of health |
+| **met'ryn'dan** | Wound, Injury | *Met* + *ryn* + *dan*: body-break |
+| **kal'met'ryn** | Bleeding | *Kal'met* (blood) + *ryn*: blood in motion |
+| **ska'met'kal** | Healing herb, Herbal remedy | *Ska* + *met'kal*: plant-medicine |
+| **kek'met** | Plague, Pestilence, Epidemic | *Kek* (death) + *met*: death of health |
+| **met'kor'tal** | Fracture, Bone break | *Met* + *kor* + *tal*: break of hard part |
+| **met'dan'tal** | Hospital, Infirmary | *Met'dan* + *tal*: place of healing |
+| **ren'na'ryn** | Suffocation, Asphyxiation | *Ren* (breath) + *na-* + *ryn*: breath without motion |
+| **sha'met'na** | Unconsciousness, Faint | *Sha* + *met* + *na*: state of not-being |
+| **met'ska'ryn** | Birth, Childbirth | *Met* + *ska* + *ryn*: life-motion of body |
+
+---
+
+## Architecture and Construction
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **kor'dan'tal** | Wall, Rampart | *Kor* + *dan* + *tal*: strong stone surface |
+| **chappa'tal** | Door, Entrance | *Chappa* (gate) + *tal*: gate-surface |
+| **kor'tal'tal** | Fortress, Citadel | *Kor'tal* (stone) + *tal*: stone-place |
+| **onak'tal** | Temple, Sanctuary | *Onak* + *tal*: god-place |
+| **dan'ryn'tar** | Builder, Architect | *Dan'ryn* (build) + *tar*: person of building |
+| **kor'pac** | Foundation, Cornerstone | *Kor* + *pac* (down): lower stone |
+| **cha'chappa** | Window | *Cha* (light) + *chappa*: light-opening |
+| **nona'tal'le** | Palace | *Nona'tal* + *le*: great home-place |
+| **kor'ryn'tal** | Bridge | *Kor* + *ryn* + *tal*: firm linking surface |
+| **kor'tal'pac** | Stairs, Steps | *Kor'tal* + *pac*: directional stone |
+| **pac'tal'le** | Tower | *Pac* + *tal* + *le*: great directional structure |
+| **nona'kor** | House, Building | *Nona* (home) + *kor* (firm): firm home |
+| **mel'kor'tal** | Forge, Smithy | *Mel* + *kor* + *tal*: place of fire and metal |
+
+---
+
+## Food and Drink
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **skanat'kal** | Food, Meal, Nourishment | *Ska'nat* + *kal*: life-preserving essence |
+| **met'ka'dan** | Drinking water, Beverage | *Met'ka* + *dan*: good water |
+| **ska'met'ryn** | Fruit | *Ska* + *met* + *ryn*: growing plant substance |
+| **ska'pac'kal** | Vegetable, Root vegetable | *Ska* + *pac* + *kal*: essence of ground-plant |
+| **tar'met'mel** | Cooked meat, Roast | *Tar'met* + *mel*: fire-touched meat |
+| **mel'ska** | To cook, To prepare food | *Mel* + *ska*: bring to life with fire |
+| **met'ka'mel** | Soup, Stew, Broth | *Met'ka* + *mel*: heated water |
+| **ska'kor'mel** | Bread | *Ska* + *kor* + *mel*: solid baked grain |
+| **met'ka'ska** | Wine, Alcohol | *Met'ka* + *ska*: fermented plant water |
+| **sha'skanat** | Hunger | *Sha* + *skanat*: nourishment-feeling |
+| **sha'met'ka** | Thirst | *Sha* + *met'ka*: water-feeling |
+| **mel'ska'tar** | Cook, Baker | *Mel'ska* + *tar*: person of cooking |
+| **pac'mel'kal** | Salt, Spice | *Pac'tal* + *mel* + *kal*: sharp earth essence |
+| **ska'ra'kal** | Honey, Sweetener | *Ska* + *ra* + *kal*: golden life essence |
+
+---
+
+## Clothing and Armor
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **tar'shel** | Armor | *Tar* + *shel*: body-protection |
+| **tar'kor'shel** | Chainmail, Plate armor | *Tar* + *kor* + *shel*: metal body-protection |
+| **fron'shel** | Helmet | *Fron* + *shel*: head-protection |
+| **ko'shel** | Glove, Gauntlet | *Ko* + *shel*: hand-protection |
+| **hol'shel** | Boot, Shoe | *Hol* + *shel*: walking-protection |
+| **tar'ryn'met** | Robe, Garment, Dress | *Tar* + *ryn* + *met*: body-wrapping |
+| **onak'ryn'met** | Ceremonial robe, Vestment | *Onak* + *ryn'met*: divine garment |
+| **ra'kor'lok** | Crown, Diadem | *Ra* + *kor* + *lok*: golden metal band |
+| **tar'met'ryn** | Belt, Sash | *Tar* + *met* + *ryn*: wrapping body material |
+| **kek'vol'ryn'met** | Cloak, Camouflage cloak | *Kek'vol* + *ryn'met*: black garment |
+| **cha'ryn'met** | Cape, Mantle | *Cha* + *ryn'met*: bright garment |
+
+---
+
+## Tools and Instruments
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **kor'ko** | Tool, Instrument | *Kor* + *ko*: metal hand-piece |
+| **kor'shac** | Blade, Knife, Dagger | *Kor* + *shac*: cutting metal |
+| **kor'shac'le** | Sword | *Kor'shac* + *le*: great blade |
+| **kor'tok'le** | Shield | *Kor* + *tok* + *le*: metal resistance |
+| **mel'kor'ko** | Hammer | *Mel* + *kor* + *ko*: striking metal tool |
+| **lok'ryn** | Rope, Chain | *Lok* + *ryn*: extended bond |
+| **yu'yu'le** | Telescope, Spyglass | *Yu'yu* + *le*: augmented seeing |
+| **cha'mel'ko** | Torch, Lantern | *Cha* + *mel* + *ko*: hand fire-light |
+| **pac'ryn'ko** | Arrow | *Pac* + *ryn* + *ko*: directed thrown motion |
+| **pac'ryn'tal** | Bow, Crossbow | *Pac'ryn* + *tal*: directional device |
+| **kor'shac'pac** | Axe, Hatchet | *Kor'shac* + *pac*: heavy blade |
+| **lok'kor** | Key | *Lok* + *kor*: metal opener |
+
+---
+
+## Music and Art
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **sha'meta'ryn** | Music, Song | *Sha* + *meta* + *ryn*: flowing feeling-speech |
+| **sha'meta'tar** | Singer, Bard, Musician | *Sha'meta'ryn* + *tar*: person of music |
+| **vo'cume'sha** | Painting, Picture, Artwork | *Vo'cume* + *sha*: feeling-image |
+| **vo'cume'sha'tar** | Artist, Painter | *Vo'cume'sha* + *tar*: person of art |
+| **kor'sha'ryn** | Drum, Percussion | *Kor* + *sha* + *ryn*: hard sound rhythm |
+| **ryn'sha'met** | Flute, Wind instrument | *Ryn* + *sha* + *met*: sound-air motion |
+| **sha'meta'kal** | Poetry, Poem | *Sha* + *meta* + *kal*: essence of feeling-speech |
+| **dan'sha'ryn** | Dance | *Dan* + *sha* + *ryn*: good feeling-motion |
+| **dan'sha'ryn'tar** | Dancer | *Dan'sha'ryn* + *tar*: person of dance |
+| **kor'sha'kal** | Bell | *Kor* + *sha* + *kal*: metal soul-sound |
+
+---
+
+## Education and Knowledge
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **eetium'tal** | School, Academy | *Eetium* + *tal*: place of knowing |
+| **eetium'kal** | Wisdom, Insight | *Eetium* + *kal*: essence of knowing |
+| **delmac'kal'tal** | Library, Knowledge archive | *Delmac'kal* + *tal*: place of data |
+| **meta'kal** | Writing, Script | *Meta* + *kal*: essence of speech |
+| **meta'kal'tal** | Book, Document, Scroll | *Meta'kal* + *tal*: writing-object |
+| **bashaak'kal** | Lesson, Instruction | *Bashaak* + *kal*: essence of training |
+| **sha'meta'kal** | Philosophy, Worldview | *Sha'meta* + *kal*: essence of thinking |
+| **nokia'eetium** | Memory, Chronicle | *Nokia* + *eetium*: knowledge of the past |
+| **sha'meta'tar** | Thinker, Scholar, Philosopher | *Sha'meta* + *tar*: person of thinking |
+| **bashaak'kal'ma** | Student, Apprentice, Pupil | *Bashaak'kal* + *ma*: young learner |
+
+---
+
+## Agriculture and Plants
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **ska'pac'tal** | Field, Farmland | *Ska* + *pac'tal*: life-earth |
+| **ska'pac'tar** | Farmer, Peasant | *Ska'pac'tal* + *tar*: person of the field |
+| **ska'ryn'kal** | Harvest, Crop, Yield | *Ska'ryn* + *kal*: essence of growth |
+| **ska'met'le** | Forest, Woods, Grove | *Ska* + *met* + *le*: great plant area |
+| **ska'ryn'mel** | Flower, Blossom | *Ska* + *ryn* + *mel*: bright plant |
+| **ska'tal'ryn** | Grass, Lawn | *Ska* + *tal* + *ryn*: creeping ground plant |
+| **ska'lok'ryn** | Vine, Tendril | *Ska* + *lok* + *ryn*: growing plant bond |
+| **ska'kor'met** | Mushroom, Fungus | *Ska* + *kor* + *met*: moist earth-life |
+| **ska'pac'mel** | To plow, To cultivate | *Ska* + *pac* + *mel*: work earth for growth |
+| **ska'met'ka** | Juice, Nectar, Sap | *Ska* + *met'ka*: plant liquid |
+| **ska'kek** | To wilt, To wither | *Ska* + *kek*: life-death of plant |
+
+---
+
+## Expanded Animals
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **unas'kor** | Predator, Beast | *Unas* + *kor*: strong animal |
+| **unas'paca** | Insect, Bug, Vermin | *Unas* + *paca*: small creature |
+| **unas'ska** | Livestock, Cattle | *Unas* + *ska*: use-animal |
+| **unas'kal** | Dog, Loyal companion | *Unas* + *kal*: soul-creature |
+| **unas'tak** | Snake, Serpent | *Unas* + *tak*: cunning creature |
+| **unas'kor'le** | Dragon, Great predator | *Unas'kor* + *le*: great predator |
+| **unas'met** | Frog, Amphibian | *Unas* + *met*: water-creature |
+| **unas'pac'ryn** | Eagle, Raptor | *Unas* + *pac'ryn*: flying creature |
+| **unas'lok'ryn** | Spider, Weaver | *Unas* + *lok* + *ryn*: bond-weaving creature |
+| **unas'kek'sha** | Wolf, Night-hunter | *Unas* + *kek'sha*: fear-creature |
+
+---
+
+## Geography and Terrain
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **met'ka'ryn** | River, Stream | *Met'ka* + *ryn*: flowing water |
+| **met'ka'hol** | Lake, Pond | *Met'ka* + *hol*: still water |
+| **pac'tal'mel** | Desert, Wasteland | *Pac'tal* + *mel*: hot earth |
+| **met'kor'tal** | Glacier, Ice field | *Met'kor* + *tal*: ice surface |
+| **pac'tal'ska** | Swamp, Marsh, Bog | *Pac'tal* + *ska*: moist living earth |
+| **ska'tal'le** | Jungle, Rainforest | *Ska'tal* + *le*: great tree-place |
+| **kor'tal'ryn** | Cave, Cavern, Grotto | *Kor'tal* + *ryn*: stone hollow |
+| **pac'tal'hol** | Valley, Gorge, Ravine | *Pac'tal* + *hol*: deep earth |
+| **met'ka'pac** | Waterfall, Cascade | *Met'ka* + *pac*: downward-falling water |
+| **cha'tal'le** | Sky, Firmament | *Cha* + *tal* + *le*: great light-world |
+| **pac'kor'le** | Volcano | *Pac* + *kor'tal'le* + *mel*: fire-mountain |
+| **hol'met'le** | Deep ocean, Abyss | *Hol* + *met* + *le*: great deep water |
+| **chappa'met'ryn** | Spring, Well, Fountain | *Chappa* + *met* + *ryn*: water-opening |
+| **cha'mel'pac** | Horizon | *Cha'mel* + *pac*: sun-edge |
+| **pac'tal'kor** | Cliff, Precipice, Crag | *Pac'tal* + *kor*: steep hard earth |
+
+---
+
+## Mathematics and Science
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **wata'noka** | Six | Base continuation: five plus one |
+| **noka'noka** | Seven | Base continuation: five plus two |
+| **reka'noka** | Eight | Base continuation: five plus three |
+| **pak'noka** | Nine | Base continuation: five plus four |
+| **noka'shem** | Ten | *Noka* x *shem'a*: two fives |
+| **shem'shem** | Twenty-five | *Shem'a* x *shem'a*: five times five |
+| **sha'meta'eetium** | Science, Research | *Sha'meta* + *eetium*: thinking knowledge |
+| **cha'eetium** | Astronomy, Star-lore | *Cha* + *eetium*: star-knowledge |
+| **met'eetium** | Chemistry, Material science | *Met* + *eetium*: substance-knowledge |
+| **ska'eetium** | Biology, Life science | *Ska* + *eetium*: life-knowledge |
+| **kor'tal'eetium** | Geology, Earth science | *Kor'tal* + *eetium*: earth-knowledge |
+| **wata'sha'meta** | Calculation, Computation | *Wata* + *sha'meta*: number-thinking |
+| **cha'hol'ryn** | Orbit | *Cha* + *hol* + *ryn*: circular motion around stars |
+| **naquadah'eetium** | Physics, Energy science | *Naquadah* + *eetium*: knowledge of primal energy |
+
+---
+
+## Expanded Verbs
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **kal'ryn'sha** | To forget, Forget | *Kal'ryn* (remember) + *sha*: memory reversal |
+| **tok'meta** | To argue, To protest, Argue | *Tok* + *meta*: speak-against |
+| **lok'meta** | To promise, To vow, Promise | *Lok* + *meta*: binding speech |
+| **kor'hol'le** | To defend, To guard, Defend | *Kor'hol* + *le*: stand firm and great |
+| **mel'shak'ryn** | To fight, To battle, Fight | *Mel'shak* + *ryn*: attack-action |
+| **sha'meta'lok** | To understand, Understand | *Sha'meta* + *lok*: connect thoughts |
+| **met'ryn'hol** | To drink, Drink | *Met* + *ryn* + *hol*: move water inward |
+| **skanat'ryn** | To eat, Eat | *Skanat* + *ryn*: intake nourishment |
+| **sha'kal** | To sense, To perceive, Sense | *Sha* + *kal*: feel with the soul |
+| **kek'mel'ryn** | To incinerate, To raze, Raze | *Kek'mel* + *ryn*: completely destroy |
+| **dan'ryn'le** | To construct, To erect, Construct | *Dan'ryn* + *le*: build greatly |
+| **chappa'ryn** | To open, To unlock, Open | *Chappa* + *ryn*: move the gate |
+| **na'chappa'ryn** | To close, To lock, Close | *Na-* + *chappa'ryn*: not-open |
+| **tok'hol** | To flee, To escape, Flee | *Tok* + *hol*: against the hold |
+| **kal'sha'meta** | To meditate, To contemplate, Meditate | *Kal* + *sha* + *meta*: inner soul-speech |
+| **ko'ryn'met** | To wash, To cleanse, Wash | *Ko* + *ryn* + *met*: hand-motion with water |
+| **na'lok'ryn** | To release, To untie, Release | *Na-* + *lok'ryn*: un-bind |
+| **yu'yu'ryn** | To search, To explore, Search | *Yu'yu* + *ryn*: seeing-motion |
+| **met'hol** | To heal, To cure, Heal | *Met* + *hol*: restore health |
+| **sha'ren** | To whisper, Whisper | *Sha* + *ren*: speak with breath |
+| **meta'le** | To shout, To yell, Shout | *Meta* + *le*: speak loudly |
+| **kal'ko** | To sacrifice, To offer, Sacrifice | *Kal* + *ko*: give the soul |
+| **sha'meta'dan** | To plan, To strategize, Plan | *Sha'meta* + *dan*: think well |
+| **na'eetium** | To ignore, To misunderstand, Ignore | *Na-* + *eetium*: not-know |
+| **tak'meta** | To lie, To cheat, To deceive | *Tak* + *meta*: speak trickfully |
+| **cha'ryn** | To shine, To glow, Shine | *Cha* + *ryn*: light in motion |
+| **mel'ryn** | To run, To sprint, Run | *Mel* + *ryn*: urgent motion |
+| **kor'shac'ryn** | To cut, To slice, Cut | *Kor'shac* + *ryn*: blade-action |
+| **hol'sha** | To wait, To be patient, Wait | *Hol* + *sha*: state of staying |
+| **mel'cha'ryn** | To explode, To detonate, Explode | *Mel* + *cha* + *ryn*: fire-light-motion |
+| **onak'meta** | To pray, To invoke, Pray | *Onak* + *meta*: speak to god |
+| **lok'sha** | To love, To cherish, Love | *Lok* + *sha*: binding feeling |
+| **tok'sha'ryn** | To hate, To despise, Hate | *Tok* + *sha* + *ryn*: feeling-against-action |
+| **sha'dormata** | To dream, Dream | *Sha* + *dormata*: state of sleeping |
+| **met'ska** | To live, To breathe, Live | *Met* + *ska*: healthy life |
+| **cha'nok'ryn** | To awaken, To wake up, Awaken | *Cha* + *nok* + *ryn*: light-now-motion |
+| **sha'hol** | To rest, To pause, Rest | *Sha* + *hol*: state of stopping |
+| **ko'met** | To carry, To hold, Carry | *Ko* + *met*: substance in hand |
+| **pac'ko** | To throw, To hurl, Throw | *Pac* + *ko*: directional hand |
+| **sha'ko** | To steal, To rob, Steal | *Sha* + *ko*: secret taking |
+| **dan'meta** | To teach, To instruct, Teach | *Dan* + *meta*: speak truth |
+| **sha'meta'mel** | To finish, To complete, Finish | *Sha'meta* + *mel*: thought-end |
+| **kal'lok** | To inherit, To pass on, Inherit | *Kal* + *lok*: pass the soul-bond |
+| **na'yu'yu** | To hide, To conceal, Hide | *Na-* + *yu'yu*: cause not-seeing |
+
+---
+
+## Expanded Adjectives
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **mel'ryn'le** | Fast, Quick, Swift | *Mel* + *ryn* + *le*: greatly urgent motion |
+| **hol'ryn'paca** | Slow, Sluggish | *Hol* + *ryn* + *paca*: barely-motion |
+| **dan'le** | Noble, Honorable, Worthy | *Dan* + *le*: greatly good |
+| **tak'le** | Wicked, Malicious, Vile | *Tak* + *le*: greatly tricky |
+| **sha'dan** | Beautiful, Graceful, Pretty | *Sha* + *dan*: good-feeling-causing |
+| **sha'na'dan** | Ugly, Repulsive | *Sha* + *na'dan*: bad-feeling-causing |
+| **kor'dan** | Brave, Courageous, Fearless | *Kor* + *dan*: good strength |
+| **na'kor'dan** | Cowardly, Timid | *Na-* + *kor'dan*: not brave |
+| **dan'kal** | Sacred, Blessed, Holy | *Dan* + *kal*: soul-good |
+| **na'dan'kal** | Cursed, Unholy, Damned | *Na-* + *dan'kal*: not-holy |
+| **met'dan'le** | Healthy, Vigorous, Vital | *Met* + *dan* + *le*: very good health |
+| **met'kek** | Sick, Ill, Feeble | *Met* + *kek*: weakened health |
+| **tun'le'le** | Huge, Enormous, Colossal | *Tun'le* + *le*: greatly big |
+| **paca'paca** | Tiny, Microscopic, Minuscule | *Paca* doubled: very very small |
+| **cha'dan** | Clear, Obvious, Evident | *Cha* + *dan*: true light |
+| **kek'cha'le** | Gloomy, Sinister, Ominous | *Kek'cha* + *le*: very dark |
+| **nokia'le** | Eternal, Infinite, Immortal | *Nokia* + *le*: great time |
+| **ska'mel** | Raw, Uncooked, Unprocessed | *Ska* + *mel*: natural state |
+| **dan'lok'le** | Just, Fair, Righteous | *Dan'lok* + *le*: great law |
+| **sha'kor** | Stubborn, Tenacious, Unyielding | *Sha* + *kor*: hard state |
+| **sha'met** | Quiet, Calm, Gentle, Peaceful | *Sha* + *met*: flowing state |
+| **kal'sha'le** | Faithful, Loyal, Devoted | *Kal'sha* + *le*: great love |
+| **mel'le'le** | Blazing, Burning, Intense | *Mel'le* + *le*: extremely hot |
+| **met'kor'le** | Icy, Frosty, Frozen | *Met'kor* + *le*: very icy |
+| **kal'le** | Wise, Clever, Experienced | *Kal* + *le*: great soul |
+| **sha'tak** | Suspicious, Distrustful | *Sha* + *tak*: state of trick-suspicion |
+| **mel'nok** | Urgent, Pressing, Acute | *Mel* + *nok*: now-urgent |
+| **ska'sha'le** | Hopeful, Optimistic | *Ska'sha* + *le*: great hope |
+| **dan'sha'le** | Joyful, Cheerful, Merry | *Dan'sha* + *le*: great joy |
+
+---
+
+## Prepositions and Conjunctions
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **tal'pac** | Under, Below, Beneath | *Tal* + *pac*: below the surface |
+| **tal'cha** | Above, Over | *Tal* + *cha*: above the surface |
+| **lok'nok** | With, Together with | *Lok* + *nok*: now bonded |
+| **na'lok** | Without | *Na-* + *lok*: without bond |
+| **tok'nok** | Against | *Tok* + *nok*: now against |
+| **hol'pac** | Between, Among | *Hol* + *pac*: held in the middle |
+| **chappa'nok** | Through | *Chappa* + *nok*: through the gate |
+| **lok'mel** | And, Also | *Lok* + *mel*: connected in sequence |
+| **tok'mel** | Or, Either | *Tok* + *mel*: opposing sequence |
+| **sha'mel** | But, However, Yet | *Sha* + *mel*: state-turn |
+| **dan'mel** | Because, For, Since | *Dan* + *mel*: true sequence |
+| **mel'sha** | If, Should, Provided | *Mel* + *sha*: possible state |
+| **nokia'mel** | Before | *Nokia* + *mel*: before in sequence |
+| **mel'nok'sha** | After, Afterwards | *Mel'nok* + *sha*: later state |
+| **hol'lok** | Until | *Hol* + *lok*: stop-bond |
+| **pac'mel** | For, In favor of | *Pac* + *mel*: directed toward |
+
+---
+
+## Domestic and Daily Life
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **nona'mel'tal** | Hearth, Fireplace, Stove | *Nona* + *mel* + *tal*: home-fire-place |
+| **dormata'tal** | Bed, Sleeping place | *Dormata* + *tal*: sleeping place |
+| **met'ka'yaki** | Jug, Bottle, Vessel | *Met'ka* + *yaki*: water vessel |
+| **skanat'yaki** | Bowl, Plate, Dish | *Skanat* + *yaki*: food vessel |
+| **mel'yaki** | Kettle, Pot, Cauldron | *Mel* + *yaki*: fire vessel |
+| **lota'tal** | Chair, Seat, Stool | *Lota* + *tal*: sitting-object |
+| **kor'tal'dan** | Table, Work surface | *Kor'tal* + *dan*: firm surface |
+| **nona'chappa** | Front door, Main entrance | *Nona* + *chappa*: home-gate |
+| **sha'mel'yaki** | Candle, Oil lamp | *Sha* + *mel* + *yaki*: small fire vessel |
+| **met'ko'ryn** | Towel, Cloth, Rag | *Met* + *ko* + *ryn*: water hand material |
+| **cha'mel'yaki** | Lamp, Light fixture | *Cha* + *mel* + *yaki*: light-fire vessel |
+
+---
+
+## Expanded Emotions
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **sha'lok** | Longing, Yearning, Homesickness | *Sha* + *lok*: feeling of distant bond |
+| **onak'kek'sha** | Despair, Hopelessness | *Onak* + *kek'sha*: absolute fear |
+| **dan'sha'kal** | Gratitude, Appreciation | *Dan'sha* + *kal*: soul-joy |
+| **sha'tak'met** | Shame, Embarrassment | *Sha* + *tak* + *met*: feeling of exposure |
+| **sha'kal'mel** | Compassion, Empathy, Sympathy | *Sha* + *kal* + *mel*: soul-feeling toward others |
+| **mel'sha'kal** | Remorse, Regret | *Mel'sha* + *kal*: soul-grief |
+| **sha'mel'le** | Agony, Torment, Anguish | *Sha* + *mel* + *le*: great suffering-feeling |
+| **dan'sha'sha** | Ecstasy, Euphoria, Elation | *Dan'sha* + *sha* doubled: doubled joy |
+| **kal'tok'sha** | Jealousy, Envy | *Kal* + *tok* + *sha*: soul-against-feeling |
+| **sha'nok'le** | Surprise, Astonishment | *Sha* + *nok* + *le*: sudden great feeling |
+| **dan'lok'sha** | Duty, Honor, Sense of duty | *Dan'lok* + *sha*: law-feeling |
+| **sha'ska'mel** | Relief | *Sha* + *ska* + *mel*: life-turn feeling |
+
+---
+
+## Expanded Abstracts
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **kal'eetium** | Consciousness, Awareness | *Kal* + *eetium*: knowing soul-being |
+| **sha'meta'le** | Reason, Logic, Intellect | *Sha'meta* + *le*: great thinking |
+| **kal'hol** | Journey, Pilgrimage | *Kal* + *hol*: soul-journey |
+| **mel'kal'sha** | Sacrifice, Offering | *Mel* + *kal* + *sha*: ending of soul |
+| **dan'shak'le** | Glory, Fame, Renown | *Dan'shak* + *le*: great success |
+| **na'dan'shak'le** | Disgrace, Dishonor | *Na-* + *dan'shak'le*: not-glory |
+| **kal'dan** | Virtue, Goodness, Morality | *Kal* + *dan*: good soul |
+| **kal'tak** | Sin, Vice, Transgression | *Kal* + *tak*: dishonest soul |
+| **kal'nok** | Presence | *Kal* + *nok*: now-existing essence |
+| **na'kal'nok** | Absence, Void, Nothingness | *Na-* + *kal'nok*: non-presence |
+| **sha'hol'tal** | Peace, Ceasefire | *Sha* + *hol* + *tal*: state of world-stopping |
+| **mel'tok'sha** | War, Conflict, Enmity | *Mel* + *tok* + *sha*: fire-against-state |
+| **kal'sha'lok** | Trust, Confidence | *Kal'sha* + *lok*: loving bond |
+| **na'kal'sha'lok** | Distrust, Suspicion, Paranoia | *Na-* + *kal'sha'lok*: not-trust |
+| **nok'kal** | Identity, Self | *Nok* + *kal*: being-soul |
+| **sha'mel'kal** | Pain, Suffering | *Sha* + *mel* + *kal*: soul-ending-feeling |
+
+---
+
+## Communication and Language
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **meta'chappa** | Message, Dispatch | *Meta* + *chappa*: transmitted speech |
+| **meta'lok** | Conversation, Dialogue | *Meta* + *lok*: bonding speech |
+| **meta'hol** | Silence | *Meta* + *hol*: stopped speech |
+| **meta'ryn'chappa** | Translation, Interpreting | *Meta* + *ryn* + *chappa*: move speech through gate |
+| **meta'ryn'tar** | Translator, Interpreter | *Meta'ryn'chappa* + *tar*: person of translation |
+| **meta'kal'tar** | Scribe, Chronicler, Secretary | *Meta'kal* + *tar*: person of writing |
+| **meta'sha'le** | Speech, Address, Sermon | *Meta* + *sha* + *le*: great feeling-speech |
+| **meta'kal'sha** | Secret, Hidden knowledge | *Meta* + *kal* + *sha*: inner speech-essence |
+| **na'meta** | Mute, Speechless | *Na-* + *meta*: not-speaking |
+| **meta'tal** | Language, Tongue, Idiom | *Meta* + *tal*: speaking system |
+
+---
+
+## Extended Combat Terms
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **mel'shak'tar** | Warrior, Fighter, Soldier | *Mel'shak* + *tar*: person of attack |
+| **shak'tal** | Battle, Combat field | *Shak* + *tal*: battle-place |
+| **kor'shac'le'tar** | Swordmaster, Swordbearer | *Kor'shac'le* + *tar*: person of the sword |
+| **mel'shak'kal** | Strategy, Battle plan, Tactics | *Mel'shak* + *kal*: essence of attack |
+| **na'shak** | Truce, Armistice | *Na-* + *shak*: not-battle |
+| **shak'kor** | Stronghold, Bastion, Fortification | *Shak* + *kor*: firm battle-place |
+| **mel'sha'le** | Explosion, Detonation | *Mel* + *sha* + *le*: great fire-wave |
+| **kor'shel'le** | Siege, Encirclement | *Kor* + *shel* + *le*: great firm surrounding |
+| **kek'shak'le** | Massacre, Slaughter | *Kek'shak* + *le*: great deadly act |
+| **dan'shak'tar** | Hero, Champion, Victor | *Dan'shak* + *tar*: person of success |
+| **kor'mel'shak** | Artillery, Heavy weapons | *Kor* + *mel'shak*: heavy fire-attack |
+| **tok'hol'tar** | Refugee, Deserter | *Tok'hol* + *tar*: person of flight |
+| **shak'met** | Spoils, Plunder, Loot | *Shak* + *met*: battle-substance |
+| **lok'shak** | Military alliance, War pact | *Lok* + *shak*: battle-bond |
+
+---
+
+## Expanded Technology
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **delmac'chappa** | Router, Network node | *Delmac* + *chappa*: crystal connection gate |
+| **vo'cume'ryn** | Video, Recording | *Vo'cume* + *ryn*: moving image |
+| **sha'meta'delmac** | Software, Program | *Sha'meta* + *delmac*: thinking crystal system |
+| **kor'delmac** | Hardware, Device, Apparatus | *Kor* + *delmac*: solid crystal system |
+| **chappa'mel'le** | Internet, World network | *Chappa'mel* + *le*: great network |
+| **sha'meta'kor'tar** | Ai, Artificial intelligence | *Sha'meta* + *kor'tar*: thinking machine |
+| **mel'delmac** | Battery, Power cell | *Mel* + *delmac*: energy crystal |
+| **cha'mel'delmac** | Solar cell, Light energy | *Cha'mel* + *delmac*: sun crystal |
+| **meta'delmac** | Communicator, Radio | *Meta* + *delmac*: speaking crystal |
+| **delmac'kal'ryn** | Algorithm, Computational rule | *Delmac'kal* + *ryn*: data-path |
+| **shesh'chappa** | Digital trade, Transaction | *Shesh* + *chappa*: currency transfer |
+| **na'yu'yu'delmac** | Encryption, Cryptography | *Na'yu'yu* + *delmac*: concealed crystal data |
+| **delmac'shesh** | Computer virus, Malware | *Delmac* + *shesh*: crystal error |
+
+---
+
+## Maritime and Spacefaring (Expanded)
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **met'ka'hol'ryn** | Ship, Boat | *Met'ka* + *hol* + *ryn*: water-traveler |
+| **met'ka'hol'tar** | Sailor, Captain, Mariner | *Met'ka'hol'ryn* + *tar*: person of the ship |
+| **met'ka'shak** | Naval battle, Sea battle | *Met'ka* + *shak*: water-battle |
+| **cha'hol'ryn'le** | Spaceship, Star cruiser | *Cha* + *hol'ryn* + *le*: great star-journey |
+| **cha'pac'ryn** | Shuttle, Landing craft | *Cha* + *pac* + *ryn*: downward from space |
+| **chappa'ai'ryn** | Wormhole, Hyperspace | *Chappa'ai* + *ryn*: Stargate motion-space |
+| **cha'shak'tal** | Space battle, Star battle | *Cha* + *shak* + *tal*: star-battle |
+| **peltac'kal** | Navigation, Course calculation | *Peltac* + *kal*: essence of the bridge |
+
+---
+
+## Religion and Ritual (Expanded)
+
+| Goa'uld | Meaning | Notes |
+|---------|---------|-------|
+| **onak'meta'tar** | Priest, High priest | *Onak* + *meta* + *tar*: speaks for god |
+| **onak'sha'kal** | Prayer, Devotion, Invocation | *Onak* + *sha* + *kal*: soul-feeling for god |
+| **onak'mel'kal** | Prophecy, Oracle | *Onak* + *mel* + *kal*: divine future-essence |
+| **dan'kal'tal** | Altar, Sacrificial place | *Dan'kal* + *tal*: holy place |
+| **onak'sha'ryn** | Ritual, Ceremony, Rite | *Onak* + *sha* + *ryn*: divine state-action |
+| **onak'mel'tar** | Prophet, Seer | *Onak'mel'kal* + *tar*: person of prophecy |
+| **kal'mel'nok** | Resurrection, Rebirth | *Kal* + *mel* + *nok*: soul now again |
+| **dan'kal'sha'ryn** | Blessing, Benediction | *Dan'kal* + *sha* + *ryn*: holy feeling-action |
+| **na'dan'kal'sha** | Curse, Malediction | *Na-* + *dan'kal'sha*: not-blessing |
+| **kal'kek'sha** | Afterlife, Underworld | *Kal* + *kek* + *sha*: soul death-state |
+
+
+---
+
 ## English → Goa'uld: Direct lookup
 
 This table is loaded by the translator application for EN→Goa'uld mode.
@@ -524,3 +1030,753 @@ This table is loaded by the translator application for EN→Goa'uld mode.
 | dream | kal'sha'tal | Abstract |
 | destiny | hol'kal'tal | Abstract |
 | fate | hol'kal'tal | Abstract |
+| ruler | onak'tar | Governance |
+| sovereign | onak'tar | Governance |
+| throne | onak'mel | Governance |
+| seat of power | onak'mel | Governance |
+| law | dan'lok | Governance |
+| rule | dan'lok | Governance |
+| judge | dan'lok'tar | Governance |
+| lawgiver | dan'lok'tar | Governance |
+| crime | tok'dan'lok | Governance |
+| lawbreaking | tok'dan'lok | Governance |
+| criminal | tok'dan'lok'tar | Governance |
+| outlaw | tok'dan'lok'tar | Governance |
+| prison | kor'mak'tal | Governance |
+| dungeon | kor'mak'tal | Governance |
+| oath | shel'dan | Governance |
+| vow | shel'dan | Governance |
+| court | onak'dan'lok | Governance |
+| tribunal | onak'dan'lok | Governance |
+| injustice | na'dan'lok | Governance |
+| wrong | na'dan'lok | Governance |
+| ambassador | mak'shel'tar | Governance |
+| envoy | mak'shel'tar | Governance |
+| council | onak'lok | Governance |
+| assembly | onak'lok | Governance |
+| justice | dan'lok'kal | Governance |
+| guardian | shel'tar | Governance |
+| protector | shel'tar | Governance |
+| uprising | tok'onak | Governance |
+| rebellion | tok'onak | Governance |
+| decree | kree'dan'lok | Governance |
+| edict | kree'dan'lok | Governance |
+| tax | shesh'dan'lok | Governance |
+| tribute | shesh'dan'lok | Governance |
+| oppression | na'nem'ron | Governance |
+| tyranny | na'nem'ron | Governance |
+| healing | met'dan | Medicine |
+| recovery | met'dan | Medicine |
+| healer | met'dan'tar | Medicine |
+| physician | met'dan'tar | Medicine |
+| illness | met'sha | Medicine |
+| disease | met'sha | Medicine |
+| sickness | met'sha | Medicine |
+| poison | na'met | Medicine |
+| toxin | na'met | Medicine |
+| medicine | met'kal | Medicine |
+| remedy | met'kal | Medicine |
+| wound | met'ryn'dan | Medicine |
+| injury | met'ryn'dan | Medicine |
+| bleeding | kal'met'ryn | Medicine |
+| healing herb | ska'met'kal | Medicine |
+| herbal remedy | ska'met'kal | Medicine |
+| plague | kek'met | Medicine |
+| pestilence | kek'met | Medicine |
+| epidemic | kek'met | Medicine |
+| fracture | met'kor'tal | Medicine |
+| bone break | met'kor'tal | Medicine |
+| hospital | met'dan'tal | Medicine |
+| infirmary | met'dan'tal | Medicine |
+| suffocation | ren'na'ryn | Medicine |
+| asphyxiation | ren'na'ryn | Medicine |
+| unconsciousness | sha'met'na | Medicine |
+| faint | sha'met'na | Medicine |
+| birth | met'ska'ryn | Medicine |
+| childbirth | met'ska'ryn | Medicine |
+| wall | kor'dan'tal | Architecture |
+| rampart | kor'dan'tal | Architecture |
+| door | chappa'tal | Architecture |
+| entrance | chappa'tal | Architecture |
+| fortress | kor'tal'tal | Architecture |
+| citadel | kor'tal'tal | Architecture |
+| temple | onak'tal | Architecture |
+| sanctuary | onak'tal | Architecture |
+| builder | dan'ryn'tar | Architecture |
+| architect | dan'ryn'tar | Architecture |
+| foundation | kor'pac | Architecture |
+| cornerstone | kor'pac | Architecture |
+| window | cha'chappa | Architecture |
+| palace | nona'tal'le | Architecture |
+| bridge | kor'ryn'tal | Architecture |
+| stairs | kor'tal'pac | Architecture |
+| steps | kor'tal'pac | Architecture |
+| tower | pac'tal'le | Architecture |
+| house | nona'kor | Architecture |
+| building | nona'kor | Architecture |
+| forge | mel'kor'tal | Architecture |
+| smithy | mel'kor'tal | Architecture |
+| food | skanat'kal | Food |
+| meal | skanat'kal | Food |
+| nourishment | skanat'kal | Food |
+| drinking water | met'ka'dan | Food |
+| beverage | met'ka'dan | Food |
+| fruit | ska'met'ryn | Food |
+| vegetable | ska'pac'kal | Food |
+| root vegetable | ska'pac'kal | Food |
+| cooked meat | tar'met'mel | Food |
+| roast | tar'met'mel | Food |
+| to cook | mel'ska | Food |
+| to prepare food | mel'ska | Food |
+| soup | met'ka'mel | Food |
+| stew | met'ka'mel | Food |
+| broth | met'ka'mel | Food |
+| bread | ska'kor'mel | Food |
+| wine | met'ka'ska | Food |
+| alcohol | met'ka'ska | Food |
+| hunger | sha'skanat | Food |
+| thirst | sha'met'ka | Food |
+| cook | mel'ska'tar | Food |
+| baker | mel'ska'tar | Food |
+| salt | pac'mel'kal | Food |
+| spice | pac'mel'kal | Food |
+| honey | ska'ra'kal | Food |
+| sweetener | ska'ra'kal | Food |
+| armor | tar'shel | Clothing |
+| chainmail | tar'kor'shel | Clothing |
+| plate armor | tar'kor'shel | Clothing |
+| helmet | fron'shel | Clothing |
+| glove | ko'shel | Clothing |
+| gauntlet | ko'shel | Clothing |
+| boot | hol'shel | Clothing |
+| shoe | hol'shel | Clothing |
+| robe | tar'ryn'met | Clothing |
+| garment | tar'ryn'met | Clothing |
+| dress | tar'ryn'met | Clothing |
+| ceremonial robe | onak'ryn'met | Clothing |
+| vestment | onak'ryn'met | Clothing |
+| crown | ra'kor'lok | Clothing |
+| diadem | ra'kor'lok | Clothing |
+| belt | tar'met'ryn | Clothing |
+| sash | tar'met'ryn | Clothing |
+| cloak | kek'vol'ryn'met | Clothing |
+| camouflage cloak | kek'vol'ryn'met | Clothing |
+| cape | cha'ryn'met | Clothing |
+| mantle | cha'ryn'met | Clothing |
+| tool | kor'ko | Tools |
+| instrument | kor'ko | Tools |
+| blade | kor'shac | Tools |
+| knife | kor'shac | Tools |
+| dagger | kor'shac | Tools |
+| sword | kor'shac'le | Tools |
+| shield | kor'tok'le | Tools |
+| hammer | mel'kor'ko | Tools |
+| rope | lok'ryn | Tools |
+| chain | lok'ryn | Tools |
+| telescope | yu'yu'le | Tools |
+| spyglass | yu'yu'le | Tools |
+| torch | cha'mel'ko | Tools |
+| lantern | cha'mel'ko | Tools |
+| arrow | pac'ryn'ko | Tools |
+| bow | pac'ryn'tal | Tools |
+| crossbow | pac'ryn'tal | Tools |
+| axe | kor'shac'pac | Tools |
+| hatchet | kor'shac'pac | Tools |
+| key | lok'kor | Tools |
+| music | sha'meta'ryn | Music |
+| song | sha'meta'ryn | Music |
+| singer | sha'meta'tar | Music |
+| bard | sha'meta'tar | Music |
+| musician | sha'meta'tar | Music |
+| painting | vo'cume'sha | Music |
+| picture | vo'cume'sha | Music |
+| artwork | vo'cume'sha | Music |
+| artist | vo'cume'sha'tar | Music |
+| painter | vo'cume'sha'tar | Music |
+| drum | kor'sha'ryn | Music |
+| percussion | kor'sha'ryn | Music |
+| flute | ryn'sha'met | Music |
+| wind instrument | ryn'sha'met | Music |
+| poetry | sha'meta'kal | Music |
+| poem | sha'meta'kal | Music |
+| dance | dan'sha'ryn | Music |
+| dancer | dan'sha'ryn'tar | Music |
+| bell | kor'sha'kal | Music |
+| school | eetium'tal | Education |
+| academy | eetium'tal | Education |
+| wisdom | eetium'kal | Education |
+| insight | eetium'kal | Education |
+| library | delmac'kal'tal | Education |
+| knowledge archive | delmac'kal'tal | Education |
+| writing | meta'kal | Education |
+| script | meta'kal | Education |
+| book | meta'kal'tal | Education |
+| document | meta'kal'tal | Education |
+| scroll | meta'kal'tal | Education |
+| lesson | bashaak'kal | Education |
+| instruction | bashaak'kal | Education |
+| philosophy | sha'meta'kal | Education |
+| worldview | sha'meta'kal | Education |
+| memory | nokia'eetium | Education |
+| chronicle | nokia'eetium | Education |
+| thinker | sha'meta'tar | Education |
+| scholar | sha'meta'tar | Education |
+| philosopher | sha'meta'tar | Education |
+| student | bashaak'kal'ma | Education |
+| apprentice | bashaak'kal'ma | Education |
+| pupil | bashaak'kal'ma | Education |
+| field | ska'pac'tal | Agriculture |
+| farmland | ska'pac'tal | Agriculture |
+| farmer | ska'pac'tar | Agriculture |
+| peasant | ska'pac'tar | Agriculture |
+| harvest | ska'ryn'kal | Agriculture |
+| crop | ska'ryn'kal | Agriculture |
+| yield | ska'ryn'kal | Agriculture |
+| forest | ska'met'le | Agriculture |
+| woods | ska'met'le | Agriculture |
+| grove | ska'met'le | Agriculture |
+| flower | ska'ryn'mel | Agriculture |
+| blossom | ska'ryn'mel | Agriculture |
+| grass | ska'tal'ryn | Agriculture |
+| lawn | ska'tal'ryn | Agriculture |
+| vine | ska'lok'ryn | Agriculture |
+| tendril | ska'lok'ryn | Agriculture |
+| mushroom | ska'kor'met | Agriculture |
+| fungus | ska'kor'met | Agriculture |
+| to plow | ska'pac'mel | Agriculture |
+| to cultivate | ska'pac'mel | Agriculture |
+| juice | ska'met'ka | Agriculture |
+| nectar | ska'met'ka | Agriculture |
+| sap | ska'met'ka | Agriculture |
+| to wilt | ska'kek | Agriculture |
+| to wither | ska'kek | Agriculture |
+| predator | unas'kor | Expanded Animals |
+| beast | unas'kor | Expanded Animals |
+| insect | unas'paca | Expanded Animals |
+| bug | unas'paca | Expanded Animals |
+| vermin | unas'paca | Expanded Animals |
+| livestock | unas'ska | Expanded Animals |
+| cattle | unas'ska | Expanded Animals |
+| dog | unas'kal | Expanded Animals |
+| loyal companion | unas'kal | Expanded Animals |
+| snake | unas'tak | Expanded Animals |
+| serpent | unas'tak | Expanded Animals |
+| dragon | unas'kor'le | Expanded Animals |
+| great predator | unas'kor'le | Expanded Animals |
+| frog | unas'met | Expanded Animals |
+| amphibian | unas'met | Expanded Animals |
+| eagle | unas'pac'ryn | Expanded Animals |
+| raptor | unas'pac'ryn | Expanded Animals |
+| spider | unas'lok'ryn | Expanded Animals |
+| weaver | unas'lok'ryn | Expanded Animals |
+| wolf | unas'kek'sha | Expanded Animals |
+| night-hunter | unas'kek'sha | Expanded Animals |
+| river | met'ka'ryn | Geography |
+| stream | met'ka'ryn | Geography |
+| lake | met'ka'hol | Geography |
+| pond | met'ka'hol | Geography |
+| desert | pac'tal'mel | Geography |
+| wasteland | pac'tal'mel | Geography |
+| glacier | met'kor'tal | Geography |
+| ice field | met'kor'tal | Geography |
+| swamp | pac'tal'ska | Geography |
+| marsh | pac'tal'ska | Geography |
+| bog | pac'tal'ska | Geography |
+| jungle | ska'tal'le | Geography |
+| rainforest | ska'tal'le | Geography |
+| cave | kor'tal'ryn | Geography |
+| cavern | kor'tal'ryn | Geography |
+| grotto | kor'tal'ryn | Geography |
+| valley | pac'tal'hol | Geography |
+| gorge | pac'tal'hol | Geography |
+| ravine | pac'tal'hol | Geography |
+| waterfall | met'ka'pac | Geography |
+| cascade | met'ka'pac | Geography |
+| sky | cha'tal'le | Geography |
+| firmament | cha'tal'le | Geography |
+| volcano | pac'kor'le | Geography |
+| deep ocean | hol'met'le | Geography |
+| abyss | hol'met'le | Geography |
+| spring | chappa'met'ryn | Geography |
+| well | chappa'met'ryn | Geography |
+| fountain | chappa'met'ryn | Geography |
+| horizon | cha'mel'pac | Geography |
+| cliff | pac'tal'kor | Geography |
+| precipice | pac'tal'kor | Geography |
+| crag | pac'tal'kor | Geography |
+| six | wata'noka | Mathematics |
+| seven | noka'noka | Mathematics |
+| eight | reka'noka | Mathematics |
+| nine | pak'noka | Mathematics |
+| ten | noka'shem | Mathematics |
+| twenty-five | shem'shem | Mathematics |
+| science | sha'meta'eetium | Mathematics |
+| research | sha'meta'eetium | Mathematics |
+| astronomy | cha'eetium | Mathematics |
+| star-lore | cha'eetium | Mathematics |
+| chemistry | met'eetium | Mathematics |
+| material science | met'eetium | Mathematics |
+| biology | ska'eetium | Mathematics |
+| life science | ska'eetium | Mathematics |
+| geology | kor'tal'eetium | Mathematics |
+| earth science | kor'tal'eetium | Mathematics |
+| calculation | wata'sha'meta | Mathematics |
+| computation | wata'sha'meta | Mathematics |
+| orbit | cha'hol'ryn | Mathematics |
+| physics | naquadah'eetium | Mathematics |
+| energy science | naquadah'eetium | Mathematics |
+| to forget | kal'ryn'sha | Expanded Verbs |
+| forget | kal'ryn'sha | Expanded Verbs |
+| to argue | tok'meta | Expanded Verbs |
+| to protest | tok'meta | Expanded Verbs |
+| argue | tok'meta | Expanded Verbs |
+| to promise | lok'meta | Expanded Verbs |
+| to vow | lok'meta | Expanded Verbs |
+| promise | lok'meta | Expanded Verbs |
+| to defend | kor'hol'le | Expanded Verbs |
+| to guard | kor'hol'le | Expanded Verbs |
+| defend | kor'hol'le | Expanded Verbs |
+| to fight | mel'shak'ryn | Expanded Verbs |
+| to battle | mel'shak'ryn | Expanded Verbs |
+| fight | mel'shak'ryn | Expanded Verbs |
+| to understand | sha'meta'lok | Expanded Verbs |
+| understand | sha'meta'lok | Expanded Verbs |
+| to drink | met'ryn'hol | Expanded Verbs |
+| drink | met'ryn'hol | Expanded Verbs |
+| to eat | skanat'ryn | Expanded Verbs |
+| eat | skanat'ryn | Expanded Verbs |
+| to sense | sha'kal | Expanded Verbs |
+| to perceive | sha'kal | Expanded Verbs |
+| sense | sha'kal | Expanded Verbs |
+| to incinerate | kek'mel'ryn | Expanded Verbs |
+| to raze | kek'mel'ryn | Expanded Verbs |
+| raze | kek'mel'ryn | Expanded Verbs |
+| to construct | dan'ryn'le | Expanded Verbs |
+| to erect | dan'ryn'le | Expanded Verbs |
+| construct | dan'ryn'le | Expanded Verbs |
+| to open | chappa'ryn | Expanded Verbs |
+| to unlock | chappa'ryn | Expanded Verbs |
+| open | chappa'ryn | Expanded Verbs |
+| to close | na'chappa'ryn | Expanded Verbs |
+| to lock | na'chappa'ryn | Expanded Verbs |
+| close | na'chappa'ryn | Expanded Verbs |
+| to flee | tok'hol | Expanded Verbs |
+| to escape | tok'hol | Expanded Verbs |
+| flee | tok'hol | Expanded Verbs |
+| to meditate | kal'sha'meta | Expanded Verbs |
+| to contemplate | kal'sha'meta | Expanded Verbs |
+| meditate | kal'sha'meta | Expanded Verbs |
+| to wash | ko'ryn'met | Expanded Verbs |
+| to cleanse | ko'ryn'met | Expanded Verbs |
+| wash | ko'ryn'met | Expanded Verbs |
+| to release | na'lok'ryn | Expanded Verbs |
+| to untie | na'lok'ryn | Expanded Verbs |
+| release | na'lok'ryn | Expanded Verbs |
+| to search | yu'yu'ryn | Expanded Verbs |
+| to explore | yu'yu'ryn | Expanded Verbs |
+| search | yu'yu'ryn | Expanded Verbs |
+| to heal | met'hol | Expanded Verbs |
+| to cure | met'hol | Expanded Verbs |
+| heal | met'hol | Expanded Verbs |
+| to whisper | sha'ren | Expanded Verbs |
+| whisper | sha'ren | Expanded Verbs |
+| to shout | meta'le | Expanded Verbs |
+| to yell | meta'le | Expanded Verbs |
+| shout | meta'le | Expanded Verbs |
+| to sacrifice | kal'ko | Expanded Verbs |
+| to offer | kal'ko | Expanded Verbs |
+| sacrifice | kal'ko | Expanded Verbs |
+| to plan | sha'meta'dan | Expanded Verbs |
+| to strategize | sha'meta'dan | Expanded Verbs |
+| plan | sha'meta'dan | Expanded Verbs |
+| to ignore | na'eetium | Expanded Verbs |
+| to misunderstand | na'eetium | Expanded Verbs |
+| ignore | na'eetium | Expanded Verbs |
+| to lie | tak'meta | Expanded Verbs |
+| to cheat | tak'meta | Expanded Verbs |
+| to deceive | tak'meta | Expanded Verbs |
+| to shine | cha'ryn | Expanded Verbs |
+| to glow | cha'ryn | Expanded Verbs |
+| shine | cha'ryn | Expanded Verbs |
+| to run | mel'ryn | Expanded Verbs |
+| to sprint | mel'ryn | Expanded Verbs |
+| run | mel'ryn | Expanded Verbs |
+| to cut | kor'shac'ryn | Expanded Verbs |
+| to slice | kor'shac'ryn | Expanded Verbs |
+| cut | kor'shac'ryn | Expanded Verbs |
+| to wait | hol'sha | Expanded Verbs |
+| to be patient | hol'sha | Expanded Verbs |
+| wait | hol'sha | Expanded Verbs |
+| to explode | mel'cha'ryn | Expanded Verbs |
+| to detonate | mel'cha'ryn | Expanded Verbs |
+| explode | mel'cha'ryn | Expanded Verbs |
+| to pray | onak'meta | Expanded Verbs |
+| to invoke | onak'meta | Expanded Verbs |
+| pray | onak'meta | Expanded Verbs |
+| to love | lok'sha | Expanded Verbs |
+| to cherish | lok'sha | Expanded Verbs |
+| love | lok'sha | Expanded Verbs |
+| to hate | tok'sha'ryn | Expanded Verbs |
+| to despise | tok'sha'ryn | Expanded Verbs |
+| hate | tok'sha'ryn | Expanded Verbs |
+| to dream | sha'dormata | Expanded Verbs |
+| dream | sha'dormata | Expanded Verbs |
+| to live | met'ska | Expanded Verbs |
+| to breathe | met'ska | Expanded Verbs |
+| live | met'ska | Expanded Verbs |
+| to awaken | cha'nok'ryn | Expanded Verbs |
+| to wake up | cha'nok'ryn | Expanded Verbs |
+| awaken | cha'nok'ryn | Expanded Verbs |
+| to rest | sha'hol | Expanded Verbs |
+| to pause | sha'hol | Expanded Verbs |
+| rest | sha'hol | Expanded Verbs |
+| to carry | ko'met | Expanded Verbs |
+| to hold | ko'met | Expanded Verbs |
+| carry | ko'met | Expanded Verbs |
+| to throw | pac'ko | Expanded Verbs |
+| to hurl | pac'ko | Expanded Verbs |
+| throw | pac'ko | Expanded Verbs |
+| to steal | sha'ko | Expanded Verbs |
+| to rob | sha'ko | Expanded Verbs |
+| steal | sha'ko | Expanded Verbs |
+| to teach | dan'meta | Expanded Verbs |
+| to instruct | dan'meta | Expanded Verbs |
+| teach | dan'meta | Expanded Verbs |
+| to finish | sha'meta'mel | Expanded Verbs |
+| to complete | sha'meta'mel | Expanded Verbs |
+| finish | sha'meta'mel | Expanded Verbs |
+| to inherit | kal'lok | Expanded Verbs |
+| to pass on | kal'lok | Expanded Verbs |
+| inherit | kal'lok | Expanded Verbs |
+| to hide | na'yu'yu | Expanded Verbs |
+| to conceal | na'yu'yu | Expanded Verbs |
+| hide | na'yu'yu | Expanded Verbs |
+| fast | mel'ryn'le | Expanded Adjectives |
+| quick | mel'ryn'le | Expanded Adjectives |
+| swift | mel'ryn'le | Expanded Adjectives |
+| slow | hol'ryn'paca | Expanded Adjectives |
+| sluggish | hol'ryn'paca | Expanded Adjectives |
+| noble | dan'le | Expanded Adjectives |
+| honorable | dan'le | Expanded Adjectives |
+| worthy | dan'le | Expanded Adjectives |
+| wicked | tak'le | Expanded Adjectives |
+| malicious | tak'le | Expanded Adjectives |
+| vile | tak'le | Expanded Adjectives |
+| beautiful | sha'dan | Expanded Adjectives |
+| graceful | sha'dan | Expanded Adjectives |
+| pretty | sha'dan | Expanded Adjectives |
+| ugly | sha'na'dan | Expanded Adjectives |
+| repulsive | sha'na'dan | Expanded Adjectives |
+| brave | kor'dan | Expanded Adjectives |
+| courageous | kor'dan | Expanded Adjectives |
+| fearless | kor'dan | Expanded Adjectives |
+| cowardly | na'kor'dan | Expanded Adjectives |
+| timid | na'kor'dan | Expanded Adjectives |
+| sacred | dan'kal | Expanded Adjectives |
+| blessed | dan'kal | Expanded Adjectives |
+| holy | dan'kal | Expanded Adjectives |
+| cursed | na'dan'kal | Expanded Adjectives |
+| unholy | na'dan'kal | Expanded Adjectives |
+| damned | na'dan'kal | Expanded Adjectives |
+| healthy | met'dan'le | Expanded Adjectives |
+| vigorous | met'dan'le | Expanded Adjectives |
+| vital | met'dan'le | Expanded Adjectives |
+| sick | met'kek | Expanded Adjectives |
+| ill | met'kek | Expanded Adjectives |
+| feeble | met'kek | Expanded Adjectives |
+| huge | tun'le'le | Expanded Adjectives |
+| enormous | tun'le'le | Expanded Adjectives |
+| colossal | tun'le'le | Expanded Adjectives |
+| tiny | paca'paca | Expanded Adjectives |
+| microscopic | paca'paca | Expanded Adjectives |
+| minuscule | paca'paca | Expanded Adjectives |
+| clear | cha'dan | Expanded Adjectives |
+| obvious | cha'dan | Expanded Adjectives |
+| evident | cha'dan | Expanded Adjectives |
+| gloomy | kek'cha'le | Expanded Adjectives |
+| sinister | kek'cha'le | Expanded Adjectives |
+| ominous | kek'cha'le | Expanded Adjectives |
+| eternal | nokia'le | Expanded Adjectives |
+| infinite | nokia'le | Expanded Adjectives |
+| immortal | nokia'le | Expanded Adjectives |
+| raw | ska'mel | Expanded Adjectives |
+| uncooked | ska'mel | Expanded Adjectives |
+| unprocessed | ska'mel | Expanded Adjectives |
+| just | dan'lok'le | Expanded Adjectives |
+| fair | dan'lok'le | Expanded Adjectives |
+| righteous | dan'lok'le | Expanded Adjectives |
+| stubborn | sha'kor | Expanded Adjectives |
+| tenacious | sha'kor | Expanded Adjectives |
+| unyielding | sha'kor | Expanded Adjectives |
+| quiet | sha'met | Expanded Adjectives |
+| calm | sha'met | Expanded Adjectives |
+| gentle | sha'met | Expanded Adjectives |
+| peaceful | sha'met | Expanded Adjectives |
+| faithful | kal'sha'le | Expanded Adjectives |
+| loyal | kal'sha'le | Expanded Adjectives |
+| devoted | kal'sha'le | Expanded Adjectives |
+| blazing | mel'le'le | Expanded Adjectives |
+| burning | mel'le'le | Expanded Adjectives |
+| intense | mel'le'le | Expanded Adjectives |
+| icy | met'kor'le | Expanded Adjectives |
+| frosty | met'kor'le | Expanded Adjectives |
+| frozen | met'kor'le | Expanded Adjectives |
+| wise | kal'le | Expanded Adjectives |
+| clever | kal'le | Expanded Adjectives |
+| experienced | kal'le | Expanded Adjectives |
+| suspicious | sha'tak | Expanded Adjectives |
+| distrustful | sha'tak | Expanded Adjectives |
+| urgent | mel'nok | Expanded Adjectives |
+| pressing | mel'nok | Expanded Adjectives |
+| acute | mel'nok | Expanded Adjectives |
+| hopeful | ska'sha'le | Expanded Adjectives |
+| optimistic | ska'sha'le | Expanded Adjectives |
+| joyful | dan'sha'le | Expanded Adjectives |
+| cheerful | dan'sha'le | Expanded Adjectives |
+| merry | dan'sha'le | Expanded Adjectives |
+| under | tal'pac | Prepositions |
+| below | tal'pac | Prepositions |
+| beneath | tal'pac | Prepositions |
+| above | tal'cha | Prepositions |
+| over | tal'cha | Prepositions |
+| with | lok'nok | Prepositions |
+| together with | lok'nok | Prepositions |
+| without | na'lok | Prepositions |
+| against | tok'nok | Prepositions |
+| between | hol'pac | Prepositions |
+| among | hol'pac | Prepositions |
+| through | chappa'nok | Prepositions |
+| and | lok'mel | Prepositions |
+| also | lok'mel | Prepositions |
+| or | tok'mel | Prepositions |
+| either | tok'mel | Prepositions |
+| but | sha'mel | Prepositions |
+| however | sha'mel | Prepositions |
+| yet | sha'mel | Prepositions |
+| because | dan'mel | Prepositions |
+| for | dan'mel | Prepositions |
+| since | dan'mel | Prepositions |
+| if | mel'sha | Prepositions |
+| should | mel'sha | Prepositions |
+| provided | mel'sha | Prepositions |
+| before | nokia'mel | Prepositions |
+| after | mel'nok'sha | Prepositions |
+| afterwards | mel'nok'sha | Prepositions |
+| until | hol'lok | Prepositions |
+| for | pac'mel | Prepositions |
+| in favor of | pac'mel | Prepositions |
+| hearth | nona'mel'tal | Domestic |
+| fireplace | nona'mel'tal | Domestic |
+| stove | nona'mel'tal | Domestic |
+| bed | dormata'tal | Domestic |
+| sleeping place | dormata'tal | Domestic |
+| jug | met'ka'yaki | Domestic |
+| bottle | met'ka'yaki | Domestic |
+| vessel | met'ka'yaki | Domestic |
+| bowl | skanat'yaki | Domestic |
+| plate | skanat'yaki | Domestic |
+| dish | skanat'yaki | Domestic |
+| kettle | mel'yaki | Domestic |
+| pot | mel'yaki | Domestic |
+| cauldron | mel'yaki | Domestic |
+| chair | lota'tal | Domestic |
+| seat | lota'tal | Domestic |
+| stool | lota'tal | Domestic |
+| table | kor'tal'dan | Domestic |
+| work surface | kor'tal'dan | Domestic |
+| front door | nona'chappa | Domestic |
+| main entrance | nona'chappa | Domestic |
+| candle | sha'mel'yaki | Domestic |
+| oil lamp | sha'mel'yaki | Domestic |
+| towel | met'ko'ryn | Domestic |
+| cloth | met'ko'ryn | Domestic |
+| rag | met'ko'ryn | Domestic |
+| lamp | cha'mel'yaki | Domestic |
+| light fixture | cha'mel'yaki | Domestic |
+| longing | sha'lok | Expanded Emotions |
+| yearning | sha'lok | Expanded Emotions |
+| homesickness | sha'lok | Expanded Emotions |
+| despair | onak'kek'sha | Expanded Emotions |
+| hopelessness | onak'kek'sha | Expanded Emotions |
+| gratitude | dan'sha'kal | Expanded Emotions |
+| appreciation | dan'sha'kal | Expanded Emotions |
+| shame | sha'tak'met | Expanded Emotions |
+| embarrassment | sha'tak'met | Expanded Emotions |
+| compassion | sha'kal'mel | Expanded Emotions |
+| empathy | sha'kal'mel | Expanded Emotions |
+| sympathy | sha'kal'mel | Expanded Emotions |
+| remorse | mel'sha'kal | Expanded Emotions |
+| regret | mel'sha'kal | Expanded Emotions |
+| agony | sha'mel'le | Expanded Emotions |
+| torment | sha'mel'le | Expanded Emotions |
+| anguish | sha'mel'le | Expanded Emotions |
+| ecstasy | dan'sha'sha | Expanded Emotions |
+| euphoria | dan'sha'sha | Expanded Emotions |
+| elation | dan'sha'sha | Expanded Emotions |
+| jealousy | kal'tok'sha | Expanded Emotions |
+| envy | kal'tok'sha | Expanded Emotions |
+| surprise | sha'nok'le | Expanded Emotions |
+| astonishment | sha'nok'le | Expanded Emotions |
+| duty | dan'lok'sha | Expanded Emotions |
+| honor | dan'lok'sha | Expanded Emotions |
+| sense of duty | dan'lok'sha | Expanded Emotions |
+| relief | sha'ska'mel | Expanded Emotions |
+| consciousness | kal'eetium | Expanded Abstracts |
+| awareness | kal'eetium | Expanded Abstracts |
+| reason | sha'meta'le | Expanded Abstracts |
+| logic | sha'meta'le | Expanded Abstracts |
+| intellect | sha'meta'le | Expanded Abstracts |
+| journey | kal'hol | Expanded Abstracts |
+| pilgrimage | kal'hol | Expanded Abstracts |
+| sacrifice | mel'kal'sha | Expanded Abstracts |
+| offering | mel'kal'sha | Expanded Abstracts |
+| glory | dan'shak'le | Expanded Abstracts |
+| fame | dan'shak'le | Expanded Abstracts |
+| renown | dan'shak'le | Expanded Abstracts |
+| disgrace | na'dan'shak'le | Expanded Abstracts |
+| dishonor | na'dan'shak'le | Expanded Abstracts |
+| virtue | kal'dan | Expanded Abstracts |
+| goodness | kal'dan | Expanded Abstracts |
+| morality | kal'dan | Expanded Abstracts |
+| sin | kal'tak | Expanded Abstracts |
+| vice | kal'tak | Expanded Abstracts |
+| transgression | kal'tak | Expanded Abstracts |
+| presence | kal'nok | Expanded Abstracts |
+| absence | na'kal'nok | Expanded Abstracts |
+| void | na'kal'nok | Expanded Abstracts |
+| nothingness | na'kal'nok | Expanded Abstracts |
+| peace | sha'hol'tal | Expanded Abstracts |
+| ceasefire | sha'hol'tal | Expanded Abstracts |
+| war | mel'tok'sha | Expanded Abstracts |
+| conflict | mel'tok'sha | Expanded Abstracts |
+| enmity | mel'tok'sha | Expanded Abstracts |
+| trust | kal'sha'lok | Expanded Abstracts |
+| confidence | kal'sha'lok | Expanded Abstracts |
+| distrust | na'kal'sha'lok | Expanded Abstracts |
+| suspicion | na'kal'sha'lok | Expanded Abstracts |
+| paranoia | na'kal'sha'lok | Expanded Abstracts |
+| identity | nok'kal | Expanded Abstracts |
+| self | nok'kal | Expanded Abstracts |
+| pain | sha'mel'kal | Expanded Abstracts |
+| suffering | sha'mel'kal | Expanded Abstracts |
+| message | meta'chappa | Communication |
+| dispatch | meta'chappa | Communication |
+| conversation | meta'lok | Communication |
+| dialogue | meta'lok | Communication |
+| silence | meta'hol | Communication |
+| translation | meta'ryn'chappa | Communication |
+| interpreting | meta'ryn'chappa | Communication |
+| translator | meta'ryn'tar | Communication |
+| interpreter | meta'ryn'tar | Communication |
+| scribe | meta'kal'tar | Communication |
+| chronicler | meta'kal'tar | Communication |
+| secretary | meta'kal'tar | Communication |
+| speech | meta'sha'le | Communication |
+| address | meta'sha'le | Communication |
+| sermon | meta'sha'le | Communication |
+| secret | meta'kal'sha | Communication |
+| hidden knowledge | meta'kal'sha | Communication |
+| mute | na'meta | Communication |
+| speechless | na'meta | Communication |
+| language | meta'tal | Communication |
+| tongue | meta'tal | Communication |
+| idiom | meta'tal | Communication |
+| warrior | mel'shak'tar | Extended Combat Terms |
+| fighter | mel'shak'tar | Extended Combat Terms |
+| soldier | mel'shak'tar | Extended Combat Terms |
+| battle | shak'tal | Extended Combat Terms |
+| combat field | shak'tal | Extended Combat Terms |
+| swordmaster | kor'shac'le'tar | Extended Combat Terms |
+| swordbearer | kor'shac'le'tar | Extended Combat Terms |
+| strategy | mel'shak'kal | Extended Combat Terms |
+| battle plan | mel'shak'kal | Extended Combat Terms |
+| tactics | mel'shak'kal | Extended Combat Terms |
+| truce | na'shak | Extended Combat Terms |
+| armistice | na'shak | Extended Combat Terms |
+| stronghold | shak'kor | Extended Combat Terms |
+| bastion | shak'kor | Extended Combat Terms |
+| fortification | shak'kor | Extended Combat Terms |
+| explosion | mel'sha'le | Extended Combat Terms |
+| detonation | mel'sha'le | Extended Combat Terms |
+| siege | kor'shel'le | Extended Combat Terms |
+| encirclement | kor'shel'le | Extended Combat Terms |
+| massacre | kek'shak'le | Extended Combat Terms |
+| slaughter | kek'shak'le | Extended Combat Terms |
+| hero | dan'shak'tar | Extended Combat Terms |
+| champion | dan'shak'tar | Extended Combat Terms |
+| victor | dan'shak'tar | Extended Combat Terms |
+| artillery | kor'mel'shak | Extended Combat Terms |
+| heavy weapons | kor'mel'shak | Extended Combat Terms |
+| refugee | tok'hol'tar | Extended Combat Terms |
+| deserter | tok'hol'tar | Extended Combat Terms |
+| spoils | shak'met | Extended Combat Terms |
+| plunder | shak'met | Extended Combat Terms |
+| loot | shak'met | Extended Combat Terms |
+| military alliance | lok'shak | Extended Combat Terms |
+| war pact | lok'shak | Extended Combat Terms |
+| router | delmac'chappa | Expanded Technology |
+| network node | delmac'chappa | Expanded Technology |
+| video | vo'cume'ryn | Expanded Technology |
+| recording | vo'cume'ryn | Expanded Technology |
+| software | sha'meta'delmac | Expanded Technology |
+| program | sha'meta'delmac | Expanded Technology |
+| hardware | kor'delmac | Expanded Technology |
+| device | kor'delmac | Expanded Technology |
+| apparatus | kor'delmac | Expanded Technology |
+| internet | chappa'mel'le | Expanded Technology |
+| world network | chappa'mel'le | Expanded Technology |
+| ai | sha'meta'kor'tar | Expanded Technology |
+| artificial intelligence | sha'meta'kor'tar | Expanded Technology |
+| battery | mel'delmac | Expanded Technology |
+| power cell | mel'delmac | Expanded Technology |
+| solar cell | cha'mel'delmac | Expanded Technology |
+| light energy | cha'mel'delmac | Expanded Technology |
+| communicator | meta'delmac | Expanded Technology |
+| radio | meta'delmac | Expanded Technology |
+| algorithm | delmac'kal'ryn | Expanded Technology |
+| computational rule | delmac'kal'ryn | Expanded Technology |
+| digital trade | shesh'chappa | Expanded Technology |
+| transaction | shesh'chappa | Expanded Technology |
+| encryption | na'yu'yu'delmac | Expanded Technology |
+| cryptography | na'yu'yu'delmac | Expanded Technology |
+| computer virus | delmac'shesh | Expanded Technology |
+| malware | delmac'shesh | Expanded Technology |
+| ship | met'ka'hol'ryn | Maritime |
+| boat | met'ka'hol'ryn | Maritime |
+| sailor | met'ka'hol'tar | Maritime |
+| captain | met'ka'hol'tar | Maritime |
+| mariner | met'ka'hol'tar | Maritime |
+| naval battle | met'ka'shak | Maritime |
+| sea battle | met'ka'shak | Maritime |
+| spaceship | cha'hol'ryn'le | Maritime |
+| star cruiser | cha'hol'ryn'le | Maritime |
+| shuttle | cha'pac'ryn | Maritime |
+| landing craft | cha'pac'ryn | Maritime |
+| wormhole | chappa'ai'ryn | Maritime |
+| hyperspace | chappa'ai'ryn | Maritime |
+| space battle | cha'shak'tal | Maritime |
+| star battle | cha'shak'tal | Maritime |
+| navigation | peltac'kal | Maritime |
+| course calculation | peltac'kal | Maritime |
+| priest | onak'meta'tar | Religion |
+| high priest | onak'meta'tar | Religion |
+| prayer | onak'sha'kal | Religion |
+| devotion | onak'sha'kal | Religion |
+| invocation | onak'sha'kal | Religion |
+| prophecy | onak'mel'kal | Religion |
+| oracle | onak'mel'kal | Religion |
+| altar | dan'kal'tal | Religion |
+| sacrificial place | dan'kal'tal | Religion |
+| ritual | onak'sha'ryn | Religion |
+| ceremony | onak'sha'ryn | Religion |
+| rite | onak'sha'ryn | Religion |
+| prophet | onak'mel'tar | Religion |
+| seer | onak'mel'tar | Religion |
+| resurrection | kal'mel'nok | Religion |
+| rebirth | kal'mel'nok | Religion |
+| blessing | dan'kal'sha'ryn | Religion |
+| benediction | dan'kal'sha'ryn | Religion |
+| curse | na'dan'kal'sha | Religion |
+| malediction | na'dan'kal'sha | Religion |
+| afterlife | kal'kek'sha | Religion |
+| underworld | kal'kek'sha | Religion |
