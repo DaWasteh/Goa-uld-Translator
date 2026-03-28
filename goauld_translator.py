@@ -189,13 +189,18 @@ GLYPH_FOUND    = "◉"
 GLYPH_KEK      = "☓"
 
 # Candidate MD filenames to try automatically
+# Beide Schreibweisen: Apostroph (Windows/Mac) und Unterstrich (Linux/Mount)
 MD_CANDIDATES_EN = [
     "Goa'uld-Dictionary.md",
+    "Goa_uld-Dictionary.md",
     "Goa'uld-Fictionary.md",
+    "Goa_uld-Fictionary.md",
 ]
 MD_CANDIDATES_DE = [
     "Goa'uld-Wörterbuch.md",
+    "Goa_uld-Wörterbuch.md",
     "Goa'uld-Neologikum.md",
+    "Goa_uld-Neologikum.md",
 ]
 
 # Legacy single-file candidates (backwards-compat for --md flag)
@@ -312,13 +317,44 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
 def parse_de_map_from_entries(entries: list[dict]) -> dict[str, str]:
     """
     Baut das DE→Goa'uld-Direktwörterbuch aus den geladenen MD-Einträgen.
-    Nur Einträge mit dem 'de_map' Flag werden berücksichtigt.
+
+    Zwei Quellen:
+    1. Explizite de_map-Einträge (Wörterbuch: Deutsch→Goa'uld-Direktzuordnung)
+    2. Auto-Reverse: DE-Einträge (lang=="de") mit einwortigem deutschem Bedeutungsfeld
+       → ermöglicht Satz-Übersetzung aus Neologikum/Fictionary ohne manuelle de_map-Tags.
     """
-    return {
-        e["meaning"].lower().strip(): e["goauld"].strip()
-        for e in entries
-        if e.get("de_map")
-    }
+    result: dict[str, str] = {}
+
+    # Quelle 1: Explizit markierte Direktzuordnungen (höchste Priorität)
+    for e in entries:
+        if e.get("de_map"):
+            key = e["meaning"].lower().strip()
+            result[key] = e["goauld"].strip()
+
+    # Quelle 2: Auto-Reverse aus einfachen DE-Einträgen
+    # Aus jeder Bedeutung den ersten deutschen Term extrahieren:
+    #   "Kind (geschlechtsneutral)"  → "kind"
+    #   "Fehler, Alarm, Warnsignal"  → "fehler" + "alarm" + "warnsignal"
+    #   "Zukunft, das Kommende"       → "zukunft"
+    import re as _re2
+    _split_re  = _re2.compile(r"[,;]")
+    _paren_re  = _re2.compile(r"\s*\(.*?\)")
+    _word_ok   = _re2.compile(r"^[\w\u00c4\u00d6\u00dc\u00e4\u00f6\u00fc\u00df\'\-]+$", _re2.UNICODE)
+    for e in entries:
+        if e.get("lang") != "de":
+            continue
+        if e.get("de_map"):
+            continue  # bereits in Quelle 1 erfasst
+        goauld = e["goauld"].strip()
+        parts  = _split_re.split(e["meaning"].strip())
+        for part in parts:
+            term = _paren_re.sub("", part).strip()
+            key  = term.lower()
+            # Nur aufnehmen wenn einwortig und noch nicht belegt
+            if " " not in term and _word_ok.match(term) and key not in result:
+                result[key] = goauld
+
+    return result
 
 
 
@@ -900,23 +936,45 @@ def _get_app_dir() -> Path:
 
 
 def _find_one(candidates: list[str], hint: Optional[str] = None) -> Optional[str]:
-    """Sucht die erste vorhandene Datei aus einer Kandidatenliste."""
+    """Sucht die erste vorhandene Datei aus einer Kandidatenliste (Rückwärtskompatibilität)."""
+    result = _find_all(candidates, hint)
+    return result[0] if result else None
+
+
+def _find_all(candidates: list[str], hint: Optional[str] = None) -> list[str]:
+    """
+    Sucht ALLE vorhandenen Dateien aus einer Kandidatenliste.
+    Gibt eine nach Kandidaten-Reihenfolge sortierte Liste zurück; keine Duplikate.
+    """
     app_dir = _get_app_dir()
-    search_paths: list[str] = ([hint] if hint else [])
+    meipass = getattr(sys, '_MEIPASS', None)
+    found: list[str] = []
+    seen: set[str] = set()
+
+    # Optionaler Hint zuerst
+    if hint and Path(hint).is_file():
+        resolved = str(Path(hint).resolve())
+        if resolved not in seen:
+            seen.add(resolved)
+            found.append(str(hint))
+
     for name in candidates:
-        search_paths += [
-            str(app_dir / name),
-            str(Path.cwd() / name),
-            str(Path.home() / name),
+        search_paths = [
+            app_dir / name,
+            Path.cwd() / name,
+            Path.home() / name,
         ]
-        # Falls Ressourcen per --add-data ins Bundle eingebettet wurden (_MEIPASS)
-        meipass = getattr(sys, '_MEIPASS', None)
         if meipass:
-            search_paths.append(str(Path(meipass) / name))
-    for p in search_paths:
-        if p and Path(p).is_file():
-            return str(p)
-    return None
+            search_paths.append(Path(meipass) / name)
+        for p in search_paths:
+            if p.is_file():
+                resolved = str(p.resolve())
+                if resolved not in seen:
+                    seen.add(resolved)
+                    found.append(str(p))
+                break  # nächster Kandidat — selber Name aus verschiedenen Dirs ist derselbe
+
+    return found
 
 
 def find_md_file(hint: Optional[str] = None) -> Optional[str]:
@@ -925,13 +983,14 @@ def find_md_file(hint: Optional[str] = None) -> Optional[str]:
 
 
 def find_md_files(hint_en: Optional[str] = None,
-                  hint_de: Optional[str] = None) -> tuple[Optional[str], Optional[str]]:
+                  hint_de: Optional[str] = None) -> tuple[list[str], list[str]]:
     """
-    Sucht EN- und DE-Wörterbuchdateien getrennt.
-    Gibt (en_path, de_path) zurück — beide können None sein.
+    Sucht ALLE EN- und DE-Wörterbuchdateien.
+    Gibt ([en_paths], [de_paths]) zurück — beide können leer sein.
+    Lädt also Dictionary + Fictionary und Wörterbuch + Neologikum parallel.
     """
-    en = _find_one(MD_CANDIDATES_EN, hint_en)
-    de = _find_one(MD_CANDIDATES_DE, hint_de)
+    en = _find_all(MD_CANDIDATES_EN, hint_en)
+    de = _find_all(MD_CANDIDATES_DE, hint_de)
     return en, de
 
 
@@ -947,32 +1006,39 @@ def _load_mds(hint_en: Optional[str] = None,
     all_entries: list[dict] = []
     found_paths: list[str] = []
 
-    en_path, de_path = find_md_files(hint_en, hint_de)
+    en_paths, de_paths = find_md_files(hint_en, hint_de)
 
-    if en_path:
-        entries = parse_markdown_dictionary(en_path)
-        if entries:
-            all_entries += [{**e, "lang": "en"} for e in entries]
-            found_paths.append(en_path)
-            log.info("EN-Wörterbuch geladen: %s  (%d Einträge)", Path(en_path).name, len(entries))
-        else:
-            log.warning("Keine Einträge in EN-Datei: %s", en_path)
+    # EN-Dateien (Dictionary + Fictionary + ...)
+    if en_paths:
+        for en_path in en_paths:
+            entries = parse_markdown_dictionary(en_path)
+            if entries:
+                all_entries += [{**e, "lang": "en"} for e in entries]
+                found_paths.append(en_path)
+                log.info("EN-Wörterbuch geladen: %s  (%d Einträge)",
+                         Path(en_path).name, len(entries))
+            else:
+                log.warning("Keine Einträge in EN-Datei: %s", en_path)
     else:
         log.info("Kein EN-Wörterbuch gefunden.")
 
-    if de_path:
-        entries = parse_markdown_dictionary(de_path)
-        if entries:
-            all_entries += [{**e, "lang": "de"} for e in entries]
-            found_paths.append(de_path)
-            # Rebuild DE_GOAULD_MAP from the de_map-tagged entries
-            DE_GOAULD_MAP = parse_de_map_from_entries(entries)
-            regular = sum(1 for e in entries if not e.get("de_map"))
-            map_cnt = len(DE_GOAULD_MAP)
-            log.info("DE-Wörterbuch geladen: %s  (%d Einträge, %d DE→Goa'uld-Mappings)",
-                     Path(de_path).name, regular, map_cnt)
-        else:
-            log.warning("Keine Einträge in DE-Datei: %s", de_path)
+    # DE-Dateien (Wörterbuch + Neologikum + ...)
+    if de_paths:
+        for de_path in de_paths:
+            entries = parse_markdown_dictionary(de_path)
+            if entries:
+                all_entries += [{**e, "lang": "de"} for e in entries]
+                found_paths.append(de_path)
+                new_map = parse_de_map_from_entries([{**e, "lang": "de"} for e in entries])
+                for k, v in new_map.items():
+                    if k not in DE_GOAULD_MAP:
+                        DE_GOAULD_MAP[k] = v
+                regular = sum(1 for e in entries if not e.get("de_map"))
+                map_cnt = len(new_map)
+                log.info("DE-Wörterbuch geladen: %s  (%d Einträge, %d DE→Goa'uld-Mappings)",
+                         Path(de_path).name, regular, map_cnt)
+            else:
+                log.warning("Keine Einträge in DE-Datei: %s", de_path)
     else:
         log.info("Kein DE-Wörterbuch gefunden.")
 
@@ -2584,8 +2650,13 @@ class GoauldApp:
             return
 
         # Determine language by filename heuristic
+        # DE: Wörterbuch, Neologikum, deutsch, de_, _de., vollständige
+        # EN: Dictionary, Fictionary, and anything else
         name_low = Path(path).name.lower()
-        is_de = any(k in name_low for k in ("deutsch", "de_", "_de.", "vollständige", "vollstandige"))
+        is_de = any(k in name_low for k in (
+            "wörterbuch", "woerterbuch", "neologikum",
+            "deutsch", "de_", "_de.", "vollständige", "vollstandige",
+        ))
         lang = "de" if is_de else "en"
         tagged = [{**e, "lang": lang} for e in new_entries]
 
