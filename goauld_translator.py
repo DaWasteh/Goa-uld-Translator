@@ -24,9 +24,36 @@ import os
 import sys
 import argparse
 import difflib
+import logging
 import threading
 from pathlib import Path
 from typing import Optional
+
+
+# ── Logging Setup ─────────────────────────────────────────────────────────────
+# Bei --noconsole (PyInstaller) gibt es kein stdout — Ausgabe in Logdatei.
+def _setup_logging() -> logging.Logger:
+    _frozen = getattr(sys, 'frozen', False)
+    handlers: list[logging.Handler] = []
+    if _frozen:
+        # Logdatei neben der .exe ablegen
+        _log_dir = Path(sys.executable).parent
+        _log_file = _log_dir / "goauld_translator.log"
+        try:
+            handlers.append(logging.FileHandler(_log_file, encoding="utf-8"))
+        except OSError:
+            pass  # Wenn auch das nicht klappt, still ignorieren
+    else:
+        handlers.append(logging.StreamHandler(sys.stdout))
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)s] %(message)s",
+        handlers=handlers,
+    )
+    return logging.getLogger(__name__)
+
+log = _setup_logging()
 
 
 # ── Dependency Check ──────────────────────────────────────────────────────────
@@ -37,26 +64,32 @@ try:
     CTK_AVAILABLE = True
 except ImportError:
     CTK_AVAILABLE = False
-    # Auto-install attempt
-    try:
-        import subprocess
-        print("[INFO] CustomTkinter nicht gefunden — versuche automatische Installation…")
-        result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "customtkinter", "--quiet"],
-            capture_output=True, text=True, timeout=60,
-        )
-        if result.returncode == 0:
-            import customtkinter as ctk                 # type: ignore[import-untyped]
-            from customtkinter import ThemeManager
-            CTK_AVAILABLE = True
-            print("[OK] CustomTkinter erfolgreich installiert!")
-        else:
-            print("[HINWEIS] CustomTkinter konnte nicht automatisch installiert werden.")
-            print("          Manuelle Installation: python -m pip install customtkinter")
-            print("          Falls pip defekt ist: python -m ensurepip --upgrade")
-    except Exception as _install_err:
-        print(f"[HINWEIS] Auto-Install fehlgeschlagen: {_install_err}")
-        print("          Manuelle Installation: python -m pip install customtkinter")
+    # Auto-install NUR im Entwicklungskontext — NIEMALS in einer gepackten .exe.
+    # sys.frozen wird von PyInstaller auf True gesetzt; ohne diesen Guard würde
+    # subprocess.run(sys.executable) die .exe rekursiv in einer Endlosschleife
+    # neu starten (~1000x/min → PC-Absturz).
+    if not getattr(sys, 'frozen', False):
+        try:
+            import subprocess
+            log.info("CustomTkinter nicht gefunden — versuche automatische Installation…")
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", "customtkinter", "--quiet"],
+                capture_output=True, text=True, timeout=60,
+            )
+            if result.returncode == 0:
+                import customtkinter as ctk                 # type: ignore[import-untyped]
+                from customtkinter import ThemeManager
+                CTK_AVAILABLE = True
+                log.info("CustomTkinter erfolgreich installiert!")
+            else:
+                log.warning("CustomTkinter konnte nicht automatisch installiert werden.")
+                log.warning("Manuelle Installation: python -m pip install customtkinter")
+                log.warning("Falls pip defekt ist: python -m ensurepip --upgrade")
+        except Exception as _install_err:
+            log.warning("Auto-Install fehlgeschlagen: %s", _install_err)
+            log.warning("Manuelle Installation: python -m pip install customtkinter")
+    else:
+        log.warning("CustomTkinter nicht im Bundle — GUI fällt auf Standard-Tkinter zurück.")
 
 try:
     import tkinter as tk
@@ -215,7 +248,7 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
         with open(filepath, "r", encoding="utf-8") as fh:
             lines = fh.readlines()
     except OSError as exc:
-        print(f"[WARNUNG] Markdown-Datei nicht lesbar: {exc}")
+        log.warning("Markdown-Datei nicht lesbar: %s", exc)
         return entries
 
     current_section = "Allgemein"
@@ -366,16 +399,16 @@ class SearchEngine:
         if not q:
             return []
         q_low = q.lower()
-        best: dict[int, tuple[int, dict]] = {}  # id(entry) → (score, entry)
+        # FIX P5c: Index statt id(e) — id() kann bei GC recycelt werden
+        best: dict[int, tuple[int, dict]] = {}  # index → (score, entry)
 
-        for e in self.entries:
+        for idx, e in enumerate(self.entries):
             score_g = self._score(q_low, e["goauld"].lower())
             score_m = self._score(q_low, e["meaning"].lower())
             score = max(score_g, score_m)
             if score > 0:
-                eid = id(e)
-                if eid not in best or best[eid][0] < score:
-                    best[eid] = (score, e)
+                if idx not in best or best[idx][0] < score:
+                    best[idx] = (score, e)
 
         results = sorted(best.values(), key=lambda x: x[0], reverse=True)
         return [e for _, e in results[:max_results]]
@@ -853,16 +886,33 @@ def translate_text(text: str, mapping: dict[str, str],
 # GUI  — CustomTkinter / Tkinter
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _get_app_dir() -> Path:
+    """
+    Liefert das Verzeichnis, neben dem die .md-Wörterbücher gesucht werden.
+
+    - Frozen (.exe, PyInstaller):  Verzeichnis der .exe-Datei.
+      Mit --add-data eingebettete Ressourcen liegen zusätzlich in sys._MEIPASS.
+    - Entwicklung (.py):           Verzeichnis der Quelldatei.
+    """
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent
+
+
 def _find_one(candidates: list[str], hint: Optional[str] = None) -> Optional[str]:
     """Sucht die erste vorhandene Datei aus einer Kandidatenliste."""
-    script_dir = Path(sys.argv[0]).parent
+    app_dir = _get_app_dir()
     search_paths: list[str] = ([hint] if hint else [])
     for name in candidates:
         search_paths += [
-            str(script_dir / name),
+            str(app_dir / name),
             str(Path.cwd() / name),
             str(Path.home() / name),
         ]
+        # Falls Ressourcen per --add-data ins Bundle eingebettet wurden (_MEIPASS)
+        meipass = getattr(sys, '_MEIPASS', None)
+        if meipass:
+            search_paths.append(str(Path(meipass) / name))
     for p in search_paths:
         if p and Path(p).is_file():
             return str(p)
@@ -892,6 +942,8 @@ def _load_mds(hint_en: Optional[str] = None,
     Befüllt außerdem das globale DE_GOAULD_MAP aus der DE-Datei.
     """
     global DE_GOAULD_MAP
+    DE_GOAULD_MAP = {}   # FIX P4a: Map vor jedem Rebuild leeren — verhindert kumulative
+                         # Einträge bei mehrfachem _browse_md()-Aufruf in derselben Sitzung.
     all_entries: list[dict] = []
     found_paths: list[str] = []
 
@@ -902,11 +954,11 @@ def _load_mds(hint_en: Optional[str] = None,
         if entries:
             all_entries += [{**e, "lang": "en"} for e in entries]
             found_paths.append(en_path)
-            print(f"[OK] EN-Wörterbuch geladen: {Path(en_path).name}  ({len(entries)} Einträge)")
+            log.info("EN-Wörterbuch geladen: %s  (%d Einträge)", Path(en_path).name, len(entries))
         else:
-            print(f"[WARN] Keine Einträge in EN-Datei: {en_path}")
+            log.warning("Keine Einträge in EN-Datei: %s", en_path)
     else:
-        print("[INFO] Kein EN-Wörterbuch gefunden.")
+        log.info("Kein EN-Wörterbuch gefunden.")
 
     if de_path:
         entries = parse_markdown_dictionary(de_path)
@@ -917,17 +969,21 @@ def _load_mds(hint_en: Optional[str] = None,
             DE_GOAULD_MAP = parse_de_map_from_entries(entries)
             regular = sum(1 for e in entries if not e.get("de_map"))
             map_cnt = len(DE_GOAULD_MAP)
-            print(f"[OK] DE-Wörterbuch geladen: {Path(de_path).name}  "
-                  f"({regular} Einträge, {map_cnt} DE→Goa'uld-Mappings)")
+            log.info("DE-Wörterbuch geladen: %s  (%d Einträge, %d DE→Goa'uld-Mappings)",
+                     Path(de_path).name, regular, map_cnt)
         else:
-            print(f"[WARN] Keine Einträge in DE-Datei: {de_path}")
+            log.warning("Keine Einträge in DE-Datei: %s", de_path)
     else:
-        print("[INFO] Kein DE-Wörterbuch gefunden.")
+        log.info("Kein DE-Wörterbuch gefunden.")
 
     # ── Embedded gap-filling vocabulary ──────────────────────────────────────
     # Häufige deutsche Wörter, die im Kanon-Wörterbuch fehlen.
     # Quelle: linguistische Konstruktion / Fanon-Konsens / Stargate RPG.
     # Diese werden durch MD-Einträge überschrieben (niedrigere Priorität).
+    #
+    # FIX P4b: Nur kanonische Großschreibung (Substantive groß, Verben klein).
+    # Duplikate wie "liebe"/"Liebe" werden hier entfernt — der SearchEngine-
+    # Deduplicator normalisiert per .lower(), sodass ein Eintrag reicht.
     _GAP_FILL: list[dict] = [
         # Verwandtschaft / Family
         {"goauld": "shel'c",   "meaning": "Bruder",          "section": "Gap-Fill", "source": "Fanon/RPG", "lang": "de", "de_map": True},
@@ -938,10 +994,8 @@ def _load_mds(hint_en: Optional[str] = None,
         {"goauld": "kresh'ta", "meaning": "Tochter",          "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
         # Gefühle / Emotions
         {"goauld": "pal",      "meaning": "Liebe",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
-        {"goauld": "pal",      "meaning": "liebe",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         {"goauld": "pal",      "meaning": "Herz",             "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         {"goauld": "shal tek", "meaning": "Stolz",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
-        {"goauld": "shal tek", "meaning": "stolz",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         {"goauld": "nel nem ron","meaning": "Frieden",        "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         {"goauld": "mak shel", "meaning": "Treue",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         # Handlungen / Verben
@@ -955,8 +1009,7 @@ def _load_mds(hint_en: Optional[str] = None,
         {"goauld": "kek",      "meaning": "sterben",          "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         {"goauld": "tac",      "meaning": "kämpfen",          "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
         {"goauld": "kalach",   "meaning": "schützen",         "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
-        {"goauld": "mol kek",  "meaning": "zerstör",          "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
-        {"goauld": "mol kek",  "meaning": "zerstöre",         "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "mol kek",  "meaning": "zerstören",        "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         # Adjektive / Eigenschaften
         {"goauld": "tal",      "meaning": "groß",             "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
         {"goauld": "teal'c",   "meaning": "stark",            "section": "Gap-Fill", "source": "Kanon",     "lang": "de", "de_map": True},
@@ -992,7 +1045,7 @@ def _load_mds(hint_en: Optional[str] = None,
     all_entries = _GAP_FILL + all_entries  # low priority (prepended, MD wins via dedup)
 
     if not all_entries:
-        print("[FEHLER] Kein Vokabular geladen — bitte Wörterbuch-Dateien prüfen.")
+        log.error("Kein Vokabular geladen — bitte Wörterbuch-Dateien prüfen.")
 
     return all_entries, found_paths
 
@@ -1052,17 +1105,11 @@ class GoauldApp:
         self.root.minsize(800, 550)
         self.root.configure(fg_color=C["bg_root"])
 
-        self._configure_ctk_fonts()
         self._build_header_ctk()
         self._build_controls_ctk()
         self._build_main_ctk()
         self._build_statusbar_ctk()
         self._update_status()
-
-    def _configure_ctk_fonts(self) -> None:
-        import tkinter.font as tkfont
-        # Pre-register fonts so they can be reused
-        pass  # CTk accepts tuple fonts directly
 
     def _build_header_ctk(self) -> None:
         hdr = ctk.CTkFrame(self.root, fg_color=C["bg_panel"],
@@ -2556,7 +2603,7 @@ class GoauldApp:
         self._update_status()
         self._show_welcome_detail()
         self._do_search()
-        print(f"[OK] MD-Datei geladen ({lang.upper()}): {path}  ({len(new_entries)} Einträge)")
+        log.info("MD-Datei geladen (%s): %s  (%d Einträge)", lang.upper(), path, len(new_entries))
 
     # ─── Hilfsfunktionen ─────────────────────────────────────────────────────
 
@@ -2604,7 +2651,7 @@ def run_cli(args: argparse.Namespace) -> None:
     hint = getattr(args, "md", None)
     all_entries, found_paths = _load_mds(hint_en=hint)
     if not all_entries:
-        print("[FEHLER] Kein Vokabular geladen. Abbruch.")
+        log.error("Kein Vokabular geladen. Abbruch.")
         return
 
     mapping = build_mapping(all_entries, args.dir)
@@ -2683,12 +2730,12 @@ Beispiele (CLI):
         run_cli(args)
     else:
         if not TK_AVAILABLE:
-            print("FEHLER: Tkinter ist nicht verfügbar. Bitte Python mit Tkinter-Unterstützung installieren.")
-            print("       Im CLI-Modus läuft das Script ohne Tkinter:  --cli")
+            log.error("Tkinter ist nicht verfügbar. Bitte Python mit Tkinter-Unterstützung installieren.")
+            log.error("Im CLI-Modus läuft das Script ohne Tkinter:  --cli")
             sys.exit(1)
         if not CTK_AVAILABLE:
-            print("[HINWEIS] CustomTkinter nicht gefunden — nutze Standard-Tkinter.")
-            print("          Für das beste Erlebnis:  pip install customtkinter\n")
+            log.warning("CustomTkinter nicht gefunden — nutze Standard-Tkinter.")
+            log.warning("Für das beste Erlebnis:  pip install customtkinter")
         app = GoauldApp(md_path=args.md)
         app.run()
 

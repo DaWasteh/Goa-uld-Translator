@@ -81,7 +81,12 @@ Distribute the script as a standalone Windows application using `pyinstaller`:
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile goauld_translator.py
+pyinstaller --noconsole --onefile `
+  --add-data "Goa'uld-Dictionary.md;." `
+  --add-data "Goa'uld-Wörterbuch.md;." `
+  --add-data "Goa'uld-Fictionary.md;." `
+  --add-data "Goa'uld-Neologikum.md;." `
+  goauld_translator.py
 ```
 
 The finished `.exe` will be located inside the newly created `dist` folder.

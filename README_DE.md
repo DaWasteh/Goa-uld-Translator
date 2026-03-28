@@ -81,7 +81,13 @@ Wenn du das Skript als eigenständige Windows-Anwendung weitergeben willst, komp
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile goauld_translator.py
+pip install pyinstaller
+pyinstaller --noconsole --onefile `
+  --add-data "Goa'uld-Dictionary.md;." `
+  --add-data "Goa'uld-Wörterbuch.md;." `
+  --add-data "Goa'uld-Fictionary.md;." `
+  --add-data "Goa'uld-Neologikum.md;." `
+  goauld_translator.py
 ```
 
 Die fertige `.exe` findest du im neu erstellten `dist`-Ordner.
