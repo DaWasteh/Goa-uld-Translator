@@ -46,7 +46,7 @@ except ImportError:
             capture_output=True, text=True, timeout=60,
         )
         if result.returncode == 0:
-            import customtkinter as ctk
+            import customtkinter as ctk                 # type: ignore[import-untyped]
             from customtkinter import ThemeManager
             CTK_AVAILABLE = True
             print("[OK] CustomTkinter erfolgreich installiert!")
@@ -158,9 +158,11 @@ GLYPH_KEK      = "☓"
 # Candidate MD filenames to try automatically
 MD_CANDIDATES_EN = [
     "Goa'uld-Dictionary.md",
+    "Goa'uld-Fictionary.md",
 ]
 MD_CANDIDATES_DE = [
     "Goa'uld-Wörterbuch.md",
+    "Goa'uld-Neologikum.md",
 ]
 
 # Legacy single-file candidates (backwards-compat for --md flag)
@@ -317,12 +319,18 @@ class SearchEngine:
         max_results: int = 80,
         fuzzy_threshold: float = 0.45,
         lang_pref: str = "de",
+        prefer_short_target: bool = False,
+        min_score: int = 0,
     ) -> list[dict]:
         """
-        direction:  'goa2de' → suche in goauld-Spalte
-                    'de2goa' → suche in meaning-Spalte
-        lang_pref:  'de' → deutsche Einträge zuerst
-                    'en' → englische Einträge zuerst
+        direction:           'goa2de' → suche in goauld-Spalte
+                             'de2goa' → suche in meaning-Spalte
+        lang_pref:           'de' → deutsche Einträge zuerst
+                             'en' → englische Einträge zuerst
+        prefer_short_target: True → bevorzuge Einträge mit einwortigem Ziel
+        min_score:           Mindest-Score (vor Boni) — Treffer unterhalb werden
+                             verworfen. Für de2goa empfohlen: 50 (nur echte Wort-
+                             Matches, keine fuzzy-Zufallstreffer).
         """
         q = query.strip()
         if not q:
@@ -336,10 +344,18 @@ class SearchEngine:
         for e in self.entries:
             val = e[field].lower()
             base_score = self._score(q_low, val)
-            if base_score > 0:
+            if base_score > 0 and base_score >= min_score:
                 # Sprach-Bonus: bevorzugte Sprache +8 Punkte
                 lang_bonus = 8 if e.get("lang", "de") == lang_pref else 0
-                results.append((base_score + lang_bonus, e))
+                # Einzelwort-Bonus: bei Einzelwort-Eingabe kurze Übersetzungen bevorzugen
+                # (vermeidet dass "liebe" → "Pal tiem shree tal ma" statt "mel")
+                short_bonus = 0
+                if prefer_short_target:
+                    target_field = "goauld" if direction == "de2goa" else "meaning"
+                    target_val = e[target_field].strip()
+                    if " " not in target_val:   # einwortiges Ziel
+                        short_bonus = 15
+                results.append((base_score + lang_bonus + short_bonus, e))
 
         results.sort(key=lambda x: x[0], reverse=True)
         return [e for _, e in results[:max_results]]
@@ -388,6 +404,94 @@ class SearchEngine:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# STOP WORDS  (Deutsche Funktionswörter ohne Goa'uld-Äquivalent)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Goa'uld hat keine Artikel, keine Hilfsverben im deutschen Sinne und kaum
+# Präpositionen — diese Wörter werden bei DE→Goa'uld stumm übersprungen.
+def _de_lemma_candidates(word: str) -> list[str]:
+    """
+    Gibt mögliche Grundformen für ein deutsches Wort zurück.
+    Deckt häufige Verb-Konjugation und Nominalflexion ab, damit
+    DE_MAP-Lookups für Imperativ/Plural/Genitiv-Formen funktionieren.
+
+    Beispiele:
+      zerstör  → [zerstör, zerstöre, zerstören]
+      liebst   → [liebst, lieben, liebe, lieb]
+      raumschiffe → [raumschiffe, raumschiff]
+    """
+    w = word.lower().strip()
+    candidates = [w]
+
+    # ── Verb: Imperativ-Ergänzungen ──────────────────────────────────────────
+    # "zerstör" → "zerstöre", "zerstören"
+    if not w.endswith("e"):
+        candidates.append(w + "e")
+    if not w.endswith("en"):
+        candidates.append(w + "en")
+
+    # ── Verb: Präsens → Infinitiv ─────────────────────────────────────────────
+    # "zerstörst" → "zerstör" → "zerstören"
+    if w.endswith("st"):
+        stem = w[:-2]
+        candidates += [stem, stem + "en", stem + "e"]
+    if w.endswith("t") and len(w) > 3:
+        stem = w[:-1]
+        candidates += [stem, stem + "en", stem + "e"]
+    if w.endswith("est"):
+        stem = w[:-3]
+        candidates += [stem, stem + "en", stem + "e"]
+
+    # ── Nomen: Plural-Formen → Singular ──────────────────────────────────────
+    # "raumschiffe" → "raumschiff"
+    if w.endswith("e") and len(w) > 3:
+        candidates.append(w[:-1])
+    # "götter" → "gott"  (not perfect but helps)
+    if w.endswith("er") and len(w) > 4:
+        candidates.append(w[:-2])
+    if w.endswith("en") and len(w) > 4:
+        candidates.append(w[:-2])
+    if w.endswith("nen") and len(w) > 5:
+        candidates.append(w[:-3])
+
+    # ── Adjektiv-Endungen → Stamm ─────────────────────────────────────────────
+    for suffix in ("em", "en", "er", "es"):
+        if w.endswith(suffix) and len(w) > len(suffix) + 2:
+            candidates.append(w[: -len(suffix)])
+
+    # Deduplizieren, Reihenfolge erhalten
+    seen: set[str] = set()
+    result: list[str] = []
+    for c in candidates:
+        if c and c not in seen:
+            seen.add(c)
+            result.append(c)
+    return result
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STOP WORDS  (Deutsche Funktionswörter ohne Goa'uld-Äquivalent)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Goa'uld hat keine Artikel, keine Hilfsverben im deutschen Sinne und kaum
+# Präpositionen — diese Wörter werden bei DE→Goa'uld stumm übersprungen.
+GERMAN_STOP_WORDS: frozenset[str] = frozenset({
+    # Artikel
+    "der", "die", "das", "dem", "den", "des",
+    "ein", "eine", "einen", "einem", "einer", "eines",
+    # Präpositionen
+    "in", "im", "an", "am", "auf", "bei", "mit", "nach", "seit", "von",
+    "vor", "zu", "zum", "zur", "durch", "für", "gegen", "ohne", "um",
+    "über", "unter", "zwischen", "aus", "bis", "hinter", "neben",
+    # Konjunktionen (koordinierend)
+    "und", "oder", "aber", "doch", "sondern", "denn", "als", "wie",
+    # Partikel / sonstige Funktionswörter
+    "auch", "nur", "schon", "noch", "ja", "nicht", "kein", "keine",
+    "sehr", "gar", "mal", "nun", "so",
+})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # SENTENCE ANALYZER  (Wort-für-Wort Analyse mit Alternativen)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -409,92 +513,272 @@ class SentenceAnalyzer:
     def analyze(self, text: str, direction: str, lang_pref: str = "de") -> list[dict]:
         """
         Returns list of token dicts:
-            token        – original word
+            token        – original word (may be a phrase if matched as unit)
             primary      – best-match entry or None
             alternatives – up to 3 further entries
             found        – True/False
-        """
-        raw_tokens = re.split(r"(\s+)", text.strip())
-        result: list[dict] = []
-        for tok in raw_tokens:
-            if not tok:
-                continue
-            clean = tok.strip(".,!?;:")
-            if not clean or not self._WORD_RE.match(clean):
-                continue
+            skipped      – True when a stop word was silently dropped
 
-            # DE→Goa'uld: explizites Wörterbuch zuerst prüfen
+        Uses greedy longest-phrase-first matching:
+          • DE→Goa'uld: articles/particles are silently dropped (no Goa'uld equivalent).
+            DE_MAP multi-word hits are only used when no shorter Goa'uld entry exists.
+          • Goa'uld→DE: multi-word Goa'uld phrases are recognised as one unit.
+        """
+        # ── 1. Flatten to clean word list ─────────────────────────────────────
+        raw_tokens = re.split(r"(\s+)", text.strip())
+        words: list[str] = []
+        for tok in raw_tokens:
+            clean = tok.strip(".,!?;:")
+            if clean and self._WORD_RE.match(clean):
+                words.append(clean)
+
+        if not words:
+            return []
+
+        _MAX_PHRASE = 6        # max window size (words)
+        result: list[dict] = []
+        i = 0
+
+        # ── 2. Greedy longest-match loop ──────────────────────────────────────
+        while i < len(words):
+            matched = False
+            window = min(_MAX_PHRASE, len(words) - i)
+
+            # ── DE → Goa'uld ─────────────────────────────────────────────────
             if direction == "de2goa":
-                de_hit = DE_GOAULD_MAP.get(clean.lower())
-                if de_hit:
-                    synthetic = {
-                        "goauld":  de_hit,
-                        "meaning": clean,
-                        "section": "Deutsch→Goa'uld",
-                        "source":  "DE_MAP",
-                        "lang":    "de",
-                    }
+
+                # a) Stop word? → skip silently, don't add to translation
+                if words[i].lower() in GERMAN_STOP_WORDS:
                     result.append({
-                        "token":        clean,
-                        "primary":      synthetic,
+                        "token":        words[i],
+                        "primary":      None,
                         "alternatives": [],
-                        "found":        True,
+                        "found":        False,
+                        "skipped":      True,   # stop-word, not a failure
                     })
+                    i += 1
                     continue
 
-            matches = self.engine.search(clean, direction=direction,
-                                         max_results=7, lang_pref=lang_pref)
-            if matches:
+                # b) Try multi-word DE_MAP hits first (window → 2), then single
+                de_map_hit: Optional[tuple[str, str]] = None  # (phrase, goauld)
+                for n in range(window, 1, -1):
+                    phrase    = " ".join(words[i:i + n])
+                    # Try exact phrase first, then lemma candidates for multi-word
+                    hit = DE_GOAULD_MAP.get(phrase.lower())
+                    if hit:
+                        de_map_hit = (phrase, hit)
+                        # Immediately consume multi-word phrase and move on
+                        synthetic = {
+                            "goauld":  hit,
+                            "meaning": phrase,
+                            "section": "Deutsch→Goa'uld",
+                            "source":  "DE_MAP",
+                            "lang":    "de",
+                        }
+                        result.append({
+                            "token":        phrase,
+                            "primary":      synthetic,
+                            "alternatives": [],
+                            "found":        True,
+                            "skipped":      False,
+                        })
+                        i += n
+                        matched = True
+                        break
+
+                if matched:
+                    continue
+
+                # c) Single word – check DE_MAP with lemma fallback, also run engine;
+                #    pick whichever gives a shorter Goa'uld output.
+                phrase    = words[i]
+                phrase_low = phrase.lower()
+
+                # Lemma fallback: try "zerstör" → "zerstöre" → "zerstören" etc.
+                de_map_single: Optional[str] = None
+                for candidate in _de_lemma_candidates(phrase_low):
+                    de_map_single = DE_GOAULD_MAP.get(candidate)
+                    if de_map_single:
+                        break
+
+                engine_matches = self.engine.search(
+                    phrase, direction=direction,
+                    max_results=7, lang_pref=lang_pref,
+                    prefer_short_target=True,
+                    min_score=50,   # require real word-match, not fuzzy noise
+                )
+
+                # Decide between DE_MAP result and engine result
+                chosen_primary = None
+                chosen_alts    = []
+                chosen_goauld  = None
+
+                if de_map_single:
+                    chosen_goauld = de_map_single  # may be multi-word
+                    # If engine found a single-word alternative, prefer it
+                    if engine_matches:
+                        engine_top_goauld = engine_matches[0]["goauld"].strip()
+                        # Prefer engine if its result is shorter (fewer tokens)
+                        if (
+                            " " not in engine_top_goauld          # single word
+                            and " " in de_map_single               # DE_MAP is multi-word
+                        ):
+                            chosen_primary = engine_matches[0]
+                            chosen_alts    = engine_matches[1:4]
+                            chosen_goauld  = engine_top_goauld
+                        else:
+                            # Use DE_MAP, but still attach engine alternatives
+                            chosen_primary = {
+                                "goauld":  de_map_single,
+                                "meaning": phrase,
+                                "section": "Deutsch→Goa'uld",
+                                "source":  "DE_MAP",
+                                "lang":    "de",
+                            }
+                            chosen_alts = engine_matches[:3]
+                    else:
+                        chosen_primary = {
+                            "goauld":  de_map_single,
+                            "meaning": phrase,
+                            "section": "Deutsch→Goa'uld",
+                            "source":  "DE_MAP",
+                            "lang":    "de",
+                        }
+                elif engine_matches:
+                    chosen_primary = engine_matches[0]
+                    chosen_alts    = engine_matches[1:4]
+
                 result.append({
-                    "token":        clean,
-                    "primary":      matches[0],
-                    "alternatives": matches[1:4],
-                    "found":        True,
+                    "token":        phrase,
+                    "primary":      chosen_primary,
+                    "alternatives": chosen_alts,
+                    "found":        chosen_primary is not None,
+                    "skipped":      False,
                 })
-            else:
+                i += 1
+                continue
+
+            # ── Goa'uld → DE ─────────────────────────────────────────────────
+            for n in range(window, 0, -1):
+                phrase     = " ".join(words[i:i + n])
+                phrase_low = phrase.lower()
+
+                if n > 1:
+                    # Multi-word: only use if goauld field matches phrase exactly/nearly
+                    matches = self.engine.search(phrase, direction=direction,
+                                                 max_results=3, lang_pref=lang_pref)
+                    if matches:
+                        top_val = matches[0]["goauld"].lower()
+                        score = self.engine._score(phrase_low, top_val)
+                        if score >= 85:   # exact (100) or prefix (85)
+                            result.append({
+                                "token":        phrase,
+                                "primary":      matches[0],
+                                "alternatives": matches[1:3],
+                                "found":        True,
+                                "skipped":      False,
+                            })
+                            i += n
+                            matched = True
+                            break
+                else:
+                    # Single word: prefer entries with shorter German meanings
+                    matches = self.engine.search(phrase, direction=direction,
+                                                 max_results=7, lang_pref=lang_pref,
+                                                 prefer_short_target=True,
+                                                 min_score=40)
+                    result.append({
+                        "token":        phrase,
+                        "primary":      matches[0] if matches else None,
+                        "alternatives": matches[1:4] if matches else [],
+                        "found":        bool(matches),
+                        "skipped":      False,
+                    })
+                    i += 1
+                    matched = True
+                    break
+
+            if not matched:
                 result.append({
-                    "token":        clean,
+                    "token":        words[i],
                     "primary":      None,
                     "alternatives": [],
                     "found":        False,
+                    "skipped":      False,
                 })
+                i += 1
+
         return result
+
+    @staticmethod
+    def _extract_core_meaning(meaning: str) -> str:
+        """
+        Extrahiert die kürzeste sinnvolle Kernbedeutung aus einem Wörterbuch-Eintrag.
+
+        Strategie:
+          1. Entfernt Klammern, Markdown-Dekoratoren
+          2. Splittet an mehreren Trennzeichen (;  —  /  ,)
+          3. Wählt das kürzeste nicht-leere Segment ≥ 1 Wort
+          4. Bereinigt Anführungszeichen und führende Sonderzeichen
+        """
+        m = meaning.strip()
+        # Strip leading decorators/bullets
+        m = re.sub(r"^[\-–▸→✦◆◉☓\s]+", "", m)
+        # Remove bracketed annotations like (Pronomen), (Substantiv) etc.
+        m = re.sub(r"\s*\([^)]*\)\s*", " ", m)
+        # Split on major meaning separators
+        segments = re.split(r"\s*[;—/,]\s*", m)
+        segments = [s.strip().strip('"\'„"').strip() for s in segments if s.strip()]
+        if not segments:
+            return ""
+        # Prefer the shortest segment (most likely the core word/phrase)
+        shortest = min(segments, key=lambda s: len(s.split()))
+        # If shortest is still very long (>5 words), take just the first 3 words as fallback
+        words_in_shortest = shortest.split()
+        if len(words_in_shortest) > 5:
+            shortest = " ".join(words_in_shortest[:3]) + "…"
+        return re.sub(r"\s+", " ", shortest).strip()
 
     def build_translation(self, analysis: list[dict],
                           direction: str = "goa2de") -> str:
         """
         Erzeugt die kompakte Übersetzung.
-        goa2de → gibt die deutsche/englische Bedeutung aus
+        goa2de → gibt die deutsche/englische Kernbedeutung aus
         de2goa → gibt das Goa'uld-Wort aus
+        Stop words (skipped=True) werden stillschweigend ignoriert.
         """
         parts: list[str] = []
         for item in analysis:
+            # Stop words & unmatched tokens
+            if item.get("skipped"):
+                continue        # Artikel etc. still schweigend überspringen
             if not item["found"]:
                 parts.append(f"[{item['token']}?]")
-            else:
-                prim = item["primary"]
+                continue
 
-                if direction == "de2goa":
-                    # DE_MAP synthetic entries: goauld field IS the translation
-                    word = prim["goauld"].strip()
-                    if word:
-                        parts.append(word)
-                else:
-                    # Output: German meaning, prefer DE entries
-                    best = prim
-                    for alt in item["alternatives"]:
-                        if alt.get("lang") == "de" and prim.get("lang") != "de":
-                            best = alt
-                            break
-                    m = best["meaning"]
-                    # Nur erste Bedeutung nehmen, deduplizieren
-                    m = re.split(r"\s*[;—]\s*", m)[0]
-                    m = re.sub(r"\s*\(.*?\)\s*", " ", m).strip()
+            prim = item["primary"]
+
+            if direction == "de2goa":
+                word = prim["goauld"].strip()
+                if word:
+                    parts.append(word)
+            else:
+                # Prefer DE-lang entries for meaning output
+                best = prim
+                for alt in item["alternatives"]:
+                    if alt.get("lang") == "de" and prim.get("lang") != "de":
+                        best = alt
+                        break
+                # Multi-word token = phrase match → full meaning; single token → extract core
+                if " " in item["token"]:
+                    # Phrase match: clean up but don't shorten
+                    m = best["meaning"].strip().strip('"\'„"').strip()
+                    m = re.sub(r"\s*\([^)]*\)\s*", " ", m).strip()
                     m = re.sub(r"\s+", " ", m).strip()
-                    m = re.sub(r"^[-–▸→✦◆◉☓]+\s*", "", m).strip()
-                    m = m.strip('"\'').strip()
-                    if m:
-                        parts.append(m)
+                else:
+                    m = self._extract_core_meaning(best["meaning"])
+                if m:
+                    parts.append(m)
         return " ".join(parts) if parts else "—"
 
 
@@ -639,6 +923,73 @@ def _load_mds(hint_en: Optional[str] = None,
             print(f"[WARN] Keine Einträge in DE-Datei: {de_path}")
     else:
         print("[INFO] Kein DE-Wörterbuch gefunden.")
+
+    # ── Embedded gap-filling vocabulary ──────────────────────────────────────
+    # Häufige deutsche Wörter, die im Kanon-Wörterbuch fehlen.
+    # Quelle: linguistische Konstruktion / Fanon-Konsens / Stargate RPG.
+    # Diese werden durch MD-Einträge überschrieben (niedrigere Priorität).
+    _GAP_FILL: list[dict] = [
+        # Verwandtschaft / Family
+        {"goauld": "shel'c",   "meaning": "Bruder",          "section": "Gap-Fill", "source": "Fanon/RPG", "lang": "de", "de_map": True},
+        {"goauld": "shel'ca",  "meaning": "Schwester",        "section": "Gap-Fill", "source": "Fanon/RPG", "lang": "de", "de_map": True},
+        {"goauld": "tel'mak",  "meaning": "Vater",            "section": "Gap-Fill", "source": "Fanon/RPG", "lang": "de", "de_map": True},
+        {"goauld": "tel'ma",   "meaning": "Mutter",           "section": "Gap-Fill", "source": "Fanon/RPG", "lang": "de", "de_map": True},
+        {"goauld": "shol'va",  "meaning": "Sohn",             "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "kresh'ta", "meaning": "Tochter",          "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        # Gefühle / Emotions
+        {"goauld": "pal",      "meaning": "Liebe",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "pal",      "meaning": "liebe",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "pal",      "meaning": "Herz",             "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "shal tek", "meaning": "Stolz",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "shal tek", "meaning": "stolz",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "nel nem ron","meaning": "Frieden",        "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "mak shel", "meaning": "Treue",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        # Handlungen / Verben
+        {"goauld": "kree",     "meaning": "gehen",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "kel",      "meaning": "kommen",           "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "hol",      "meaning": "halten",           "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "tel",      "meaning": "sehen",            "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "nok",      "meaning": "wissen",           "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "shree",    "meaning": "eindringen",       "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "tak",      "meaning": "täuschen",         "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "kek",      "meaning": "sterben",          "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "tac",      "meaning": "kämpfen",          "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "kalach",   "meaning": "schützen",         "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "mol kek",  "meaning": "zerstör",          "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "mol kek",  "meaning": "zerstöre",         "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        # Adjektive / Eigenschaften
+        {"goauld": "tal",      "meaning": "groß",             "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "teal'c",   "meaning": "stark",            "section": "Gap-Fill", "source": "Kanon",     "lang": "de", "de_map": True},
+        {"goauld": "teal'c",   "meaning": "Stärke",           "section": "Gap-Fill", "source": "Kanon",     "lang": "de", "de_map": True},
+        {"goauld": "nokia",    "meaning": "neu",              "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "shel",     "meaning": "frei",             "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "kek",      "meaning": "schwach",          "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "onak",     "meaning": "alle",             "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        # Technologie / Schiffe
+        {"goauld": "ha'tak",   "meaning": "Raumschiff",       "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "ha'tak",   "meaning": "Schiff",           "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "ha'tak",   "meaning": "Kriegsschiff",     "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "tel'tak",  "meaning": "Frachtschiff",     "section": "Gap-Fill", "source": "Kanon",     "lang": "de", "de_map": True},
+        {"goauld": "udajeet",  "meaning": "Jäger",            "section": "Gap-Fill", "source": "Kanon",     "lang": "de", "de_map": True},
+        # Orte / Substantive
+        {"goauld": "a'roush",  "meaning": "Heimat",           "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "nel",      "meaning": "Weg",              "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "ring",     "meaning": "Tor",              "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "kel'sha",  "meaning": "Welt",             "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
+        {"goauld": "onak",     "meaning": "Macht",            "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        {"goauld": "shal tek", "meaning": "Ehre",             "section": "Gap-Fill", "source": "Kanon",     "lang": "de", "de_map": True},
+        {"goauld": "kel mar",  "meaning": "Rache",            "section": "Gap-Fill", "source": "Kanon",     "lang": "de", "de_map": True},
+        {"goauld": "kalach",   "meaning": "heilig",           "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+    ]
+
+    # Merge: existing DE_MAP takes priority — only add gap entries if key not yet known
+    gap_map = parse_de_map_from_entries(_GAP_FILL)
+    for k, v in gap_map.items():
+        if k not in DE_GOAULD_MAP:
+            DE_GOAULD_MAP[k] = v
+
+    # Add gap entries to the main pool so they appear in search results too
+    all_entries = _GAP_FILL + all_entries  # low priority (prepended, MD wins via dedup)
 
     if not all_entries:
         print("[FEHLER] Kein Vokabular geladen — bitte Wörterbuch-Dateien prüfen.")
@@ -929,7 +1280,7 @@ class GoauldApp:
             left, fg_color=C["bg_panel"], corner_radius=0)
         self._result_scroll.grid(row=2, column=0, sticky="nsew")
         self._result_scroll.columnconfigure(0, weight=1)
-        self._result_rows: list[ctk.CTkFrame] = []
+        self._result_rows: list[ctk.CTkFrame | ctk.CTkLabel] = []
 
         # ── RIGHT: Tabbed panel (Detail | Satzanalyse) ────────────────────
         right_outer = tk.Frame(self._paned, bg=C["bg_card"])
@@ -1106,7 +1457,7 @@ class GoauldApp:
 
         ctk.CTkLabel(
             bar,
-            text="STARGATE SG-1  ·  Goa'uld Linguistic Interface  ·  v3.0",
+            text="STARGATE SG-1  ·  Goa'uld Linguistic Interface  ·  v0.2",
             font=("Courier", 9),
             text_color=C["text_lo"],
         ).pack(side="right", padx=12)
@@ -1404,7 +1755,7 @@ class GoauldApp:
         analysis  = self._analyzer.analyze(text, direction=direction,
                                            lang_pref=lang_pref)
         found_n   = sum(1 for t in analysis if t["found"])
-        total_n   = len(analysis)
+        total_n   = sum(1 for t in analysis if not t.get("skipped"))  # exclude stop-words
         trans_str = self._analyzer.build_translation(analysis, direction=direction)
 
         # Translation output
@@ -1697,8 +2048,8 @@ class GoauldApp:
         self._result_rows.clear()
 
         translation = self._analyzer.build_translation(analysis, direction=self._direction)
-        found_count = sum(1 for t in analysis if t["found"])
-        total_count = len(analysis)
+        found_count = sum(1 for t in analysis if t["found"] and not t.get("skipped"))
+        total_count = sum(1 for t in analysis if not t.get("skipped"))
 
         # Header card: full translation
         hdr_card = ctk.CTkFrame(self._result_scroll, fg_color=C["bg_sentence"],
@@ -1809,7 +2160,7 @@ class GoauldApp:
         self._listbox.delete(0, "end")
         self._tk_results = []
         translation = self._analyzer.build_translation(analysis, direction=self._direction)
-        found_count = sum(1 for t in analysis if t["found"])
+        found_count = sum(1 for t in analysis if t["found"] and not t.get("skipped"))
 
         self._listbox.insert("end", f"  {GLYPH_GATE} SATZ: {query[:35]}")
         self._listbox.insert("end", f"  {GLYPH_ARROW} {translation[:50]}")
@@ -1845,7 +2196,7 @@ class GoauldApp:
         welcome = (
             "\n"
             "╔══════════════════════════════════════════════╗\n"
-            "║   GOA'ULD LINGUISTIC INTERFACE  v3.0        ║\n"
+            "║   GOA'ULD LINGUISTIC INTERFACE  v0.2        ║\n"
             "║   SGC Xenolinguistics Division               ║\n"
             "║   Stargate Command  ·  LEVEL 28             ║\n"
             "╚══════════════════════════════════════════════╝\n\n"
@@ -2008,8 +2359,8 @@ class GoauldApp:
         sep   = "═" * 52
         sep_s = "─" * 52
         translation = self._analyzer.build_translation(analysis, direction=self._direction)
-        found_count = sum(1 for t in analysis if t["found"])
-        total_count = len(analysis)
+        found_count = sum(1 for t in analysis if t["found"] and not t.get("skipped"))
+        total_count = sum(1 for t in analysis if not t.get("skipped"))
 
         lines = [
             "",
@@ -2246,7 +2597,7 @@ class GoauldApp:
 
 def run_cli(args: argparse.Namespace) -> None:
     print("\n" + "=" * 62)
-    print("   JAFFA, KREE!  —  Goa'uld Linguistic Interface  v3.0")
+    print("   JAFFA, KREE!  —  Goa'uld Linguistic Interface  v0.2")
     print("=" * 62)
 
     # Lade Vokabular aus EN- und DE-Wörterbuch
