@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v2.0                 ║
+║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v0.2                 ║
 ║   SGC Xenolinguistics Division  ·  Classification: LEVEL 28    ║
 ╚══════════════════════════════════════════════════════════════════╝
 
@@ -156,11 +156,15 @@ GLYPH_FOUND    = "◉"
 GLYPH_KEK      = "☓"
 
 # Candidate MD filenames to try automatically
-MD_CANDIDATES = [
-    "compass_artifact_wf-a7fb3e11-059a-4f09-8803-4e8b71e5cacb_text_markdown.md",
-    "goauld_dictionary.md",
-    "dictionary.md",
+MD_CANDIDATES_EN = [
+    "Goa'uld-Dictionary.md",
 ]
+MD_CANDIDATES_DE = [
+    "Goa'uld-Wörterbuch.md",
+]
+
+# Legacy single-file candidates (backwards-compat for --md flag)
+MD_CANDIDATES = MD_CANDIDATES_EN + MD_CANDIDATES_DE
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -168,9 +172,17 @@ MD_CANDIDATES = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Header cells we skip (those are the table-header rows, not data)
-_SKIP_FIRST = {"goa'uld", "phrase", "abydonian", "goauld"}
+_SKIP_FIRST = {"goa'uld", "phrase", "abydonian", "goauld", "deutsch"}
 _SKIP_SECOND = {"meaning", "english", "translation", "compound analysis",
-                "context", "notes", "episode", "speaker", "source / episode"}
+                "context", "notes", "episode", "speaker", "source / episode",
+                "bedeutung", "goa'uld", "goauld", "kontext", "kategorie"}
+
+# Section headings that signal reversed columns (Deutsch → Goa'uld)
+_DE_GOA_SECTION_MARKERS = {
+    "deutsch → goa'uld: direktzuordnung",
+    "deutsch → goa'uld",
+    "de → goa'uld",
+}
 
 
 def _clean(text: str) -> str:
@@ -188,9 +200,13 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
 
     Each entry is a dict:
         goauld   – the Goa'uld word / phrase
-        meaning  – English / German meaning
-        section  – which section of the dictionary (e.g. "Battle cries")
+        meaning  – the translation (German or English)
+        section  – which section of the dictionary
         source   – episode / source reference (optional)
+
+    Also handles reversed sections (Deutsch → Goa'uld) where col0 is the
+    German word and col1 is the Goa'uld target — these are returned with
+    goauld/meaning swapped so the engine sees them correctly.
     """
     entries: list[dict] = []
     try:
@@ -201,6 +217,7 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
         return entries
 
     current_section = "Allgemein"
+    reversed_section = False   # True inside a Deutsch→Goa'uld table
 
     for raw in lines:
         line = raw.rstrip("\n")
@@ -208,6 +225,7 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
         # Track section headings
         if line.startswith("## ") or line.startswith("# "):
             current_section = line.lstrip("#").strip()
+            reversed_section = current_section.lower() in _DE_GOA_SECTION_MARKERS
             continue
 
         # Only process table rows
@@ -219,7 +237,6 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
             continue
 
         parts = [_clean(p) for p in line.split("|")]
-        # Remove leading / trailing empty strings from split artefact
         parts = [p for p in parts if p]
 
         if len(parts) < 2:
@@ -237,175 +254,37 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
         if not col0 or not col1:
             continue
 
-        entries.append({
-            "goauld":  col0,
-            "meaning": col1,
-            "section": current_section,
-            "source":  col2,
-        })
+        if reversed_section:
+            # col0 = Deutsch, col1 = Goa'uld  → swap so engine is consistent
+            entries.append({
+                "goauld":  col1,
+                "meaning": col0,
+                "section": current_section,
+                "source":  col2,
+                "de_map":  True,   # marker: used to rebuild DE_GOAULD_MAP
+            })
+        else:
+            entries.append({
+                "goauld":  col0,
+                "meaning": col1,
+                "section": current_section,
+                "source":  col2,
+            })
 
     return entries
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# EMBEDDED FALLBACK VOCABULARY  (aus dem Original-Script, deutlich erweitert)
-# ─────────────────────────────────────────────────────────────────────────────
+def parse_de_map_from_entries(entries: list[dict]) -> dict[str, str]:
+    """
+    Baut das DE→Goa'uld-Direktwörterbuch aus den geladenen MD-Einträgen.
+    Nur Einträge mit dem 'de_map' Flag werden berücksichtigt.
+    """
+    return {
+        e["meaning"].lower().strip(): e["goauld"].strip()
+        for e in entries
+        if e.get("de_map")
+    }
 
-EMBEDDED_VOCAB: list[dict] = [
-    # ── Core ──────────────────────────────────────────────────────────────
-    {"goauld": "Kree",          "meaning": "Achtung! Zuhören! Imperativ-Partikel", "section": "Kern", "source": "Throughout"},
-    {"goauld": "Kek",           "meaning": "Tod; Schwäche (wer schwach ist, ist wie tot)", "section": "Kern", "source": "Orpheus"},
-    {"goauld": "Kel",           "meaning": "Fragepartikel: wo, wann, was", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Nok",           "meaning": "Jetzt", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Mel",           "meaning": "Sterben; enden; danach", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Hol",           "meaning": "Halten; Stopp", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Shal",          "meaning": "Was, welche", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Tal",           "meaning": "Warten; auch: sterben", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Tak",           "meaning": "Trick; Unehrlichkeit", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Tok",           "meaning": "Gegen; widerstehen", "section": "Kern", "source": "The Tok'ra"},
-    {"goauld": "Tel",           "meaning": "Ich; Ich habe", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Mak",           "meaning": "Meine Identität", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Mok",           "meaning": "Deine Identität", "section": "Kern", "source": "Ultimate Visual Guide"},
-    {"goauld": "Ta",            "meaning": "Ich (Pronomen)", "section": "Kern", "source": "SGCommand Wiki"},
-    {"goauld": "Lo",            "meaning": "Du (Pronomen)", "section": "Kern", "source": "SGCommand Wiki"},
-    {"goauld": "Tap",           "meaning": "Wir (Plural von Ta)", "section": "Kern", "source": "SGCommand Wiki"},
-    {"goauld": "Lop",           "meaning": "Ihr alle (Plural von Lo)", "section": "Kern", "source": "SGCommand Wiki"},
-    {"goauld": "Ka",            "meaning": "Nein", "section": "Kern", "source": "SGCommand Wiki"},
-    {"goauld": "Re",            "meaning": "Komm", "section": "Kern", "source": "StargateWiki"},
-    {"goauld": "Onak",          "meaning": "Gott; Goa'uld (aus Unas: onac)", "section": "Titel", "source": "Summit"},
-    {"goauld": "Tar",           "meaning": "Umgangssprachlich für 'Mensch' (von Tau'ri)", "section": "Titel", "source": "RPG Lexicon"},
-    {"goauld": "Shree",         "meaning": "Eindringling; Schänder", "section": "Beleidigungen", "source": "StargateWiki"},
-    {"goauld": "Bet",           "meaning": "Kapitulation; möglicherweise: Waffe", "section": "Kampf", "source": "SGCommand Wiki"},
-    {"goauld": "Leaa",          "meaning": "Zuhören", "section": "Kern", "source": "RPG Lexicon"},
-    # ── Greetings ─────────────────────────────────────────────────────────
-    {"goauld": "Tek'ma'te",     "meaning": "Meister, gut getroffen — formelle Begrüßung an Vorgesetzte", "section": "Begrüßungen", "source": "Children of the Gods"},
-    {"goauld": "Tek'ma'tek",    "meaning": "Freunde, gut getroffen; wir kommen in Frieden — Begrüßung unter Gleichen", "section": "Begrüßungen", "source": "Throughout"},
-    {"goauld": "Tak mal tiak",  "meaning": "Du wirst erinnert — formelle, ehrerbietige Begrüßung", "section": "Begrüßungen", "source": "SGCommand"},
-    {"goauld": "Tal'ma'te",     "meaning": "Liebevolle Begrüßung oder Abschied — zwischen Vertrauten", "section": "Begrüßungen", "source": "Throughout"},
-    {"goauld": "Chel hol",      "meaning": "Standardbegrüßung", "section": "Begrüßungen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Kel'sha",       "meaning": "Es wird so sein / wie du es wünschst / freundliche Begrüßung", "section": "Begrüßungen", "source": "Within the Serpent's Grasp"},
-    {"goauld": "Lek tol",       "meaning": "Auf Wiedersehen; Abschalten", "section": "Begrüßungen", "source": "SGCommand"},
-    {"goauld": "Shal met",      "meaning": "Toast; Prost — Jaffa-Trinkbrauch", "section": "Begrüßungen", "source": "SGCommand"},
-    {"goauld": "Ral tora ke",   "meaning": "Viel Glück", "section": "Begrüßungen", "source": "A Hundred Days"},
-    {"goauld": "Chel nok",      "meaning": "Viel Glück; sehr gute Wünsche", "section": "Begrüßungen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Quell shak",    "meaning": "Bitte", "section": "Begrüßungen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Ba'ja'kakma'te","meaning": "Ich grüße dich auch — Antwort auf Begrüßung", "section": "Begrüßungen", "source": "SGCommand"},
-    # ── Battle cries ──────────────────────────────────────────────────────
-    {"goauld": "Dal shakka mel", "meaning": "Ich sterbe frei! — Jaffa-Schlachtruf", "section": "Kampfrufe", "source": "The Nox"},
-    {"goauld": "Shel kek nem ron","meaning": "Ich sterbe frei — Freie Jaffa Passwort", "section": "Kampfrufe", "source": "Birthright"},
-    {"goauld": "Kalach shal tek","meaning": "Sieg oder Tod! (wörtl.: Seele kehrt heim)", "section": "Kampfrufe", "source": "Ultimate Visual Guide"},
-    {"goauld": "Arik tree'ac te kek","meaning": "Wir ergeben uns nicht, auch nicht im Tod", "section": "Kampfrufe", "source": "Allegiance"},
-    {"goauld": "Tal shak",      "meaning": "Angriff! / Auf der Hut sein", "section": "Kampfrufe", "source": "Ultimate Visual Guide"},
-    {"goauld": "Tal bet",       "meaning": "Ergebt euch / Waffen niederlegen", "section": "Kampfrufe", "source": "StargateWiki"},
-    {"goauld": "Shel norak",    "meaning": "Ergebt euch oder sterbt", "section": "Kampfrufe", "source": "StargateWiki"},
-    {"goauld": "Mol kek",       "meaning": "Tötet sie alle!", "section": "Kampfrufe", "source": "Ultimate Visual Guide"},
-    {"goauld": "Hol mel",       "meaning": "Feuer einstellen; Warteposition", "section": "Kampfrufe", "source": "Ultimate Visual Guide"},
-    {"goauld": "Mel nok tee",   "meaning": "Jetzt evakuieren!", "section": "Kampfrufe", "source": "Ultimate Visual Guide"},
-    {"goauld": "Kel'tesh",      "meaning": "Flankierender Angriff von zwei Seiten — Jaffa-Taktik", "section": "Kampfrufe", "source": "Icon"},
-    {"goauld": "Shal kek",      "meaning": "Entlassen / Weggetreten", "section": "Kampfrufe", "source": "Ultimate Visual Guide"},
-    {"goauld": "Hahl kree",     "meaning": "Freeze! Keine Bewegung!", "section": "Kampfrufe", "source": "Ultimate Visual Guide"},
-    {"goauld": "Kree tal shal mak","meaning": "Identifiziere dich!", "section": "Kampfrufe", "source": "Throughout"},
-    {"goauld": "Kree hol",      "meaning": "Los, wir gehen!", "section": "Kampfrufe", "source": "Throughout"},
-    {"goauld": "Aray kree",     "meaning": "Bleib wo du bist", "section": "Kampfrufe", "source": "Ultimate Visual Guide"},
-    {"goauld": "Shak'na kree",  "meaning": "Befehl zur Kapitulation oder zum Sterben", "section": "Kampfrufe", "source": "StargateWiki"},
-    # ── Insults ───────────────────────────────────────────────────────────
-    {"goauld": "Shol'va",       "meaning": "Verräter; Ketzer — berühmteste Beleidigung der Serie", "section": "Beleidigungen", "source": "Throughout"},
-    {"goauld": "Hasshak",       "meaning": "Schwächling, Kanonenfutter, Narr — Bra'tacs Lieblingsbeleidigung", "section": "Beleidigungen", "source": "Bloodlines"},
-    {"goauld": "Ha'taaka",      "meaning": "Kindermörder, Geistvergifter — extreme Beleidigung", "section": "Beleidigungen", "source": "Family"},
-    {"goauld": "Kresh'taa",     "meaning": "Außenseiter; Verbannter; Unberührbarer", "section": "Beleidigungen", "source": "Bloodlines"},
-    {"goauld": "Gonach",        "meaning": "Grobe Beleidigung (genaue Bedeutung unbekannt)", "section": "Beleidigungen", "source": "Fair Game"},
-    {"goauld": "Goe'nahk",      "meaning": "Idiot!", "section": "Beleidigungen", "source": "Maj C's Dictionary"},
-    {"goauld": "Mikta",         "meaning": "Hinterteil — anatomische Beleidigung", "section": "Beleidigungen", "source": "Seth"},
-    {"goauld": "Mai'tac",       "meaning": "Verdammt!", "section": "Beleidigungen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Orak",          "meaning": "Unaussprechlich — für Kull-Krieger verwendet", "section": "Beleidigungen", "source": "New Order"},
-    {"goauld": "Klavel ha",     "meaning": "Zu spät", "section": "Beleidigungen", "source": "Enemies"},
-    # ── Titles & Ranks ────────────────────────────────────────────────────
-    {"goauld": "Goa'uld",       "meaning": "Gott / Kinder der Götter — Eigenbezeichnung der Spezies", "section": "Titel", "source": "Children of the Gods"},
-    {"goauld": "Jaffa",         "meaning": "Diener-Krieger; Symbionten-Brutträger", "section": "Titel", "source": "Children of the Gods"},
-    {"goauld": "Tok'ra",        "meaning": "Gegen Ra — Rebellische Goa'uld-Fraktion", "section": "Titel", "source": "The Tok'ra"},
-    {"goauld": "Tau'ri",        "meaning": "Die Erste Welt / Erdenbewohner", "section": "Titel", "source": "The Enemy Within"},
-    {"goauld": "Lo'taur",       "meaning": "Höchstrangiger menschlicher Sklave (wörtl.: Du, Mensch!)", "section": "Titel", "source": "Summit"},
-    {"goauld": "Ashrak",        "meaning": "Jäger — Elite-Goa'uld-Attentäter", "section": "Titel", "source": "In the Line of Duty"},
-    {"goauld": "Hok'tar",       "meaning": "Fortgeschrittener Mensch — genetisch überlegen", "section": "Titel", "source": "Rite of Passage"},
-    {"goauld": "Harcesis",      "meaning": "Kind zweier Goa'uld-Wirte (trägt genetisches Gedächtnis)", "section": "Titel", "source": "Maternal Instinct"},
-    {"goauld": "Teal'c",        "meaning": "Stärke", "section": "Titel", "source": "Past and Present"},
-    {"goauld": "Reenlokia",     "meaning": "Die Asgard", "section": "Titel", "source": "Ultimate Visual Guide"},
-    {"goauld": "Kin'dra",       "meaning": "Stellvertreter; Zweiter im Kommando", "section": "Titel", "source": "GateWorld Omnipedia"},
-    {"goauld": "Dis'tra",       "meaning": "Meister", "section": "Titel", "source": "The Nox"},
-    {"goauld": "Cha'tii",       "meaning": "Krieger-Lehrling", "section": "Titel", "source": "RPG Lexicon"},
-    # ── Technology ────────────────────────────────────────────────────────
-    {"goauld": "Chappa'ai",     "meaning": "Sternentor / Stargate", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Chappa'ko",     "meaning": "Supergate", "section": "Technologie", "source": "Stargate SG-1"},
-    {"goauld": "Ha'tak",        "meaning": "Pyramiden-Mutterschiff / Angriffsraumschiff", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Al'kesh",       "meaning": "Mittelschwerer Bomber", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Tel'tak",       "meaning": "Frachtraumschiff", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Pel'tak",       "meaning": "Brücke / Kommandoraum eines Ha'tak", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Zat'nik'tel",   "meaning": "Energie-Seitenwaffe (1× betäubt, 2× tötet, 3× desintegriert)", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Ma'tok",        "meaning": "Stabwaffe", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Kara kesh",     "meaning": "Handgerät (Bandgerät)", "section": "Technologie", "source": "RPG Source"},
-    {"goauld": "Udajeet",       "meaning": "Todesgleiter — Goa'uld-Kampfjet", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Intar",         "meaning": "Trainings-Betäubungswaffe (roter Kristall)", "section": "Technologie", "source": "Rules of Engagement"},
-    {"goauld": "Naquadah",      "meaning": "Quartzit-Mineral — Grundlage der Goa'uld-Technologie", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Naquadria",     "meaning": "Instabile Variante von Naquadah", "section": "Technologie", "source": "Meridian"},
-    {"goauld": "Nish'ta",       "meaning": "Biologische Gehirnwäsche-Verbindung", "section": "Technologie", "source": "Seth"},
-    {"goauld": "Vo'cume",       "meaning": "Hologramm-Projektor / Kommunikationsgerät", "section": "Technologie", "source": "Rules of Engagement"},
-    {"goauld": "Tretonin",      "meaning": "Medizin aus Symbionten synthetisiert", "section": "Technologie", "source": "The Changeling"},
-    # ── Rituals & Culture ─────────────────────────────────────────────────
-    {"goauld": "Kel'no'reem",   "meaning": "Tiefer Meditationstrance (ersetzt Schlaf für Jaffa)", "section": "Rituale", "source": "Holiday"},
-    {"goauld": "Prim'ta",       "meaning": "Larven-Symbiont UND die Implantationszeremonie", "section": "Rituale", "source": "Bloodlines"},
-    {"goauld": "Prata",         "meaning": "Pubertät — Alter der ersten Prim'ta-Zeremonie", "section": "Rituale", "source": "Ultimate Visual Guide"},
-    {"goauld": "Bashaak",       "meaning": "Jaffa-Krieger-Training / Holz-Übungsstab", "section": "Rituale", "source": "The Warrior"},
-    {"goauld": "Shim'roa",      "meaning": "Flitterwochen", "section": "Rituale", "source": "Ultimate Visual Guide"},
-    {"goauld": "Cal mah",       "meaning": "Heiligtum — heilige Bezeichnung", "section": "Rituale", "source": "Serpent's Song"},
-    {"goauld": "Korush'nai",    "meaning": "Umkehren — Warnung auf verseuchten Welten", "section": "Rituale", "source": "There But for the Grace of God"},
-    {"goauld": "Dakara",        "meaning": "Heiliger Ort der ersten Prim'ta-Zeremonie", "section": "Orte", "source": "Reckoning"},
-    {"goauld": "Kheb",          "meaning": "Jaffa-Jenseits / Ort der Erleuchtung", "section": "Orte", "source": "Maternal Instinct"},
-    {"goauld": "Joma secu",     "meaning": "Führungsherausforderung — Kampf auf Leben und Tod", "section": "Rituale", "source": "The Warrior"},
-    {"goauld": "Kel shak lo",   "meaning": "Ritueller Kampf auf Leben und Tod zur Sühne eines Unrechts (Sodan)", "section": "Rituale", "source": "Babylon"},
-    {"goauld": "Sim'ka",        "meaning": "Verlobte — altertümlicher Begriff", "section": "Gesellschaft", "source": "Ultimate Visual Guide"},
-    {"goauld": "Sodan",         "meaning": "Legendäre freie Jaffa-Gruppe (seit 5000+ Jahren unabhängig)", "section": "Titel", "source": "Babylon"},
-    # ── Key phrases ───────────────────────────────────────────────────────
-    {"goauld": "Mekta satak Oz","meaning": "Meine Identität ist der Große und Mächtige Oz! (O'Neill)", "section": "Phrasen", "source": "Tangent"},
-    {"goauld": "Jaffa, kree",   "meaning": "Hört zu, Jaffa! / Jaffa, Achtung!", "section": "Phrasen", "source": "Throughout"},
-    {"goauld": "Niss trah",     "meaning": "Ich bin hier!", "section": "Phrasen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Mak lo onak",   "meaning": "Oh mein Gott!", "section": "Phrasen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Mak tal shree! Lo tak.", "meaning": "Ich bin ein Herr.", "section": "Phrasen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Shin tel",      "meaning": "Was ist los?", "section": "Phrasen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Kel nok shree Jaffa","meaning": "Ich bin kein Jaffa", "section": "Phrasen", "source": "Into the Fire"},
-    {"goauld": "Pal tiem shree tal ma","meaning": "Unsere Liebe endet nicht im Tod", "section": "Phrasen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Kal kek m'al shol'va","meaning": "Bereit zu sterben, Verräter?", "section": "Phrasen", "source": "RPG Lexicon"},
-    {"goauld": "Lo tak meta satak Oz","meaning": "Du sprichst mit dem Großen Oz / Ich bin der Große Oz (Doppelsatz!)", "section": "Phrasen", "source": "Tangent"},
-    {"goauld": "Benna! Ya wan ya duru!","meaning": "Kniet nieder vor euren Herren!", "section": "Phrasen", "source": "Ultimate Visual Guide"},
-    {"goauld": "Shor'wai'e! Yas! Yas!","meaning": "Beeil dich! Jetzt, jetzt!", "section": "Phrasen", "source": "Unleashed Ep 1"},
-    # ── Abydonian dialect ─────────────────────────────────────────────────
-    {"goauld": "Na-nay",        "meaning": "Nein, tu das nicht — Abydonian", "section": "Abydonian", "source": "Kasuf/Klorel"},
-    {"goauld": "Ti'u",          "meaning": "Ja — Abydonian", "section": "Abydonian", "source": "Film"},
-    {"goauld": "Bi'bo",         "meaning": "Möchtest du? / Nimm! — Abydonian", "section": "Abydonian", "source": "Kasuf"},
-    {"goauld": "Bonniewae",     "meaning": "Sehr gut, wohlschmeckend — Abydonian", "section": "Abydonian", "source": "Kasuf"},
-    {"goauld": "Bradio",        "meaning": "Komm schon! Beeil dich! — Abydonian", "section": "Abydonian", "source": "Kasuf"},
-    {"goauld": "Di'dak'dida",   "meaning": "Du wagst es?! — Abydonian", "section": "Abydonian", "source": "Film"},
-    {"goauld": "Ke'i",          "meaning": "Knie nieder! — Abydonian", "section": "Abydonian", "source": "Film"},
-    {"goauld": "Kegalo",        "meaning": "Stille! — Abydonian", "section": "Abydonian", "source": "Film"},
-    {"goauld": "Noc'ri'ton",    "meaning": "Hilf mir hier raus — Abydonian", "section": "Abydonian", "source": "Serpent's Lair"},
-    {"goauld": "A'roush",       "meaning": "Dorf — Abydonian", "section": "Abydonian", "source": "Film"},
-    # ── Numbers & misc ────────────────────────────────────────────────────
-    {"goauld": "Noc",           "meaning": "Nein", "section": "Grundvokabular", "source": "Within the Serpent's Grasp"},
-    {"goauld": "Arik",          "meaning": "Ja", "section": "Grundvokabular", "source": "SGCommand"},
-    {"goauld": "Chel'nak",      "meaning": "Sehr gut; ausgezeichnet", "section": "Grundvokabular", "source": "SGCommand"},
-    {"goauld": "Maa",           "meaning": "Vielleicht", "section": "Grundvokabular", "source": "SGCommand"},
-    {"goauld": "Haa",           "meaning": "Okay", "section": "Grundvokabular", "source": "SGCommand"},
-    {"goauld": "Ma'ate",        "meaning": "Verstanden; Wahrheit; Gerechtigkeit", "section": "Grundvokabular", "source": "SGCommand"},
-    {"goauld": "Kree nok",      "meaning": "Achtung, jetzt! (effektiv: Halt den Mund)", "section": "Grundvokabular", "source": "Ultimate Visual Guide"},
-    {"goauld": "Naquadah",      "meaning": "Quartzit-Mineral — Basis der Goa'uld-Energie-Technologie", "section": "Technologie", "source": "Throughout"},
-    {"goauld": "Ra",            "meaning": "Herrschaft; Herr; Sonnengott — System Lord", "section": "Titel", "source": "Film"},
-    {"goauld": "Ma'at",         "meaning": "Wahrheit; Gerechtigkeit; Ordnung; Schönheit", "section": "Grundvokabular", "source": "Ägyptische Mythologie"},
-    {"goauld": "Sutekh",        "meaning": "Chaos; das Böse; Feind", "section": "Grundvokabular", "source": "Ägyptische Mythologie"},
-    {"goauld": "M'al Sharran",  "meaning": "Letzter Ritus — Krieger wird an den Rand des Todes gebracht um Gehirnwäsche zu brechen", "section": "Rituale", "source": "Threshold"},
-    {"goauld": "Shesh'ta",      "meaning": "Goa'uld/Jaffa-Währungseinheit", "section": "Gesellschaft", "source": "Family"},
-    {"goauld": "Nek'sed",       "meaning": "Blitzkanone", "section": "Technologie", "source": "RPG sourcebook"},
-    {"goauld": "Ra'kek",        "meaning": "Sonnenstoß-Granate", "section": "Technologie", "source": "RPG sourcebook"},
-    {"goauld": "Krantu",        "meaning": "Klingenschaft-Waffe (Sodan)", "section": "Technologie", "source": "Babylon"},
-]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -620,258 +499,13 @@ class SentenceAnalyzer:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DEUTSCH → GOA'ULD  EXPLIZITES WÖRTERBUCH
-# Priorität vor dem Fuzzy-Engine — direkte 1:1 Übersetzungen
+# DEUTSCH → GOA'ULD  WÖRTERBUCH
+# Wird zur Laufzeit aus dem DE-Markdown-Wörterbuch befüllt.
+# Priorität vor dem Fuzzy-Engine — direkte 1:1 Übersetzungen.
 # ─────────────────────────────────────────────────────────────────────────────
 
-DE_GOAULD_MAP: dict[str, str] = {
-    # ── Pronomen ─────────────────────────────────────────────────────────
-    "ich":                      "ta",
-    "mich":                     "ta",
-    "mir":                      "ta",
-    "du":                       "lo",
-    "dich":                     "lo",
-    "dir":                      "lo",
-    "wir":                      "tap",
-    "uns":                      "tap",
-    "ihr":                      "lop",
-    "euch":                     "lop",
-    "mein":                     "mak",
-    "meine":                    "mak",
-    "meiner":                   "mak",
-    "meinem":                   "mak",
-    "dein":                     "mok",
-    "deine":                    "mok",
-
-    # ── Hilfsverben / Futur ──────────────────────────────────────────────
-    "bin":                      "k",
-    "bist":                     "k",
-    "ist":                      "k",
-    "sind":                     "k",
-    "werde":                    "nok",
-    "werden":                   "nok",
-    "wird":                     "nok",
-    "wirst":                    "nok",
-    "will":                     "nok",
-
-    # ── Verneinung ───────────────────────────────────────────────────────
-    "nicht":                    "ia",
-    "kein":                     "ka",
-    "keine":                    "ka",
-    "keinen":                   "ka",
-    "nein":                     "ka",
-    "ja":                       "arik",
-
-    # ── Basisverben ──────────────────────────────────────────────────────
-    "komm":                     "re",
-    "komme":                    "re",
-    "kommt":                    "re",
-    "kommen":                   "re",
-    "hör":                      "kree",
-    "hört":                     "kree",
-    "höre":                     "kree",
-    "hören":                    "leaa",
-    "zuhören":                  "leaa",
-    "warte":                    "tal",
-    "wartet":                   "tal",
-    "warten":                   "tal",
-    "halt":                     "hol",
-    "haltet":                   "hol",
-    "halte":                    "hol",
-    "stop":                     "hol",
-    "stopp":                    "hol",
-    "stehen":                   "hol",
-    "ergibt":                   "tal bet",
-    "ergib":                    "tal bet",
-    "ergebt":                   "tal bet",
-    "kapituliert":               "tal bet",
-    "kapituliere":              "tal bet",
-    "kapitulieren":             "tal bet",
-    "bitte":                    "quell shak",
-    "danke":                    "tek'ma'te",
-    "zeig":                     "tel ran el",
-    "zeige":                    "tel ran el",
-    "identifiziere":            "kree tal shal mak",
-    "identifiziert":            "kree tal shal mak",
-    "kämpfe":                   "tal shak",
-    "kämpft":                   "tal shak",
-    "kämpfen":                  "tal shak",
-    "folge":                    "kree hol",
-    "folgen":                   "kree hol",
-    "gehorche":                 "kree",
-    "gehorchen":                "kree",
-    "schweig":                  "dal'shak kree",
-    "schweigen":                "dal'shak kree",
-    "schweigt":                 "dal'shak kree",
-    "töte":                     "mol kek",
-    "tötet":                    "mol kek",
-    "töten":                    "mol kek",
-    "vernichte":                "mol kek",
-    "vernichtet":               "mol kek",
-    "vernichten":               "mol kek",
-    "zerstöre":                 "mol kek",
-    "zerstört":                 "mol kek",
-    "zerstören":                "mol kek",
-    "sterbe":                   "mel",
-    "stirb":                    "mel",
-    "sterben":                  "mel",
-    "sterbt":                   "mel",
-    "sterbe frei":              "dal shakka mel",
-    "gehen":                    "kree hol",
-    "geht":                     "kree hol",
-    "los":                      "kree hol",
-    "angreifen":                "tal shak",
-    "bereitmachen":             "kree lo'sehk",
-    "bereit":                   "kree lo'sehk",
-    "evakuieren":               "mel nok tee",
-    "evakuiert":                "mel nok tee",
-    "kniet":                    "benna! ya wan ya duru!",
-    "kniet nieder":             "benna! ya wan ya duru!",
-    "beeil dich":               "shor'wai'e! yas! yas!",
-    "beeilt euch":              "shor'wai'e! yas! yas!",
-    "beeilung":                 "shor'wai'e! yas! yas!",
-    "schnell":                  "shor'wai'e",
-    "bewache":                  "kree shel me'lac",
-    "bewacht":                  "kree shel me'lac",
-    "rückzug":                  "krel'lahk",
-    "zurückziehen":             "krel'lahk",
-
-    # ── Vollständige Phrasen (Priorität) ─────────────────────────────────
-    "ich sterbe frei":          "dal shakka mel",
-    "ich sterbe":               "dal shakka mel",
-    "wir ergeben uns nicht":    "arik tree'ac te kek",
-    "sieg oder tod":            "kalach shal tek",
-    "tötet sie alle":           "mol kek",
-    "alle töten":               "mol kek",
-    "ich bin hier":             "niss trah",
-    "hier bin ich":             "niss trah",
-    "oh mein gott":             "mak lo onak",
-    "oh gott":                  "mak lo onak",
-    "was ist los":              "shin tel",
-    "was geht hier vor":        "shin tel",
-    "kein bündnis":             "mak shel lo koma ashma",
-    "ich bin kein jaffa":       "kel nok shree jaffa",
-    "unsere liebe endet nicht": "pal tiem shree tal ma",
-    "wer bist du":              "kree tal shal mak",
-    "identifiziere dich":       "kree tal shal mak",
-    "feuer einstellen":         "hol mel",
-    "keine bewegung":           "hahl kree",
-    "achtung jetzt":            "kree nok",
-    "viel glück":               "chel nok",
-    "gut getroffen":            "tek'ma'te",
-    "auf wiedersehen":          "lek tol",
-    "wir kommen in frieden":    "tek'ma'tek",
-    "in frieden":               "tek'ma'tek",
-
-    # ── Adjektive ────────────────────────────────────────────────────────
-    "frei":                     "nem ron",
-    "stark":                    "teal'c",
-    "mächtig":                  "onak",
-    "groß":                     "onak",
-    "tot":                      "kek",
-    "tödlich":                  "kek",
-    "schwach":                  "kek",
-    "ehrlos":                   "shol'va",
-    "verdammt":                 "mai'tac",
-    "tapfer":                   "kalach",
-    "früher":                   "nokia",
-    "vorher":                   "nokia",
-
-    # ── Substantive ──────────────────────────────────────────────────────
-    "tod":                      "kek",
-    "schwäche":                 "kek",
-    "schwächling":              "hasshak",
-    "narr":                     "hasshak",
-    "dummkopf":                 "goe'nahk",
-    "idiot":                    "goe'nahk",
-    "verräter":                 "shol'va",
-    "ketzer":                   "shol'va",
-    "verrat":                   "shol'va",
-    "außenseiter":              "kresh'taa",
-    "verbannter":               "kresh'taa",
-    "eindringling":             "shree",
-    "schänder":                 "shree",
-    "gott":                     "onak",
-    "götter":                   "onak",
-    "meister":                  "dis'tra",
-    "herr":                     "dis'tra",
-    "jäger":                    "ashrak",
-    "attentäter":               "ashrak",
-    "krieger":                  "jaffa",
-    "jaffa":                    "jaffa",
-    "sklave":                   "lo'taur",
-    "mensch":                   "tar",
-    "menschlich":               "tar",
-    "erdlinge":                 "tau'ri",
-    "erdbewohner":              "tau'ri",
-    "erdenmenschen":            "tau'ri",
-    "erde":                     "tau'ri",
-    "stärke":                   "teal'c",
-    "asgard":                   "reenlokia",
-    "sieg":                     "kalach shal tek",
-    "ehre":                     "shal tek",
-    "seele":                    "kalach",
-    "freiheit":                 "nel nem ron",
-    "vergeltung":               "kel mar tokeem",
-    "rache":                    "kel mar tokeem",
-    "bund":                     "mak shel",
-    "allianz":                  "mak shel",
-    "befehl":                   "kree",
-    "krieg":                    "kek",
-    "mission":                  "ring kol nok",
-    "plan":                     "ring kol nok",
-    "strategie":                "ring kol nok",
-    "dorf":                     "a'roush",
-    "trick":                    "tak",
-    "lüge":                     "tak",
-    "täuschung":                "tak",
-    "sternentor":               "chappa'ai",
-    "stargate":                 "chappa'ai",
-    "supergate":                "chappa'ko",
-    "mutterschiff":             "ha'tak",
-    "symbionten":               "prim'ta",
-    "symbiont":                 "prim'ta",
-    "larve":                    "prim'ta",
-    "trance":                   "kel'no'reem",
-    "meditation":               "kel'no'reem",
-    "todesgleiter":             "udajeet",
-    "zat":                      "zat'nik'tel",
-    "stabwaffe":                "ma'tok",
-    "heiligtum":                "cal mah",
-    "zufluchtsort":             "cal mah",
-    "hochzeit":                 "shim'roa",
-    "flitterwochen":            "shim'roa",
-    "jenseits":                 "kheb",
-    "erleuchtung":              "kheb",
-    "währung":                  "shesh'ta",
-    "angriff":                  "tal shak",
-    "flankenangriff":           "kel'tesh",
-    "anfang":                   "nokiak",
-
-    # ── Zeitangaben ──────────────────────────────────────────────────────
-    "jetzt":                    "nok",
-    "sofort":                   "nok",
-    "nun":                      "nok",
-    "hier":                     "nok",
-    "da":                       "nok",
-    "so":                       "kel'sha",
-
-    # ── Begrüßungen ──────────────────────────────────────────────────────
-    "hallo":                    "chel hol",
-    "guten tag":                "chel hol",
-    "tschüss":                  "lek tol",
-    "bis dann":                 "lek tol",
-    "prost":                    "shal met",
-    "entschuldigung":           "tel kol",
-    "wie geht es dir":          "nanb'tu'qua",
-    "achtung":                  "kree",
-    "attention":                "kree",
-    "wer":                      "kel",
-    "was":                      "shal",
-    "wo":                       "kel",
-    "wann":                     "kel",
-    "name":                     "shal mak",
-}
+# Mutable module-level dict – wird von _load_mds() befüllt.
+DE_GOAULD_MAP: dict[str, str] = {}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -935,12 +569,11 @@ def translate_text(text: str, mapping: dict[str, str],
 # GUI  — CustomTkinter / Tkinter
 # ─────────────────────────────────────────────────────────────────────────────
 
-def find_md_file(hint: Optional[str] = None) -> Optional[str]:
-    """Sucht die Markdown-Datei an verschiedenen Standard-Speicherorten."""
-    search_paths = [hint] if hint else []
-    # Versuche Verzeichnis des Skripts
+def _find_one(candidates: list[str], hint: Optional[str] = None) -> Optional[str]:
+    """Sucht die erste vorhandene Datei aus einer Kandidatenliste."""
     script_dir = Path(sys.argv[0]).parent
-    for name in MD_CANDIDATES:
+    search_paths: list[str] = ([hint] if hint else [])
+    for name in candidates:
         search_paths += [
             str(script_dir / name),
             str(Path.cwd() / name),
@@ -952,6 +585,67 @@ def find_md_file(hint: Optional[str] = None) -> Optional[str]:
     return None
 
 
+def find_md_file(hint: Optional[str] = None) -> Optional[str]:
+    """Rückwärtskompatibel: sucht irgendeine MD-Datei (EN bevorzugt)."""
+    return _find_one(MD_CANDIDATES, hint)
+
+
+def find_md_files(hint_en: Optional[str] = None,
+                  hint_de: Optional[str] = None) -> tuple[Optional[str], Optional[str]]:
+    """
+    Sucht EN- und DE-Wörterbuchdateien getrennt.
+    Gibt (en_path, de_path) zurück — beide können None sein.
+    """
+    en = _find_one(MD_CANDIDATES_EN, hint_en)
+    de = _find_one(MD_CANDIDATES_DE, hint_de)
+    return en, de
+
+
+def _load_mds(hint_en: Optional[str] = None,
+              hint_de: Optional[str] = None) -> tuple[list[dict], list[str]]:
+    """
+    Lädt EN- und DE-Wörterbuchdateien, gibt (alle_eintraege, gefundene_pfade) zurück.
+    Befüllt außerdem das globale DE_GOAULD_MAP aus der DE-Datei.
+    """
+    global DE_GOAULD_MAP
+    all_entries: list[dict] = []
+    found_paths: list[str] = []
+
+    en_path, de_path = find_md_files(hint_en, hint_de)
+
+    if en_path:
+        entries = parse_markdown_dictionary(en_path)
+        if entries:
+            all_entries += [{**e, "lang": "en"} for e in entries]
+            found_paths.append(en_path)
+            print(f"[OK] EN-Wörterbuch geladen: {Path(en_path).name}  ({len(entries)} Einträge)")
+        else:
+            print(f"[WARN] Keine Einträge in EN-Datei: {en_path}")
+    else:
+        print("[INFO] Kein EN-Wörterbuch gefunden.")
+
+    if de_path:
+        entries = parse_markdown_dictionary(de_path)
+        if entries:
+            all_entries += [{**e, "lang": "de"} for e in entries]
+            found_paths.append(de_path)
+            # Rebuild DE_GOAULD_MAP from the de_map-tagged entries
+            DE_GOAULD_MAP = parse_de_map_from_entries(entries)
+            regular = sum(1 for e in entries if not e.get("de_map"))
+            map_cnt = len(DE_GOAULD_MAP)
+            print(f"[OK] DE-Wörterbuch geladen: {Path(de_path).name}  "
+                  f"({regular} Einträge, {map_cnt} DE→Goa'uld-Mappings)")
+        else:
+            print(f"[WARN] Keine Einträge in DE-Datei: {de_path}")
+    else:
+        print("[INFO] Kein DE-Wörterbuch gefunden.")
+
+    if not all_entries:
+        print("[FEHLER] Kein Vokabular geladen — bitte Wörterbuch-Dateien prüfen.")
+
+    return all_entries, found_paths
+
+
 class GoauldApp:
     """
     Haupt-GUI-Anwendung.  Läuft mit CustomTkinter (bevorzugt) oder
@@ -961,9 +655,9 @@ class GoauldApp:
     # ─── Initialisierung ─────────────────────────────────────────────────────
 
     def __init__(self, md_path: Optional[str] = None) -> None:
-        self._all_entries: list[dict] = list(EMBEDDED_VOCAB)
-        self._md_path: Optional[str] = None
-        self._load_md(md_path)
+        self._all_entries: list[dict] = []
+        self._md_paths: list[str] = []
+        self._load_mds_app(md_path)
         self._engine = SearchEngine(self._all_entries)
         self._analyzer = SentenceAnalyzer(self._engine)
         self._direction = "goa2de"
@@ -975,23 +669,17 @@ class GoauldApp:
 
     # ─── Datenladen ──────────────────────────────────────────────────────────
 
-    def _load_md(self, path: Optional[str]) -> None:
-        found = find_md_file(path)
-        if found:
-            md_entries = parse_markdown_dictionary(found)
-            if md_entries:
-                # MD-Datei hat englische Bedeutungen → lang="en"
-                md_tagged  = [{**e, "lang": "en"} for e in md_entries]
-                # Eingebettetes Vokabular hat deutsche Bedeutungen → lang="de"
-                emb_tagged = [{**e, "lang": "de"} for e in EMBEDDED_VOCAB]
-                self._all_entries = md_tagged + emb_tagged
-                self._md_path = found
-                print(f"[OK] Markdown geladen: {found}  ({len(md_entries)} Einträge)")
-            else:
-                print(f"[WARN] Keine Einträge aus MD-Datei extrahiert: {found}")
-        else:
-            self._all_entries = [{**e, "lang": "de"} for e in EMBEDDED_VOCAB]
-            print("[INFO] Keine MD-Datei gefunden – nutze eingebettetes Vokabular.")
+    def _load_mds_app(self, hint: Optional[str] = None) -> None:
+        """Lädt EN- und DE-Wörterbuch; bei manuellem hint wird er als EN-Pfad probiert."""
+        entries, paths = _load_mds(hint_en=hint)
+        self._all_entries = entries
+        self._md_paths    = paths
+
+    # Legacy-Alias für den Datei-Browser (wird weiter unten aufgerufen)
+    @property
+    def _md_path(self) -> Optional[str]:
+        """Erster gefundener Pfad – für Statusanzeige."""
+        return self._md_paths[0] if self._md_paths else None
 
     # ─── GUI-Aufbau ──────────────────────────────────────────────────────────
 
@@ -1091,8 +779,8 @@ class GoauldApp:
         )
         self._wormhole_lbl.pack(anchor="e")
 
-        src_text = (f"MD: {Path(self._md_path).name[:36]}"
-                    if self._md_path else "MD: — (Fallback-Vokabular)")
+        src_text = ("MD: " + " + ".join(Path(p).name[:20] for p in self._md_paths)
+                    if self._md_paths else "MD: — (kein Wörterbuch)")
         ctk.CTkLabel(
             stats_frame,
             text=src_text,
@@ -1470,8 +1158,8 @@ class GoauldApp:
                  bg=C["bg_panel"], fg=C["gold_dim"],
                  font=("Courier", 9)).pack(anchor="e")
 
-        src_text = (f"MD: {Path(self._md_path).name[:40]}"
-                    if self._md_path else "MD: — (Fallback-Vokabular)")
+        src_text = ("MD: " + " + ".join(Path(p).name[:22] for p in self._md_paths)
+                    if self._md_paths else "MD: — (kein Wörterbuch)")
         tk.Label(rf, text=src_text, bg=C["bg_panel"], fg=C["text_lo"],
                  font=("Courier", 8)).pack(anchor="e")
 
@@ -1674,7 +1362,7 @@ class GoauldApp:
                  fg=C["text_mid"], font=("Courier", 9), anchor="w").pack(
             side="left", padx=10)
 
-        tk.Label(bar, text="STARGATE  ·  Goa'uld Linguistic Interface  ·  v2.0",
+        tk.Label(bar, text="STARGATE  ·  Goa'uld Linguistic Interface  ·  v0.2",
                  bg=C["bg_panel"], fg=C["text_lo"], font=("Courier", 8)).pack(
             side="right", padx=10)
 
@@ -2150,8 +1838,10 @@ class GoauldApp:
     def _show_welcome_detail(self) -> None:
         total = len(self._engine.entries)
         de_map_count = len(DE_GOAULD_MAP)
-        src = (f"MD-Datei: {Path(self._md_path).name}"
-               if self._md_path else "Eingebettetes Fallback-Vokabular")
+        if self._md_paths:
+            src = "  +  ".join(Path(p).name for p in self._md_paths)
+        else:
+            src = "Kein Wörterbuch geladen"
         welcome = (
             "\n"
             "╔══════════════════════════════════════════════╗\n"
@@ -2484,23 +2174,38 @@ class GoauldApp:
             title="Markdown-Wörterbuch auswählen",
             filetypes=[("Markdown-Dateien", "*.md"), ("Alle Dateien", "*.*")],
         )
-        if path:
-            new_entries = parse_markdown_dictionary(path)
-            if new_entries:
-                self._md_path = path
-                self._all_entries = new_entries + list(EMBEDDED_VOCAB)
-                self._engine = SearchEngine(self._all_entries)
-                self._analyzer = SentenceAnalyzer(self._engine)
-                self._update_status()
-                self._show_welcome_detail()
-                self._do_search()
-                print(f"[OK] Neue MD-Datei geladen: {path}  ({len(new_entries)} Einträge)")
-            else:
-                if TK_AVAILABLE:
-                    messagebox.showwarning(
-                        "Keine Einträge",
-                        f"In der Datei wurden keine Goa'uld-Einträge gefunden:\n{path}",
-                    )
+        if not path:
+            return
+        new_entries = parse_markdown_dictionary(path)
+        if not new_entries:
+            if TK_AVAILABLE:
+                messagebox.showwarning(
+                    "Keine Einträge",
+                    f"In der Datei wurden keine Goa'uld-Einträge gefunden:\n{path}",
+                )
+            return
+
+        # Determine language by filename heuristic
+        name_low = Path(path).name.lower()
+        is_de = any(k in name_low for k in ("deutsch", "de_", "_de.", "vollständige", "vollstandige"))
+        lang = "de" if is_de else "en"
+        tagged = [{**e, "lang": lang} for e in new_entries]
+
+        # Reload everything fresh from both MDs, then replace matching lang
+        entries, paths = _load_mds()
+        # Remove any old entries of the same lang and add new ones
+        entries = [e for e in entries if e.get("lang") != lang] + tagged
+        if path not in paths:
+            paths = [p for p in paths if Path(p).name.lower() != name_low] + [path]
+
+        self._all_entries = entries
+        self._md_paths    = paths
+        self._engine      = SearchEngine(self._all_entries)
+        self._analyzer    = SentenceAnalyzer(self._engine)
+        self._update_status()
+        self._show_welcome_detail()
+        self._do_search()
+        print(f"[OK] MD-Datei geladen ({lang.upper()}): {path}  ({len(new_entries)} Einträge)")
 
     # ─── Hilfsfunktionen ─────────────────────────────────────────────────────
 
@@ -2541,18 +2246,15 @@ class GoauldApp:
 
 def run_cli(args: argparse.Namespace) -> None:
     print("\n" + "=" * 62)
-    print("   JAFFA, KREE!  —  Goa'uld Linguistic Interface  v2.0")
+    print("   JAFFA, KREE!  —  Goa'uld Linguistic Interface  v3.0")
     print("=" * 62)
 
-    # Lade Vokabular
-    all_entries = list(EMBEDDED_VOCAB)
-    md_path = find_md_file(getattr(args, "md", None))
-    if md_path:
-        md_entries = parse_markdown_dictionary(md_path)
-        all_entries = md_entries + all_entries
-        print(f"[OK] MD geladen: {md_path}  ({len(md_entries)} Einträge)")
-    else:
-        print("[INFO] Kein MD-Wörterbuch gefunden — nutze Fallback-Vokabular.")
+    # Lade Vokabular aus EN- und DE-Wörterbuch
+    hint = getattr(args, "md", None)
+    all_entries, found_paths = _load_mds(hint_en=hint)
+    if not all_entries:
+        print("[FEHLER] Kein Vokabular geladen. Abbruch.")
+        return
 
     mapping = build_mapping(all_entries, args.dir)
     dir_name = "Goa'uld → Deutsch/Englisch" if args.dir == "goa2de" else "Deutsch/Englisch → Goa'uld"
@@ -2586,7 +2288,7 @@ def run_cli(args: argparse.Namespace) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Stargate: Goa'uld Linguistic Interface v2.0",
+        description="Stargate: Goa'uld Linguistic Interface v0.2",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Beispiele (GUI):

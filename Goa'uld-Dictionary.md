@@ -45,6 +45,13 @@ These are the fundamental building blocks of Goa'uld — the individual words th
 | **Re** | Come | StargateWiki |
 | **Leaa** | Listen | RPG Lexicon |
 
+| **Chel'nak** | Very good; excellent | SGCommand |
+| **Maa** | Maybe; perhaps | SGCommand |
+| **Ma'ate** | Acknowledged; truth; justice | SGCommand |
+| **Ma'at** | Truth; justice; order; beauty | Egyptian mythology |
+| **Sutekh** | Chaos; evil; enemy | Egyptian mythology |
+| **Nel nem ron** | Freedom | RPG Lexicon |
+
 ---
 
 ## Greetings, farewells, and social phrases
