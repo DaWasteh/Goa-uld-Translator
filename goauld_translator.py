@@ -381,17 +381,42 @@ class SearchEngine:
     Bidirektionale Suche mit exaktem Matching, Präfix-Matching und Fuzzy-Matching.
     """
 
+    # Quellen-Priorität: Haupt-Wörterbuch > Fictionary > Neologikum
+    _SOURCE_PRIORITY: dict[str, int] = {
+        "Goa'uld-Wörterbuch.md": 3,
+        "Goa_uld-Wörterbuch.md": 3,
+        "Goa'uld-Dictionary.md": 3,
+        "Goa_uld-Dictionary.md": 3,
+        "Goa'uld-Fictionary.md": 2,
+        "Goa_uld-Fictionary.md": 2,
+        "Goa'uld-Neologikum.md": 1,
+        "Goa_uld-Neologikum.md": 1,
+        "Gap-Fill": 2,
+        "Kanon": 3,
+        "Kanon-ext": 2,
+        "Fanon": 2,
+        "Fanon/RPG": 2,
+        "RPG-Lexikon": 2,
+        "SG1-Kanon": 3,
+    }
+
     def __init__(self, entries: list[dict]) -> None:
         self.entries = entries
-        # Deduplicate by (goauld_lower, meaning_lower) – keep later (MD preferred)
-        seen: set[tuple] = set()
-        unique: list[dict] = []
-        for e in reversed(entries):
+        # FIX 1 (translation-bugs-findings.md): Deduplikation mit Quellen-Priorität
+        # Bei gleichem (goauld_lower, meaning_lower) behalten wir den Eintrag
+        # mit der höheren Quellen-Priorität.
+        seen: dict[tuple, tuple[int, dict]] = {}
+        for e in entries:
             key = (e["goauld"].lower(), e["meaning"].lower())
+            src = e.get("source", "")
+            priority = self._SOURCE_PRIORITY.get(src, 0)
             if key not in seen:
-                seen.add(key)
-                unique.append(e)
-        self.entries = list(reversed(unique))
+                seen[key] = (priority, e)
+            else:
+                old_priority = seen[key][0]
+                if priority > old_priority:
+                    seen[key] = (priority, e)
+        self.entries = [e for _, e in seen.values()]
 
     # ─── public api ──────────────────────────────────────────────────────────
 
@@ -426,7 +451,11 @@ class SearchEngine:
 
         for e in self.entries:
             val = e[field].lower()
-            base_score = self._score(q_low, val, fuzzy_threshold=fuzzy_threshold, direction=direction)
+            # FIX 3 (translation-bugs-findings.md): Dynamischen Fuzzy-Threshold für kurze Wörter
+            eff_threshold = fuzzy_threshold
+            if len(q_low) <= 6:
+                eff_threshold = max(fuzzy_threshold, 0.7)  # Höherer Threshold für kurze Wörter
+            base_score = self._score(q_low, val, fuzzy_threshold=eff_threshold, direction=direction)
             if base_score > 0 and base_score >= min_score:
                 # Sprach-Bonus: bevorzugte Sprache +8 Punkte
                 lang_bonus = 8 if e.get("lang", "de") == lang_pref else 0
@@ -447,7 +476,17 @@ class SearchEngine:
                     # Whole-word match in meaning → Bonus
                     if re.search(rf"\b{re.escape(q_low)}\b", val, re.IGNORECASE):
                         de2goa_bonus = max(de2goa_bonus, 5)
-                results.append((base_score + lang_bonus + short_bonus + de2goa_bonus, e))
+                # FIX 5 (translation-bugs-findings.md): Sekundäre Quellen strafen
+                source_penalty = 0
+                src = e.get("source", "")
+                if src in ("Goa'uld-Fictionary.md", "Goa_uld-Fictionary.md",
+                           "Goa'uld-Neologikum.md", "Goa_uld-Neologikum.md"):
+                    source_penalty = 15  # -15 Punkte für Fictionary/Neologikum
+                final_score = base_score + lang_bonus + short_bonus + de2goa_bonus - source_penalty
+                # FIX 4 (translation-bugs-findings.md): Debug-Logging für fehlende Wörter
+                if base_score == 0 and q_low in ("stirb", "vernichten", "deine", "mensch", "human"):
+                    log.warning("FEHLER: '%s' hat base_score=0 für Eintrag: %s", q_low, e)
+                results.append((final_score, e))
 
         results.sort(key=lambda x: x[0], reverse=True)
         return [e for _, e in results[:max_results]]
@@ -1217,6 +1256,13 @@ def _load_mds(hint_en: Optional[str] = None,
     # Duplikate wie "liebe"/"Liebe" werden hier entfernt — der SearchEngine-
     # Deduplicator normalisiert per .lower(), sodass ein Eintrag reicht.
     _GAP_FILL: list[dict] = [
+        # FIX 2 (translation-bugs-findings.md): "mensch" → "tau'ri" (kanonisch SG1)
+        # Diese Einträge haben höchste Priorität (SG1-Kanon) und überschreiben
+        # sekundäre Quellen wie Fictionary/Neologikum (tap'tar).
+        {"goauld": "tau'ri",   "meaning": "mensch",           "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "de", "de_map": True},
+        {"goauld": "tau'ri",   "meaning": "menschen",         "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "de", "de_map": True},
+        {"goauld": "tau'ri",   "meaning": "human",            "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "en", "de_map": False},
+        {"goauld": "tau'ri",   "meaning": "humans",           "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "en", "de_map": False},
         # Verwandtschaft / Family
         {"goauld": "shel'c",   "meaning": "Bruder",          "section": "Gap-Fill", "source": "Fanon/RPG", "lang": "de", "de_map": True},
         {"goauld": "shel'ca",  "meaning": "Schwester",        "section": "Gap-Fill", "source": "Fanon/RPG", "lang": "de", "de_map": True},
@@ -1238,6 +1284,12 @@ def _load_mds(hint_en: Optional[str] = None,
         {"goauld": "nok",      "meaning": "wissen",           "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         {"goauld": "shree",    "meaning": "eindringen",       "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         {"goauld": "tak",      "meaning": "täuschen",         "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
+        # FIX Problem 2 (translation-bugs-findings.md): "stirb" → "mel", "vernichten" → "mol kek"
+        {"goauld": "mel",      "meaning": "sterbe",           "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "de", "de_map": True},
+        {"goauld": "mel",      "meaning": "stirb",            "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "de", "de_map": True},
+        {"goauld": "mel",      "meaning": "sterben",          "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "de", "de_map": True},
+        {"goauld": "mol kek",  "meaning": "vernichten",       "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "de", "de_map": True},
+        {"goauld": "mol kek",  "meaning": "vernichtet",       "section": "Gap-Fill", "source": "SG1-Kanon", "lang": "de", "de_map": True},
         {"goauld": "kek",      "meaning": "sterben",          "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
         {"goauld": "tac",      "meaning": "kämpfen",          "section": "Gap-Fill", "source": "Fanon",     "lang": "de", "de_map": True},
         {"goauld": "kalach",   "meaning": "schützen",         "section": "Gap-Fill", "source": "Kanon-ext", "lang": "de", "de_map": True},
@@ -1359,7 +1411,7 @@ class GoauldApp:
             btn = ctk.CTkButton(
                 chev_frame, text="◆", font=("Courier", 8),
                 fg_color="transparent", text_color=C["chevron"],
-                hover_color="transparent", width=16, height=10,
+                hover_color=C["bg_panel"], width=16, height=10,
                 corner_radius=0, border_width=0
             )
             btn.pack(pady=1)
@@ -1629,6 +1681,10 @@ class GoauldApp:
         self._tabs.pack(fill="x", padx=6, pady=(4, 0))
         self._tabs.add("  ◈ Detail  ")
         self._tabs.add("  ⊕ Satzanalyse  ")
+        
+        # Tab-Separator
+        ctk.CTkFrame(right, fg_color=C["gold_dim"],
+                     corner_radius=0, height=1).pack(fill="x", padx=6, pady=(0, 0))
 
         # Detail tab
         detail_tab = self._tabs.tab("  ◈ Detail  ")
@@ -1778,11 +1834,12 @@ class GoauldApp:
                                     width=max(width, 800),
                                     height=max(height, 550))
 
-        # Zeichne horizontale Linien (alle 3px)
+        # Zeichne horizontale Linien (alle 3px) — Tkinter-freundlich
+        scanline_color = "#101820"  # Dunkles Panel-Farbe für subtile Scanlines
         for y in range(0, max(height, 550), 3):
             self._scanline_canvas.create_line(
                 0, y, max(width, 800), y,
-                fill=C["scanline"], width=1
+                fill=scanline_color, width=1
             )
 
     # ─── Standard Tkinter variant ─────────────────────────────────────────────
@@ -2099,48 +2156,66 @@ class GoauldApp:
         self._trans_output.insert("0.0", trans_str)
         self._trans_output.configure(state="disabled")
 
-        # Status badge
-        icon = GLYPH_LOCKED if found_n == total_n else GLYPH_CHEVRON
+        # Status badge — farbcodierte Anzeige
+        if found_n == total_n and total_n > 0:
+            badge_icon = GLYPH_FOUND
+            badge_color = C["sgc_green"]
+            badge_text = f"{badge_icon}  {found_n}/{total_n} Token"
+        elif found_n > 0:
+            badge_icon = GLYPH_CHEVRON
+            badge_color = C["orange"]
+            badge_text = f"{badge_icon}  {found_n}/{total_n} Token"
+        else:
+            badge_icon = GLYPH_KEK
+            badge_color = C["warning_red"]
+            badge_text = f"{badge_icon}  0/{total_n} Token"
+        
         self._trans_status_lbl.configure(
-            text=f"{icon}  {found_n}/{total_n} Token",
-            text_color=C["locked_bright"] if found_n == total_n else C["orange"],
+            text=badge_text,
+            text_color=badge_color,
         )
 
-        # Wormhole-Status im Header aktualisieren
+        # Wormhole-Status im Header — farbcodierte Status-Anzeige
         if hasattr(self, "_wormhole_var"):
             if not text:
                 self._wormhole_var.set("◎  STANDBY")
                 self._wormhole_lbl.configure(text_color=C["text_mid"])
             elif found_n == total_n:
-                self._wormhole_var.set("◉  WORMHOLE ESTABLISHED")
-                self._wormhole_lbl.configure(text_color=C["locked_bright"])
+                self._wormhole_var.set(f"{GLYPH_FOUND}  WORMHOLE ESTABLISHED")
+                self._wormhole_lbl.configure(text_color=C["sgc_green"])
             elif found_n > 0:
-                self._wormhole_var.set(f"◎  DIALING  ({found_n}/{total_n})")
+                self._wormhole_var.set(f"{GLYPH_CHEVRON}  DIALING  ({found_n}/{total_n})")
                 self._wormhole_lbl.configure(text_color=C["orange"])
             else:
-                self._wormhole_var.set("✕  NO SIGNAL")
-                self._wormhole_lbl.configure(text_color=C["text_kek"])
+                self._wormhole_var.set(f"{GLYPH_KEK}  NO SIGNAL")
+                self._wormhole_lbl.configure(text_color=C["warning_red"])
 
-        # Token breakdown — label columns depend on direction
+        # Token breakdown — verbesserte Tabelle mit Farbcodierung
         if direction == "goa2de":
             col_a_hdr, col_b_hdr = "GOA'ULD", "BEDEUTUNG (DE)"
         else:
             col_a_hdr, col_b_hdr = "EINGABE (DE)", "GOA'ULD"
 
-        lines: list[str] = [f"\n  {col_a_hdr:<22}  {col_b_hdr}\n"]
-        sep = "─" * 48
-        lines.append(f"  {sep}\n")
+        lines: list[str] = [
+            f"\n  {col_a_hdr:<22}  {col_b_hdr}\n",
+            f"  {'─' * 48}\n",
+        ]
 
         for td in analysis:
             tok   = td["token"]
             found = td["found"]
             prim  = td["primary"]
             alts  = td["alternatives"]
+            skipped = td.get("skipped", False)
+
+            if skipped:
+                lines.append(f"  {GLYPH_CHEVRON}  {tok:<20}  (Stoppwort, übersprungen)")
+                lines.append("")
+                continue
 
             t_icon = GLYPH_LOCKED if found else GLYPH_KEK
 
             if found and prim:
-                is_map = prim.get("source") == "DE_MAP"
                 if direction == "de2goa":
                     # col_a = Eingabe, col_b = Goa'uld
                     result_word = prim["goauld"].strip()
@@ -2278,6 +2353,7 @@ class GoauldApp:
             self._display_sentence_tk(analysis, query, phrase_hit)
 
     def _display_results_ctk(self, results: list[dict]) -> None:
+        """SGC Card-basierte Ergebnisliste mit Icons, Quelle/Episode-Tags."""
         # Clear old rows
         for row in self._result_rows:
             row.destroy()
@@ -2286,7 +2362,7 @@ class GoauldApp:
         if not results:
             msg = ctk.CTkLabel(
                 self._result_scroll,
-                text="  Kein Eintrag gefunden.\n  Tek'ma'te…",
+                text=f"  {GLYPH_KEK}  Kein Eintrag gefunden.\n     Tek'ma'te…",
                 font=("Courier", 11),
                 text_color=C["text_lo"],
                 anchor="w",
@@ -2298,58 +2374,116 @@ class GoauldApp:
             return
 
         for idx, entry in enumerate(results):
+            # Card-Frame mit Border
             row = ctk.CTkFrame(
                 self._result_scroll,
                 fg_color=C["bg_card"],
+                border_width=1,
+                border_color=C["card_border"],
                 corner_radius=4,
             )
             row.grid(row=idx, column=0, sticky="ew", padx=4, pady=2)
-            row.columnconfigure(0, weight=1)
+            row.columnconfigure(1, weight=1)
 
-            # Top line: Goa'uld term
+            # Icon: exakt (◆) oder fuzzy (◐)
+            score = entry.get("score", 0)
+            if score >= 90:
+                icon = GLYPH_FOUND  # ◉ exakt
+                icon_color = C["locked_bright"]
+            elif score >= 60:
+                icon = GLYPH_BULLET  # ◐ fuzzy
+                icon_color = C["gold"]
+            else:
+                icon = GLYPH_CHEVRON  # schwacher Treffer
+                icon_color = C["text_mid"]
+            
+            icon_lbl = ctk.CTkLabel(
+                row,
+                text=icon,
+                font=("Courier", 12, "bold"),
+                text_color=icon_color,
+                anchor="w",
+                width=16,
+            )
+            icon_lbl.grid(row=0, column=0, rowspan=2, sticky="n", padx=(6, 6), pady=6)
+
+            # Top line: Goa'uld term (bold, gold)
             goauld_lbl = ctk.CTkLabel(
                 row,
-                text=f"  {GLYPH_BULLET}  {entry['goauld']}",
+                text=entry["goauld"],
                 font=("Courier", 12, "bold"),
                 text_color=C["gold_bright"],
                 anchor="w",
             )
-            goauld_lbl.grid(row=0, column=0, sticky="ew", padx=6, pady=(6, 1))
+            goauld_lbl.grid(row=0, column=1, sticky="ew", padx=(0, 6), pady=(6, 0))
 
-            # Second line: meaning (truncated)
+            # Right side: score indicator (small)
+            score_lbl = ctk.CTkLabel(
+                row,
+                text=f"{score}%",
+                font=("Courier", 8),
+                text_color=C["text_lo"],
+                anchor="e",
+                width=36,
+            )
+            score_lbl.grid(row=0, column=2, sticky="e", padx=(0, 8), pady=(6, 0))
+
+            # Second line: meaning (truncated, wrapped)
             meaning = entry["meaning"]
-            if len(meaning) > 72:
-                meaning = meaning[:69] + "…"
+            if len(meaning) > 60:
+                meaning = meaning[:57] + "…"
             meaning_lbl = ctk.CTkLabel(
                 row,
-                text=f"    {GLYPH_ARROW}  {meaning}",
+                text=f"{GLYPH_ARROW}  {meaning}",
                 font=("Courier", 10),
                 text_color=C["text_hi"],
                 anchor="w",
-                wraplength=320,
+                wraplength=340,
             )
-            meaning_lbl.grid(row=1, column=0, sticky="ew", padx=6, pady=(0, 2))
+            meaning_lbl.grid(row=1, column=1, sticky="ew", padx=(0, 6), pady=(0, 2))
 
-            # Section tag
-            tag_lbl = ctk.CTkLabel(
-                row,
-                text=f"    [{entry['section']}]",
-                font=("Courier", 8),
-                text_color=C["gold_dim"],
-                anchor="w",
-            )
-            tag_lbl.grid(row=2, column=0, sticky="ew", padx=6, pady=(0, 5))
+            # Third line: Source/Episode tags
+            tag_parts = []
+            if entry.get("section"):
+                sec = entry["section"]
+                # Color-code sections
+                if "Kanon" in sec or "Kanon" in entry.get("source", ""):
+                    tag_color = C["locked_bright"]
+                elif "Fanon" in sec:
+                    tag_color = C["orange"]
+                else:
+                    tag_color = C["text_mid"]
+                tag_parts.append(f"[{sec}]")
+            if entry.get("source"):
+                src = entry["source"]
+                if len(src) > 24:
+                    src = src[:21] + "…"
+                tag_parts.append(f"Ep: {src}")
+            
+            if tag_parts:
+                tag_text = "  ·  ".join(tag_parts)
+                tag_lbl = ctk.CTkLabel(
+                    row,
+                    text=f"    {tag_text}",
+                    font=("Courier", 8),
+                    text_color=C["text_mid"],
+                    anchor="w",
+                    wraplength=360,
+                )
+                tag_lbl.grid(row=2, column=1, sticky="ew", padx=(0, 6), pady=(0, 5))
 
             # Click binding
             def _select(e, entry=entry, row=row):
                 for r in self._result_rows:
                     if isinstance(r, ctk.CTkFrame):
-                        r.configure(fg_color=C["bg_card"])
-                row.configure(fg_color=C["bg_select"])
+                        r.configure(fg_color=C["bg_card"], border_color=C["card_border"])
+                row.configure(fg_color=C["bg_select"], border_color=C["gold"])
                 self._show_detail(entry)
 
-            for w in [row, goauld_lbl, meaning_lbl, tag_lbl]:
-                w.bind("<Button-1>", _select)
+            for w in [row, goauld_lbl, meaning_lbl, tag_lbl if 'tag_lbl' in dir() else None]:
+                if w:
+                    w.bind("<Button-1>", _select)
+            icon_lbl.bind("<Button-1>", _select)
 
             self._result_rows.append(row)
 
@@ -2357,20 +2491,24 @@ class GoauldApp:
 
         # Auto-select first result
         if results:
-            self._result_rows[0].configure(fg_color=C["bg_select"])
+            self._result_rows[0].configure(fg_color=C["bg_select"], border_color=C["gold"])
             self._show_detail(results[0])
 
     def _display_results_tk(self, results: list[dict]) -> None:
+        """SGC Card-basierte Ergebnisliste (Tkinter-Fallback)."""
         self._listbox.delete(0, "end")
         self._tk_results = results
         if not results:
-            self._listbox.insert("end", "  Kein Eintrag gefunden.  Tek'ma'te…")
+            self._listbox.insert("end", f"  {GLYPH_KEK}  Kein Eintrag gefunden.  Tek'ma'te…")
             self._update_status(0)
             return
         for e in results:
-            goa = e["goauld"][:30]
-            mea = e["meaning"][:38]
-            self._listbox.insert("end", f"  {goa:<32}  {mea}")
+            score = e.get("score", 0)
+            icon = GLYPH_FOUND if score >= 90 else GLYPH_BULLET
+            goa = e["goauld"][:28]
+            mea = e["meaning"][:36]
+            sec = e.get("section", "")[:12]
+            self._listbox.insert("end", f"  {icon}  {goa:<30}  {mea}  [{sec}]")
         self._update_status(len(results))
         self._listbox.selection_set(0)
         self._show_detail(results[0])
@@ -2570,6 +2708,7 @@ class GoauldApp:
         self._write_detail(welcome)
 
     def _show_detail(self, entry: dict) -> None:
+        """SGC Detail-Panel mit klaren Sektionen: ENTRY, BEDEUTUNG, QUELLE, GRAMMATIK, ALTERNATIVEN."""
         self._selected_entry = entry
         sep   = "─" * 52
         sep_s = "┄" * 52
@@ -2609,20 +2748,22 @@ class GoauldApp:
         if "kek" in gl:
             tips.append(f"  {GLYPH_GATE}  Wurzel KEK = »Tod / Schwäche«")
 
-        # --- Build text ---
+        # --- Build text mit Sektionen ---
         lines = [
+            "",
+            f"  {GLYPH_GATE}  ENTRY DETAIL",
+            f"  {sep}",
             "",
             f"  {GLYPH_LOCKED}  {entry['goauld']}",
             "",
-            f"  {sep}",
-            "",
-            "  BEDEUTUNG",
-            "",
         ]
 
-        # Full meaning with line wrapping at 58 chars
+        # BEDEUTUNG Sektion
+        lines += [f"  {sep}", ""]
+        lines.append("  BEDEUTUNG")
+        lines.append("")
+        
         full_meaning = entry["meaning"]
-        # Split on ; and — to show structured meaning
         meaning_parts = re.split(r"\s*([;—])\s*", full_meaning)
         if len(meaning_parts) == 1:
             lines.append(f"    {full_meaning}")
@@ -2641,18 +2782,22 @@ class GoauldApp:
                     prefix = f"    {GLYPH_BULLET}  " if not first else "    "
                     lines.append(f"{prefix}{part.strip()}")
                     first = False
-
-        lines.append("")
-
-        # Section / Quelle
-        lines += [f"  {sep}", ""]
-        if entry.get("section"):
-            lines.append(f"  SEKTION     {entry['section']}")
-        if entry.get("source"):
-            lines.append(f"  EPISODE     {entry['source']}")
         lines += ["", f"  {sep}", ""]
 
-        # Grammar tips
+        # QUELLE / EPISODE Sektion
+        lines.append("  QUELLE")
+        lines.append("")
+        if entry.get("section"):
+            sec = entry["section"]
+            sec_icon = "◆" if "Kanon" in sec else "◈" if "Fanon" in sec else "▸"
+            lines.append(f"    {sec_icon}  SEKTION     {sec}")
+        if entry.get("source"):
+            lines.append(f"    ◈  EPISODE     {entry['source']}")
+        if not entry.get("section") and not entry.get("source"):
+            lines.append("    —  Keine Quelle verfügbar")
+        lines += ["", f"  {sep}", ""]
+
+        # GRAMMATIK & LINGUISTIK Sektion
         if tips:
             lines.append("  GRAMMATIK & LINGUISTIK")
             lines.append("")
@@ -2660,20 +2805,20 @@ class GoauldApp:
                 lines.append(t)
             lines += ["", f"  {sep}", ""]
 
-        # Alternatives (other forms)
+        # ALTERNATIVEN Sektion
         if alternatives:
-            lines.append("  VERWANDTE EINTRÄGE")
+            lines.append("  ALTERNATIVEN")
             lines.append("")
             for r in alternatives:
                 goa = r["goauld"][:26]
                 mea = re.split(r"[;—]", r["meaning"])[0].strip()[:40]
                 sec = f"[{r['section'][:14]}]" if r.get("section") else ""
-                lines.append(f"    {GLYPH_ARROW}  {goa:<28}  {mea}")
+                lines.append(f"    ▸  {goa:<28}  {mea}")
                 if sec:
                     lines.append(f"       {sec}")
             lines += ["", f"  {sep_s}", ""]
 
-        # Semantic relatives (same meaning domain)
+        # SEMANTISCH VERWANDT Sektion
         if semantic:
             lines.append("  SEMANTISCH VERWANDT")
             lines.append("")
@@ -2683,7 +2828,7 @@ class GoauldApp:
                 lines.append(f"    {GLYPH_GATE}  {goa:<28}  {mea}")
             lines += ["", f"  {sep}", ""]
 
-        lines.append(f"  {GLYPH_STAR}  Kree!  {GLYPH_STAR}")
+        lines.append(f"  {GLYPH_STAR}  Tek'ma'te.  {GLYPH_STAR}")
         lines.append("")
 
         self._write_detail("\n".join(lines))
@@ -2948,11 +3093,11 @@ def run_cli(args: argparse.Namespace) -> None:
         return
 
     mapping = build_mapping(all_entries, args.dir)
-    dir_name = "Goa'uld → Deutsch/Englisch" if args.dir == "goa2de" else "Deutsch/Englisch → Goa'uld"
+    dir_name = "Goa'uld -> Deutsch/Englisch" if args.dir == "goa2de" else "Deutsch/Englisch -> Goa'uld"
 
     if args.text:
         result = translate_text(args.text, mapping, direction=args.dir)
-        print(f"[{dir_name}]  {args.text}  →  {result}")
+        print(f"[{dir_name}]  {args.text}  ->  {result}")
         return
 
     print(f"\nRichtung: {dir_name}")
@@ -2967,7 +3112,7 @@ def run_cli(args: argparse.Namespace) -> None:
             if not user_input:
                 continue
             result = translate_text(user_input, mapping, direction=args.dir)
-            print(f"  →  {result}\n")
+            print(f"  ->  {result}\n")
         except (KeyboardInterrupt, EOFError):
             print("\nTek'ma'te!")
             break
@@ -3029,8 +3174,36 @@ Beispiele (CLI):
         if not CTK_AVAILABLE:
             log.warning("CustomTkinter nicht gefunden — nutze Standard-Tkinter.")
             log.warning("Für das beste Erlebnis:  pip install customtkinter")
-        app = GoauldApp(md_path=args.md)
-        app.run()
+        else:
+            log.info("CustomTkinter verfügbar — nutze CTK-GUI.")
+        try:
+            log.info("Initialisiere GoauldApp...")
+            app = GoauldApp(md_path=args.md)
+            log.info("Starte app.run()...")
+            app.run()
+            log.info("app.run() zurückgegeben.")
+        except SystemExit:
+            log.error("SystemExit während GUI-Start.")
+            import traceback
+            traceback.print_exc()
+            input("FEHLER: SystemExit\nDrücke Enter zum Beenden...")
+            sys.exit(1)
+        except Exception as _gui_err:
+            log.error("GUI-Fehler: %s", _gui_err, exc_info=True)
+            import traceback
+            _tb = traceback.format_exc()
+            log.error(_tb)
+            # Versuche, Fehler in einer MessageBox anzuzeigen
+            try:
+                import tkinter as tk
+                _root = tk.Tk()
+                _root.withdraw()
+                tk.messagebox.showerror("GUI-Fehler", f"FEHLER: {_gui_err}\n\n{_tb}")
+                _root.destroy()
+            except Exception:
+                pass
+            input(f"\nFEHLER: {_gui_err}\n\n{_tb}\nDrücke Enter zum Beenden...")
+            sys.exit(1)
 
 
 if __name__ == "__main__":
