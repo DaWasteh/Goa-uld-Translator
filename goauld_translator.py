@@ -154,6 +154,20 @@ C = {
     "found":        "#40A060",
     "warn":         "#C87020",
     "error":        "#A03020",
+
+    # NEU: SGC-Terminal Screen-Effekte
+    "scanline":     "#00000010",    # Scanline-Overlay (transparent)
+    "glow_gold":    "#F0C05030",    # Gold-Glow (transparent)
+    "glow_blue":    "#2A80D820",    # Blau-Glow (transparent)
+    "screen_tint":  "#0A182810",    # Gesamter Screen-Tint
+
+    # NEU: SGC-spezifisch
+    "sgc_green":    "#30A030",      # SGC Terminal-Grün (für Status)
+    "sgc_green_dim":"#1A4020",      # Gedämpftes Grün
+    "warning_red":  "#C03020",      # Warnung/Rot
+    "warning_red_dim":"#401810",    # Gedämpftes Rot
+    "card_border":  "#1A2840",      # Karten-Rand (blau)
+    "card_border_g":"#302818",      # Karten-Rand (gold)
 }
 
 # Font helpers (tuples for Tkinter)
@@ -1330,96 +1344,178 @@ class GoauldApp:
         self._update_status()
 
     def _build_header_ctk(self) -> None:
+        """SGC-Kommandoterminal Header mit animierten Chevron, Event-Horizon und Status-Badges."""
         hdr = ctk.CTkFrame(self.root, fg_color=C["bg_panel"],
-                           corner_radius=0, height=82)
+                           corner_radius=0, height=90)
         hdr.pack(fill="x", padx=0, pady=0)
         hdr.pack_propagate(False)
 
-        # Left: gate ring + chevron column
-        gate_frame = ctk.CTkFrame(hdr, fg_color="transparent", width=54)
-        gate_frame.pack(side="left", padx=(14, 0))
-        gate_frame.pack_propagate(False)
-        ctk.CTkLabel(gate_frame, text="⊕", font=("Courier", 34, "bold"),
-                     text_color=C["blue_gate"]).pack(pady=10)
-
-        chev_frame = ctk.CTkFrame(hdr, fg_color="transparent", width=16)
-        chev_frame.pack(side="left")
+        # ── Linke Chevron-Spalte (animiert) ──────────────────────────────
+        self._chev_buttons = []
+        chev_frame = ctk.CTkFrame(hdr, fg_color="transparent", width=50)
+        chev_frame.pack(side="left", padx=(10, 0))
         chev_frame.pack_propagate(False)
         for i in range(7):
-            ctk.CTkLabel(chev_frame, text="◆", font=("Courier", 7),
-                         text_color=C["chevron"]).pack()
+            btn = ctk.CTkButton(
+                chev_frame, text="◆", font=("Courier", 8),
+                fg_color="transparent", text_color=C["chevron"],
+                hover_color="transparent", width=16, height=10,
+                corner_radius=0, border_width=0
+            )
+            btn.pack(pady=1)
+            self._chev_buttons.append(btn)
 
-        # Title block
+        # ── Zentrale Titel-Sektion mit Event-Horizon ─────────────────────
         title_frame = ctk.CTkFrame(hdr, fg_color="transparent")
-        title_frame.pack(side="left", padx=(8, 0))
+        title_frame.pack(side="left", padx=(10, 0), expand=True)
+
+        # Pulsierender Event-Horizon-Glow (simuliert)
+        self._eh_glow = ctk.CTkLabel(
+            title_frame, text="⊕", font=("Courier", 28, "bold"),
+            text_color=C["blue_gate"]
+        )
+        self._eh_glow.pack(anchor="n", pady=(6, 0))
+        self._eh_phase = 0
 
         ctk.CTkLabel(
             title_frame,
             text="GOA'ULD LINGUISTIC INTERFACE",
-            font=("Courier", 19, "bold"),
+            font=("Courier", 18, "bold"),
             text_color=C["gold_bright"],
-        ).pack(anchor="w")
+        ).pack(anchor="w", pady=(2, 0))
 
         ctk.CTkLabel(
             title_frame,
-            text="SGC Xenolinguistics Division  ·  Stargate Command  ·  LEVEL 28",
+            text="SGC Xenolinguistics  ·  LEVEL 28",
             font=("Courier", 9),
             text_color=C["text_blue"],
         ).pack(anchor="w")
 
-        ctk.CTkLabel(
-            title_frame,
-            text='  "Tek\'ma\'te. Jaffa, kree!"  —  Stargate SG-1',
-            font=("Courier", 8, "italic"),
-            text_color=C["gold_dim"],
-        ).pack(anchor="w")
-
-        # Right side: wormhole status + stats
-        stats_frame = ctk.CTkFrame(hdr, fg_color="transparent")
-        stats_frame.pack(side="right", padx=18)
+        # ── Rechte Status-Sektion ────────────────────────────────────────
+        status_frame = ctk.CTkFrame(hdr, fg_color="transparent")
+        status_frame.pack(side="right", padx=(10, 0))
 
         self._entry_count_var = ctk.StringVar(value="")
         ctk.CTkLabel(
-            stats_frame,
+            status_frame,
             textvariable=self._entry_count_var,
             font=("Courier", 9, "bold"),
             text_color=C["locked_bright"],
         ).pack(anchor="e")
 
-        self._wormhole_var = ctk.StringVar(value="◎  STANDBY")
+        # Wormhole Status Badge
+        self._wormhole_var = ctk.StringVar(value="◎  WORMHOLE ESTABLISHED")
         self._wormhole_lbl = ctk.CTkLabel(
-            stats_frame,
+            status_frame,
             textvariable=self._wormhole_var,
             font=("Courier", 10, "bold"),
-            text_color=C["text_mid"],
+            text_color=C["sgc_green"],
         )
         self._wormhole_lbl.pack(anchor="e")
 
-        src_text = ("MD: " + " + ".join(Path(p).name[:20] for p in self._md_paths)
-                    if self._md_paths else "MD: — (kein Wörterbuch)")
-        ctk.CTkLabel(
-            stats_frame,
+        # MD-Datei Badge
+        src_text = ("◈ MD: " + Path(self._md_paths[0]).name[:25]
+                    if self._md_paths else "◈ MD: KEIN WÖRTERBUCH")
+        self._md_lbl = ctk.CTkLabel(
+            status_frame,
             text=src_text,
             font=("Courier", 8),
             text_color=C["text_lo"],
-        ).pack(anchor="e")
+        )
+        self._md_lbl.pack(anchor="e")
 
-        # Right gate decoration
+        # Rechte Gate-Dekoration
         ctk.CTkLabel(hdr, text="⊕", font=("Courier", 34, "bold"),
                      text_color=C["blue_dim"]).pack(side="right", padx=(0, 10))
 
+        # Animation starten
+        self._animate_header_ctk()
+
+    def _animate_header_ctk(self) -> None:
+        """Pulsierender Event-Horizon und Chevron-Pulsation."""
+        if not hasattr(self, '_chev_buttons'):
+            return
+        # Chevron pulsierend
+        base = C["chevron"]
+        for i, btn in enumerate(self._chev_buttons):
+            phase = (self._eh_phase + i) % 5
+            if phase < 2:
+                btn.configure(text_color=C["gold"])
+            else:
+                btn.configure(text_color=C["chevron"])
+        # Event-Horizon Glow
+        glow_color = C["blue_bright"] if self._eh_phase % 3 == 0 else C["blue_gate"]
+        self._eh_glow.configure(text_color=glow_color)
+        self._eh_phase = (self._eh_phase + 1) % 15
+        self.root.after(500, self._animate_header_ctk)
+
     def _build_controls_ctk(self) -> None:
+        """SGC-Eingabespalte mit EINGABE-Label und Direction-Toggle darunter."""
+        # Haupt-Control-Leiste (höher für zwei Zeilen)
         ctrl = ctk.CTkFrame(self.root, fg_color=C["bg_panel"],
-                            corner_radius=0, height=52)
+                            corner_radius=0, height=80)
         ctrl.pack(fill="x", padx=0, pady=(1, 0))
         ctrl.pack_propagate(False)
 
-        # Direction toggle — Deutsch→Goa'uld ist Hauptfunktion, steht links
+        # ── Zeile 1: EINGABE-Feld ────────────────────────────────────────
+        inp_frame = ctk.CTkFrame(ctrl, fg_color="transparent")
+        inp_frame.pack(fill="x", padx=14, pady=(8, 2))
+
+        # "EINGABE:" Label
+        ctk.CTkLabel(
+            inp_frame, text="EINGABE:",
+            font=("Courier", 10, "bold"),
+            text_color=C["gold_dim"]
+        ).pack(side="left", padx=(0, 8))
+
+        # Search icon
+        ctk.CTkLabel(inp_frame, text="◎", text_color=C["orange"],
+                     font=("Courier", 14)).pack(side="left", padx=(0, 4))
+
+        # Search entry
+        self._search_var = ctk.StringVar()
+        self._search_var.trace_add("write", self._on_search_change)
+        self._entry = ctk.CTkEntry(
+            inp_frame,
+            textvariable=self._search_var,
+            placeholder_text="Jaffa, kree!  —  Deutsch oder Goa'uld …",
+            font=("Courier", 13),
+            fg_color=C["bg_input"],
+            border_color=C["gold_dim"],
+            text_color=C["text_hi"],
+            placeholder_text_color=C["text_lo"],
+            border_width=1,
+            corner_radius=4,
+            height=30,
+        )
+        self._entry.pack(side="left", fill="x", expand=True, padx=(4, 4))
+        self._entry.bind("<Escape>", lambda e: self._search_var.set(""))
+        self._entry.bind("<Return>", lambda e: self._do_search())
+
+        # Load MD Button (rechts)
+        ctk.CTkButton(
+            inp_frame,
+            text="📂",
+            width=36,
+            height=30,
+            fg_color=C["bg_card"],
+            hover_color=C["bg_hover"],
+            text_color=C["text_mid"],
+            font=("Courier", 10),
+            corner_radius=4,
+            command=self._browse_md,
+        ).pack(side="left", padx=(4, 0))
+
+        # ── Zeile 2: Direction-Toggle + Language-Pref ────────────────────
+        btn_frame = ctk.CTkFrame(ctrl, fg_color="transparent")
+        btn_frame.pack(fill="x", padx=14, pady=(2, 6))
+
+        # Direction toggle
         self._dir_var = ctk.StringVar(value="de2goa")
         seg = ctk.CTkSegmentedButton(
-            ctrl,
-            values=["  DE  →  Goa'uld  ",
-                    "  Goa'uld  →  DE  "],
+            btn_frame,
+            values=["  DE → Goa'uld  ",
+                    "  Goa'uld → DE  "],
             variable=self._dir_var,
             command=self._on_direction_change,
             fg_color=C["bg_card"],
@@ -1431,17 +1527,17 @@ class GoauldApp:
             text_color_disabled=C["text_mid"],
             font=("Courier", 10, "bold"),
         )
-        seg.pack(side="left", padx=(14, 8), pady=10)
-        seg.set("  DE  →  Goa'uld  ")
-        self._direction = "de2goa"  # Default: Deutsch→Goa'uld
+        seg.pack(side="left", padx=(0, 8))
+        seg.set("  DE → Goa'uld  ")
+        self._direction = "de2goa"
 
         # Language preference toggle (DE / EN)
         self._lang_btn_var = ctk.StringVar(value="🇩🇪 DE")
         self._lang_btn = ctk.CTkButton(
-            ctrl,
+            btn_frame,
             textvariable=self._lang_btn_var,
             width=58,
-            height=30,
+            height=28,
             fg_color=C["locked_dim"],
             hover_color=C["locked"],
             text_color=C["locked_bright"],
@@ -1449,81 +1545,40 @@ class GoauldApp:
             corner_radius=4,
             command=self._toggle_lang_pref,
         )
-        self._lang_btn.pack(side="left", padx=(0, 10))
-
-        # Separator
-        ctk.CTkLabel(ctrl, text="|", text_color=C["gold_dim"],
-                     font=("Courier", 16)).pack(side="left", padx=4)
-
-        # Search icon
-        ctk.CTkLabel(ctrl, text="◎", text_color=C["orange"],
-                     font=("Courier", 16)).pack(side="left", padx=(8, 0))
-
-        # Search entry — wider, with horizontal scroll hint
-        self._search_var = ctk.StringVar()
-        self._search_var.trace_add("write", self._on_search_change)
-        self._entry = ctk.CTkEntry(
-            ctrl,
-            textvariable=self._search_var,
-            placeholder_text="Jaffa, kree!  —  Deutsch oder Goa'uld eingeben …  (Esc = löschen)",
-            font=("Courier", 13),
-            fg_color=C["bg_input"],
-            border_color=C["gold_dim"],
-            text_color=C["text_hi"],
-            placeholder_text_color=C["text_lo"],
-            border_width=1,
-            corner_radius=4,
-            height=32,
-        )
-        self._entry.pack(side="left", padx=(6, 8), pady=10, fill="x", expand=True)
-        self._entry.bind("<Escape>", lambda e: self._search_var.set(""))
-        self._entry.bind("<Return>", lambda e: self._do_search())
+        self._lang_btn.pack(side="left", padx=(0, 8))
 
         # Clear button
         ctk.CTkButton(
-            ctrl,
+            btn_frame,
             text="✕",
             width=30,
-            height=30,
+            height=28,
             fg_color=C["bg_card"],
             hover_color=C["bg_hover"],
             text_color=C["gold_dim"],
             font=("Courier", 12),
             corner_radius=4,
             command=lambda: self._search_var.set(""),
-        ).pack(side="left", padx=(0, 8))
-
-        # Load MD button
-        ctk.CTkButton(
-            ctrl,
-            text="📂",
-            width=36,
-            height=30,
-            fg_color=C["bg_card"],
-            hover_color=C["bg_hover"],
-            text_color=C["text_mid"],
-            font=("Courier", 10),
-            corner_radius=4,
-            command=self._browse_md,
-        ).pack(side="right", padx=(0, 14))
+        ).pack(side="left")
 
     def _build_main_ctk(self) -> None:
+        """SGC-Hauptbereich: Links Ergebnisliste (450px), rechts Tabs + Live-Übersetzung."""
         # ── Resizable PanedWindow (horizontal sash) ───────────────────────
         self._paned = tk.PanedWindow(
             self.root,
             orient="horizontal",
             bg=C["blue_gate"],
             sashrelief="flat",
-            sashwidth=5,
-            sashpad=0,
+            sashwidth=6,
+            sashpad=2,
             showhandle=False,
             bd=0,
         )
         self._paned.pack(fill="both", expand=True)
 
-        # ── LEFT: Results panel ───────────────────────────────────────────
+        # ── LEFT: Results panel (450px min, breiter) ──────────────────────
         left_outer = tk.Frame(self._paned, bg=C["bg_panel"])
-        self._paned.add(left_outer, minsize=200, width=340, stretch="never")
+        self._paned.add(left_outer, minsize=400, width=450, stretch="never")
 
         left = ctk.CTkFrame(left_outer, fg_color=C["bg_panel"], corner_radius=0)
         left.pack(fill="both", expand=True)
@@ -1547,16 +1602,19 @@ class GoauldApp:
         self._result_scroll.columnconfigure(0, weight=1)
         self._result_rows: list[ctk.CTkFrame | ctk.CTkLabel] = []
 
-        # ── RIGHT: Tabbed panel (Detail | Satzanalyse) ────────────────────
+        # ── RIGHT: Tabs oben + Live-Übersetzung unten ─────────────────────
         right_outer = tk.Frame(self._paned, bg=C["bg_card"])
-        self._paned.add(right_outer, minsize=300, stretch="always")
+        self._paned.add(right_outer, minsize=400, stretch="always")
 
         right = ctk.CTkFrame(right_outer, fg_color=C["bg_card"], corner_radius=0)
         right.pack(fill="both", expand=True)
+        right.rowconfigure(0, weight=0)   # Tabs
+        right.rowconfigure(1, weight=1)   # Live-Übersetzung
 
         ctk.CTkFrame(right, fg_color=C["gold_dim"],
                      corner_radius=0, height=2).pack(fill="x")
 
+        # Tabs (nur Detail + Satzanalyse, Übersetzer wird unten angezeigt)
         self._tabs = ctk.CTkTabview(
             right,
             fg_color=C["bg_card"],
@@ -1568,10 +1626,9 @@ class GoauldApp:
             text_color=C["text_hi"],
             text_color_disabled=C["text_mid"],
         )
-        self._tabs.pack(fill="both", expand=True)
+        self._tabs.pack(fill="x", padx=6, pady=(4, 0))
         self._tabs.add("  ◈ Detail  ")
         self._tabs.add("  ⊕ Satzanalyse  ")
-        self._tabs.add("  ⚡ Übersetzer  ")
 
         # Detail tab
         detail_tab = self._tabs.tab("  ◈ Detail  ")
@@ -1597,105 +1654,68 @@ class GoauldApp:
         )
         self._sentence_text.pack(fill="both", expand=True, padx=2, pady=2)
 
-        # ── Übersetzer tab (live, liest aus der Suchleiste) ──────────────
-        trans_tab = self._tabs.tab("  ⚡ Übersetzer  ")
-        trans_tab.rowconfigure(4, weight=1)
-        trans_tab.columnconfigure(0, weight=1)
+        # ── LIVE-ÜBERSETZUNG (immer sichtbar, unten) ──────────────────────
+        live_frame = ctk.CTkFrame(right, fg_color=C["bg_card"], corner_radius=0)
+        live_frame.pack(fill="both", expand=True, padx=6, pady=(4, 6))
+        live_frame.rowconfigure(0, weight=0)
+        live_frame.rowconfigure(1, weight=0)
+        live_frame.rowconfigure(2, weight=1)
+        live_frame.columnconfigure(0, weight=1)
 
-        # ── Direction bar ─────────────────────────────────────────────────
-        trans_hdr = ctk.CTkFrame(trans_tab, fg_color=C["blue_dim"],
-                                 corner_radius=4)
-        trans_hdr.grid(row=0, column=0, sticky="ew", padx=6, pady=(8, 4))
-        trans_hdr.columnconfigure(0, weight=1)
+        # Header: ⚡ LIVE-ÜBERSETZUNG + Status
+        live_hdr = ctk.CTkFrame(live_frame, fg_color=C["blue_dim"], corner_radius=4)
+        live_hdr.grid(row=0, column=0, sticky="ew", padx=0, pady=(0, 4))
+        live_hdr.columnconfigure(1, weight=1)
 
-        self._trans_dir_lbl = ctk.CTkLabel(
-            trans_hdr,
-            text=f"  {GLYPH_GATE}  Goa'uld  →  Deutsch",
-            font=("Courier", 11, "bold"),
-            text_color=C["blue_bright"],
+        ctk.CTkLabel(
+            live_hdr,
+            text=f"  ⚡ LIVE-ÜBERSETZUNG",
+            font=("Courier", 10, "bold"),
+            text_color=C["gold_bright"],
             anchor="w",
-        )
-        self._trans_dir_lbl.grid(row=0, column=0, sticky="w", padx=10, pady=6)
+        ).grid(row=0, column=0, sticky="w", padx=8, pady=4)
 
         self._trans_status_lbl = ctk.CTkLabel(
-            trans_hdr, text="",
+            live_hdr, text="",
             font=("Courier", 9, "bold"),
             text_color=C["locked_bright"], anchor="e",
         )
-        self._trans_status_lbl.grid(row=0, column=1, sticky="e", padx=10, pady=6)
+        self._trans_status_lbl.grid(row=0, column=1, sticky="e", padx=8, pady=4)
 
-        # ── INPUT display (read-only echo of the search bar) ─────────────
-        inp_frame = ctk.CTkFrame(trans_tab, fg_color=C["bg_input"],
-                                 corner_radius=4,
-                                 border_color=C["gold_dim"], border_width=1)
-        inp_frame.grid(row=1, column=0, sticky="ew", padx=6, pady=(0, 0))
-        inp_frame.columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(
-            inp_frame,
-            text=f"  EINGABE  ",
-            font=("Courier", 8, "bold"),
-            text_color=C["gold_dim"],
-            anchor="w",
-        ).grid(row=0, column=0, padx=(8, 0), pady=6)
-
-        self._trans_input_echo = ctk.CTkLabel(
-            inp_frame,
-            text="—  Suchleiste benutzen",
-            font=("Courier", 12),
-            text_color=C["text_mid"],
-            anchor="w",
-            wraplength=600,
-        )
-        self._trans_input_echo.grid(row=0, column=1, sticky="ew", padx=4, pady=6)
-
-        # ── Big arrow divider ─────────────────────────────────────────────
-        ctk.CTkLabel(
-            trans_tab,
-            text=f"  ▼  ÜBERSETZUNG",
-            font=("Courier", 10, "bold"),
-            text_color=C["locked_bright"],
-            anchor="w",
-        ).grid(row=2, column=0, sticky="ew", padx=10, pady=(6, 2))
-
-        # ── OUTPUT — the main result ──────────────────────────────────────
+        # Output-Bereich (groß, Gold-Highlight)
         self._trans_output = ctk.CTkTextbox(
-            trans_tab,
-            fg_color=C["locked_dim"],
+            live_frame,
+            fg_color=C["bg_input"],
             text_color=C["gold_bright"],
-            font=("Courier", 16, "bold"),
-            border_color=C["locked"],
-            border_width=2,
-            corner_radius=6,
-            height=90,
+            font=("Courier", 14, "bold"),
+            border_width=1,
+            corner_radius=4,
             state="disabled",
             wrap="word",
         )
-        self._trans_output.grid(row=3, column=0, sticky="ew", padx=6, pady=(0, 8))
+        self._trans_output.grid(row=1, column=0, sticky="ew", padx=0, pady=(0, 4))
 
-        # ── Token breakdown ───────────────────────────────────────────────
-        bd_outer = ctk.CTkFrame(trans_tab, fg_color=C["bg_panel"], corner_radius=0)
-        bd_outer.grid(row=4, column=0, sticky="nsew", padx=0)
-        bd_outer.rowconfigure(1, weight=1)
-        bd_outer.columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(
-            bd_outer,
-            text=f"  {GLYPH_SECTION}  WORT-FÜR-WORT  AUFSCHLÜSSELUNG",
-            font=("Courier", 9, "bold"),
+        # Token-Breakdown (kleinere Schrift)
+        self._trans_token_lbl = ctk.CTkLabel(
+            live_frame,
+            text="── WORT-FÜR-WORT ──",
+            font=("Courier", 8, "bold"),
             text_color=C["gold_dim"],
-            anchor="w",
-        ).grid(row=0, column=0, sticky="ew", padx=8, pady=(6, 2))
+        )
+        self._trans_token_lbl.grid(row=2, column=0, sticky="ew", pady=(0, 2))
 
-        self._trans_breakdown = ctk.CTkTextbox(
-            bd_outer,
+        self._trans_token_text = ctk.CTkTextbox(
+            live_frame,
             fg_color=C["bg_card"],
             text_color=C["text_hi"],
             font=("Courier", 10),
-            border_width=0, corner_radius=0,
-            state="disabled", wrap="word",
+            border_width=0,
+            corner_radius=0,
+            state="disabled",
+            wrap="word",
         )
-        self._trans_breakdown.grid(row=1, column=0, sticky="nsew", padx=6, pady=(0, 4))
+        self._trans_token_text.grid(row=3, column=0, sticky="nsew", pady=(0, 0))
+        live_frame.rowconfigure(3, weight=1)
 
         self._trans_after_id: Optional[str] = None
 
@@ -1727,6 +1747,44 @@ class GoauldApp:
             text_color=C["text_lo"],
         ).pack(side="right", padx=12)
 
+        # Scanline-Overlay (nur bei CustomTkinter)
+        self._create_scanline_overlay()
+
+    def _create_scanline_overlay(self) -> None:
+        """Erzeugt ein Scanline-Overlay über die gesamte GUI (CRT-Monitor-Look)."""
+        if not CTK_AVAILABLE:
+            return
+
+        # Canvas wird nach dem ersten Pack aktualisiert
+        self.root.after(500, self._draw_scanlines)
+
+    def _draw_scanlines(self) -> None:
+        """Zeichnet horizontale Scanline-Linien über die gesamte GUI."""
+        try:
+            width = self.root.winfo_width()
+            height = self.root.winfo_height()
+        except Exception:
+            width, height = 1100, 720
+
+        self._scanline_canvas = tk.Canvas(
+            self.root,
+            width=max(width, 800),
+            height=max(height, 550),
+            bg=C["bg_root"],
+            highlightthickness=0,
+            bd=0,
+        )
+        self._scanline_canvas.place(x=0, y=0,
+                                    width=max(width, 800),
+                                    height=max(height, 550))
+
+        # Zeichne horizontale Linien (alle 3px)
+        for y in range(0, max(height, 550), 3):
+            self._scanline_canvas.create_line(
+                0, y, max(width, 800), y,
+                fill=C["scanline"], width=1
+            )
+
     # ─── Standard Tkinter variant ─────────────────────────────────────────────
 
     def _build_tk(self) -> None:
@@ -1748,68 +1806,110 @@ class GoauldApp:
         self._update_status()
 
     def _build_header_tk(self) -> None:
-        hdr = tk.Frame(self.root, bg=C["bg_panel"], height=68)
+        """SGC-Kommandoterminal Header (Tkinter-Fallback)."""
+        hdr = tk.Frame(self.root, bg=C["bg_panel"], height=90)
         hdr.pack(fill="x")
         hdr.pack_propagate(False)
 
-        tk.Label(hdr, text="⬡", bg=C["bg_panel"], fg=C["gold"],
-                 font=("Courier", 28)).pack(side="left", padx=(14, 0))
+        # Linke Chevron-Spalte
+        chev_frame = tk.Frame(hdr, bg=C["bg_panel"])
+        chev_frame.pack(side="left", padx=(10, 0))
+        for i in range(7):
+            tk.Label(chev_frame, text="◆", bg=C["bg_panel"], fg=C["chevron"],
+                     font=("Courier", 8)).pack(pady=1)
 
+        # Gate-Symbol
+        tk.Label(hdr, text="⊕", bg=C["bg_panel"], fg=C["blue_gate"],
+                 font=("Courier", 28)).pack(side="left", padx=(10, 0))
+
+        # Zentrale Titel-Sektion
         tf = tk.Frame(hdr, bg=C["bg_panel"])
-        tf.pack(side="left", padx=10)
+        tf.pack(side="left", padx=(10, 0), expand=True)
 
+        tk.Label(tf, text="⊕", bg=C["bg_panel"], fg=C["blue_gate"],
+                 font=("Courier", 28, "bold")).pack(anchor="n")
         tk.Label(tf, text="GOA'ULD LINGUISTIC INTERFACE",
                  bg=C["bg_panel"], fg=C["gold_bright"],
-                 font=("Courier", 16, "bold")).pack(anchor="w")
-
-        tk.Label(tf, text="SGC Xenolinguistics Division  ·  Classification: LEVEL 28",
-                 bg=C["bg_panel"], fg=C["text_mid"],
+                 font=("Courier", 18, "bold")).pack(anchor="w")
+        tk.Label(tf, text="SGC Xenolinguistics  ·  LEVEL 28",
+                 bg=C["bg_panel"], fg=C["text_blue"],
                  font=("Courier", 9)).pack(anchor="w")
 
+        # Rechte Status-Sektion
         rf = tk.Frame(hdr, bg=C["bg_panel"])
-        rf.pack(side="right", padx=14)
+        rf.pack(side="right", padx=(10, 0))
 
         self._entry_count_var = tk.StringVar()
         tk.Label(rf, textvariable=self._entry_count_var,
-                 bg=C["bg_panel"], fg=C["gold_dim"],
-                 font=("Courier", 9)).pack(anchor="e")
+                 bg=C["bg_panel"], fg=C["locked_bright"],
+                 font=("Courier", 9, "bold")).pack(anchor="e")
 
-        src_text = ("MD: " + " + ".join(Path(p).name[:22] for p in self._md_paths)
-                    if self._md_paths else "MD: — (kein Wörterbuch)")
+        self._wormhole_var = tk.StringVar(value="◎  WORMHOLE ESTABLISHED")
+        tk.Label(rf, textvariable=self._wormhole_var,
+                 bg=C["bg_panel"], fg=C["sgc_green"],
+                 font=("Courier", 10, "bold")).pack(anchor="e")
+
+        src_text = ("◈ MD: " + Path(self._md_paths[0]).name[:25]
+                    if self._md_paths else "◈ MD: KEIN WÖRTERBUCH")
         tk.Label(rf, text=src_text, bg=C["bg_panel"], fg=C["text_lo"],
                  font=("Courier", 8)).pack(anchor="e")
 
-        tk.Label(hdr, text="⬡", bg=C["bg_panel"], fg=C["gold"],
-                 font=("Courier", 28)).pack(side="right", padx=(0, 4))
+        tk.Label(hdr, text="⊕", bg=C["bg_panel"], fg=C["blue_dim"],
+                 font=("Courier", 34, "bold")).pack(side="right", padx=(0, 10))
 
     def _build_controls_tk(self) -> None:
-        ctrl = tk.Frame(self.root, bg=C["bg_panel"], height=48)
+        """SGC-Eingabespalte (Tkinter-Fallback)."""
+        ctrl = tk.Frame(self.root, bg=C["bg_panel"], height=80)
         ctrl.pack(fill="x", pady=(1, 0))
         ctrl.pack_propagate(False)
 
-        self._dir_var = tk.StringVar(value="goa2de")
+        # Zeile 1: EINGABE-Feld
+        inp_frame = tk.Frame(ctrl, bg=C["bg_panel"])
+        inp_frame.pack(fill="x", padx=14, pady=(8, 2))
 
-        tk.Radiobutton(
-            ctrl,
-            text="  Goa'uld → Dt/En  ",
-            variable=self._dir_var,
-            value="goa2de",
-            command=self._on_direction_change,
-            bg=C["bg_card"],
+        tk.Label(inp_frame, text="EINGABE:", bg=C["bg_panel"], fg=C["gold_dim"],
+                 font=("Courier", 10, "bold")).pack(side="left", padx=(0, 8))
+        tk.Label(inp_frame, text="◎", bg=C["bg_panel"], fg=C["orange"],
+                 font=("Courier", 14)).pack(side="left", padx=(0, 4))
+
+        self._search_var = tk.StringVar()
+        self._search_var.trace_add("write", self._on_search_change)
+        self._entry = tk.Entry(
+            inp_frame,
+            textvariable=self._search_var,
+            bg=C["bg_input"],
             fg=C["text_hi"],
-            selectcolor=C["gold_dim"],
-            activebackground=C["bg_hover"],
-            activeforeground=C["gold_bright"],
-            font=("Courier", 10),
-            indicatoron=False,
+            insertbackground=C["gold"],
+            font=("Courier", 13),
             relief="flat",
             bd=0,
-            padx=10, pady=6,
-        ).pack(side="left", padx=(14, 2), pady=8)
+        )
+        self._entry.pack(side="left", fill="x", expand=True, padx=(4, 4))
+        self._entry.bind("<Escape>", lambda e: self._search_var.set(""))
+
+        tk.Button(
+            inp_frame,
+            text="📂",
+            bg=C["bg_card"],
+            fg=C["text_mid"],
+            activebackground=C["bg_hover"],
+            activeforeground=C["text_hi"],
+            font=("Courier", 10),
+            relief="flat",
+            bd=0,
+            padx=8, pady=4,
+            command=self._browse_md,
+        ).pack(side="left", padx=(4, 0))
+
+        # Zeile 2: Direction-Toggle + Buttons
+        btn_frame = tk.Frame(ctrl, bg=C["bg_panel"])
+        btn_frame.pack(fill="x", padx=14, pady=(2, 6))
+
+        self._dir_var = tk.StringVar(value="de2goa")
 
         tk.Radiobutton(
-            ctrl,
-            text="  Dt/En → Goa'uld  ",
+            btn_frame,
+            text="  DE → Goa'uld  ",
             variable=self._dir_var,
             value="de2goa",
             command=self._on_direction_change,
@@ -1823,29 +1923,28 @@ class GoauldApp:
             relief="flat",
             bd=0,
             padx=10, pady=6,
-        ).pack(side="left", padx=2, pady=8)
+        ).pack(side="left", padx=(0, 2))
 
-        tk.Label(ctrl, text=" ◎ ", bg=C["bg_panel"], fg=C["orange"],
-                 font=("Courier", 14)).pack(side="left", padx=(14, 0))
-
-        self._search_var = tk.StringVar()
-        self._search_var.trace_add("write", self._on_search_change)
-        self._entry = tk.Entry(
-            ctrl,
-            textvariable=self._search_var,
-            bg=C["bg_input"],
+        tk.Radiobutton(
+            btn_frame,
+            text="  Goa'uld → DE  ",
+            variable=self._dir_var,
+            value="goa2de",
+            command=self._on_direction_change,
+            bg=C["bg_card"],
             fg=C["text_hi"],
-            insertbackground=C["gold"],
-            font=("Courier", 13),
+            selectcolor=C["gold_dim"],
+            activebackground=C["bg_hover"],
+            activeforeground=C["gold_bright"],
+            font=("Courier", 10),
+            indicatoron=False,
             relief="flat",
             bd=0,
-            width=38,
-        )
-        self._entry.pack(side="left", padx=(4, 8), pady=10, ipady=5)
-        self._entry.bind("<Escape>", lambda e: self._search_var.set(""))
+            padx=10, pady=6,
+        ).pack(side="left", padx=2)
 
         tk.Button(
-            ctrl,
+            btn_frame,
             text="✕",
             bg=C["bg_card"],
             fg=C["gold_dim"],
@@ -1854,30 +1953,17 @@ class GoauldApp:
             font=("Courier", 11),
             relief="flat",
             bd=0,
-            padx=6, pady=3,
-            command=lambda: self._search_var.set(""),
-        ).pack(side="left", padx=(0, 12))
-
-        tk.Button(
-            ctrl,
-            text="📂  MD laden",
-            bg=C["bg_card"],
-            fg=C["text_mid"],
-            activebackground=C["bg_hover"],
-            activeforeground=C["text_hi"],
-            font=("Courier", 10),
-            relief="flat",
-            bd=0,
             padx=8, pady=4,
-            command=self._browse_md,
-        ).pack(side="right", padx=(0, 14))
+            command=lambda: self._search_var.set(""),
+        ).pack(side="left", padx=(10, 0))
 
     def _build_main_tk(self) -> None:
+        """SGC-Hauptbereich (Tkinter-Fallback)."""
         main = tk.Frame(self.root, bg=C["bg_root"])
         main.pack(fill="both", expand=True, pady=(1, 0))
 
-        # Results panel
-        left = tk.Frame(main, bg=C["bg_panel"], width=340)
+        # Results panel (450px breit)
+        left = tk.Frame(main, bg=C["bg_panel"], width=450)
         left.pack(side="left", fill="both")
         left.pack_propagate(False)
 
@@ -1993,24 +2079,8 @@ class GoauldApp:
         direction = self._direction
         lang_pref = self._lang_pref
 
-        # Sync direction label
-        if direction == "goa2de":
-            dir_text  = "⊕  Goa'uld  →  Deutsch / Englisch"
-            in_hint   = "Goa'uld eingeben …"
-        else:
-            dir_text  = "⊕  Deutsch  →  Goa'uld"
-            in_hint   = "Deutschen Text eingeben …"
-
-        self._trans_dir_lbl.configure(text=f"  {dir_text}")
-
-        # Update input echo
-        self._trans_input_echo.configure(
-            text=text if text else f"—  {in_hint}",
-            text_color=C["gold_bright"] if text else C["text_lo"],
-        )
-
         if not text:
-            for w in (self._trans_output, self._trans_breakdown):
+            for w in (self._trans_output, self._trans_token_text):
                 w.configure(state="normal")
                 w.delete("0.0", "end")
                 w.configure(state="disabled")
@@ -2115,10 +2185,10 @@ class GoauldApp:
 
             lines.append("")
 
-        self._trans_breakdown.configure(state="normal")
-        self._trans_breakdown.delete("0.0", "end")
-        self._trans_breakdown.insert("0.0", "\n".join(lines))
-        self._trans_breakdown.configure(state="disabled")
+        self._trans_token_text.configure(state="normal")
+        self._trans_token_text.delete("0.0", "end")
+        self._trans_token_text.insert("0.0", "\n".join(lines))
+        self._trans_token_text.configure(state="disabled")
 
     def _toggle_lang_pref(self) -> None:
         """Wechselt zwischen Deutsch- und Englisch-Priorisierung."""
