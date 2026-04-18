@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v0.2                  ║
+║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v0.2.5                ║
 ║   SGC Xenolinguistics Division  ·  Classification: LEVEL 28      ║
 ╚══════════════════════════════════════════════════════════════════╝
 
@@ -168,6 +168,16 @@ C = {
     "warning_red_dim":"#401810",    # Gedämpftes Rot
     "card_border":  "#1A2840",      # Karten-Rand (blau)
     "card_border_g":"#302818",      # Karten-Rand (gold)
+
+    # NEU v0.2.5: Classification Bar (TOP SECRET)
+    "class_bg":     "#3A0A0A",      # Dunkles Rot — Background
+    "class_border": "#601818",      # Rand der Classification-Bar
+    "class_text":   "#F0A0A0",      # Heller roter Text
+    "class_block":  "#904030",      # Block-Quadrate ■ ■ ■
+    # NEU v0.2.5: Militär-Akzente
+    "mil_amber":    "#D89020",      # Signal-Amber für Operator-ID
+    "mil_text_dim": "#888070",      # Gedämpfter Military-Grau
+    "phosphor_grn": "#40B060",      # Phosphor-Grün für LEDs
 }
 
 # Font helpers (tuples for Tkinter)
@@ -231,12 +241,35 @@ _SKIP_SECOND = {"meaning", "english", "translation", "compound analysis",
                 "context", "notes", "episode", "speaker", "source / episode",
                 "bedeutung", "goa'uld", "goauld", "kontext", "kategorie"}
 
-# Section headings that signal reversed columns (Deutsch → Goa'uld)
-_DE_GOA_SECTION_MARKERS = {
-    "deutsch → goa'uld: direktzuordnung",
-    "deutsch → goa'uld",
-    "de → goa'uld",
-}
+# Section headings that signal reversed columns (Deutsch/English → Goa'uld).
+#
+# FIX (v0.2.5): Früher war das ein exact-match Set mit festen Strings wie
+# "deutsch → goa'uld: direktzuordnung".  Dadurch wurde die Sektion
+# "## Deutsch → Goa'uld: Direktzuordnung (Neologikum)" aus dem Neologikum
+# NICHT erkannt — der Zusatz "(Neologikum)" ließ den Exact-Match fehlschlagen.
+# Konsequenz: 1200+ Einträge wurden umgekehrt eingelesen (goauld-Feld bekam
+# deutsche Wörter, meaning-Feld bekam Goa'uld-Wörter), was die Engine-Suche
+# und das DE_GOAULD_MAP verfälschte (z.B. "tap'tar" → "menschheit" statt
+# umgekehrt).  Dasselbe Problem bestand symmetrisch für "English → Goa'uld"
+# im Fictionary.
+#
+# Jetzt: Regex-basiert.  Erkennt alle Varianten:
+#   "Deutsch → Goa'uld"
+#   "Deutsch → Goa'uld: Direktzuordnung"
+#   "Deutsch → Goa'uld: Direktzuordnung (Neologikum)"
+#   "DE → Goa'uld"
+#   "English → Goa'uld: Direct lookup"
+#   "EN → Goa'uld"
+# Erlaubte Pfeile: →, ->, =>, -->
+# Erlaubte Apostrophe in "Goa'uld": ', ’, ´, ` (Unicode-tolerant)
+_DE_GOA_SECTION_RE = re.compile(
+    r"^\s*(deutsch|de|english|en)\s*(?:→|->|-->|=>)\s*goa['\u2019\u00b4`]?uld\b",
+    re.IGNORECASE,
+)
+
+# Legacy-Alias — falls irgendwo noch referenziert.  Die Regex ist jetzt
+# die Single Source of Truth.
+_DE_GOA_SECTION_MARKERS: frozenset[str] = frozenset()
 
 
 def _clean(text: str) -> str:
@@ -279,7 +312,10 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
         # Track section headings
         if line.startswith("## ") or line.startswith("# "):
             current_section = line.lstrip("#").strip()
-            reversed_section = current_section.lower() in _DE_GOA_SECTION_MARKERS
+            # FIX (v0.2.5): Regex-basierte Erkennung statt exact-match Set.
+            # Fängt jetzt auch "Direktzuordnung (Neologikum)", "Direct lookup"
+            # und englische Varianten ab.
+            reversed_section = bool(_DE_GOA_SECTION_RE.match(current_section))
             continue
 
         # Only process table rows
@@ -1385,20 +1421,53 @@ class GoauldApp:
 
         self.root = ctk.CTk()
         self.root.title("GOA'ULD LINGUISTIC INTERFACE — SGC")
-        self.root.geometry("1100x720")
-        self.root.minsize(800, 550)
+        self.root.geometry("1100x760")
+        self.root.minsize(900, 600)
         self.root.configure(fg_color=C["bg_root"])
 
+        self._build_classification_bar_ctk()
         self._build_header_ctk()
         self._build_controls_ctk()
         self._build_main_ctk()
         self._build_statusbar_ctk()
         self._update_status()
 
+    def _build_classification_bar_ctk(self) -> None:
+        """TOP SECRET // SCI Klassifizierungsleiste — dauerhaft rot (SGC-Konvention)."""
+        bar = ctk.CTkFrame(self.root, fg_color=C["class_bg"],
+                           corner_radius=0, height=20,
+                           border_width=0)
+        bar.pack(fill="x", padx=0, pady=0)
+        bar.pack_propagate(False)
+
+        # Untere Trennlinie
+        ctk.CTkFrame(self.root, fg_color=C["class_border"],
+                     corner_radius=0, height=1).pack(fill="x", padx=0, pady=0)
+
+        # Links: Blocks + Text
+        left = ctk.CTkFrame(bar, fg_color="transparent")
+        left.pack(side="left", padx=10)
+        ctk.CTkLabel(
+            left,
+            text="■ ■ ■   TOP SECRET // SCI // STARGATE COMMAND   ■ ■ ■",
+            font=("Courier", 10, "bold"),
+            text_color=C["class_text"],
+        ).pack(side="left")
+
+        # Rechts: Clearance
+        right = ctk.CTkFrame(bar, fg_color="transparent")
+        right.pack(side="right", padx=10)
+        ctk.CTkLabel(
+            right,
+            text="CLEARANCE LEVEL 28 REQUIRED",
+            font=("Courier", 10, "bold"),
+            text_color=C["class_text"],
+        ).pack(side="right")
+
     def _build_header_ctk(self) -> None:
         """SGC-Kommandoterminal Header mit animierten Chevron, Event-Horizon und Status-Badges."""
         hdr = ctk.CTkFrame(self.root, fg_color=C["bg_panel"],
-                           corner_radius=0, height=90)
+                           corner_radius=0, height=110)
         hdr.pack(fill="x", padx=0, pady=0)
         hdr.pack_propagate(False)
 
@@ -1438,35 +1507,57 @@ class GoauldApp:
 
         ctk.CTkLabel(
             title_frame,
-            text="SGC Xenolinguistics  ·  LEVEL 28",
+            text="SGC XENOLINGUISTICS DIV  ·  SG-1 OPS  ·  FACILITY: CHEYENNE MOUNTAIN",
             font=("Courier", 9),
             text_color=C["text_blue"],
         ).pack(anchor="w")
 
         # ── Rechte Status-Sektion ────────────────────────────────────────
         status_frame = ctk.CTkFrame(hdr, fg_color="transparent")
-        status_frame.pack(side="right", padx=(10, 0))
+        status_frame.pack(side="right", padx=(10, 10))
 
-        self._entry_count_var = ctk.StringVar(value="")
-        ctk.CTkLabel(
-            status_frame,
-            textvariable=self._entry_count_var,
-            font=("Courier", 9, "bold"),
-            text_color=C["locked_bright"],
-        ).pack(anchor="e")
-
-        # Wormhole Status Badge
+        # Wormhole Status Badge — top
         self._wormhole_var = ctk.StringVar(value="◎  WORMHOLE ESTABLISHED")
         self._wormhole_lbl = ctk.CTkLabel(
             status_frame,
             textvariable=self._wormhole_var,
             font=("Courier", 10, "bold"),
-            text_color=C["sgc_green"],
+            text_color=C["phosphor_grn"],
         )
         self._wormhole_lbl.pack(anchor="e")
 
+        # Operator-ID
+        self._operator_var = ctk.StringVar(value="◈ OPERATOR: CIV-01 / JACKSON-D")
+        ctk.CTkLabel(
+            status_frame,
+            textvariable=self._operator_var,
+            font=("Courier", 9),
+            text_color=C["mil_amber"],
+        ).pack(anchor="e")
+
+        # Stardate / Zulu-Zeit (einmal beim Start gesetzt — keine Animation)
+        from datetime import datetime, timezone
+        _now = datetime.now(timezone.utc)
+        _doy = _now.timetuple().tm_yday
+        _stardate = f"⧗ STARDATE {_now.year}.{_doy:03d}  ·  {_now.strftime('%H%M')} ZULU"
+        ctk.CTkLabel(
+            status_frame,
+            text=_stardate,
+            font=("Courier", 9),
+            text_color=C["text_blue"],
+        ).pack(anchor="e")
+
+        # Lexikon-Counter  (wird per _entry_count_var aktualisiert)
+        self._entry_count_var = ctk.StringVar(value="▸ LEXICON: — ENTRIES")
+        ctk.CTkLabel(
+            status_frame,
+            textvariable=self._entry_count_var,
+            font=("Courier", 9),
+            text_color=C["mil_text_dim"],
+        ).pack(anchor="e")
+
         # MD-Datei Badge
-        src_text = ("◈ MD: " + Path(self._md_paths[0]).name[:25]
+        src_text = ("◈ MD: " + Path(self._md_paths[0]).name[:28]
                     if self._md_paths else "◈ MD: KEIN WÖRTERBUCH")
         self._md_lbl = ctk.CTkLabel(
             status_frame,
@@ -1478,7 +1569,7 @@ class GoauldApp:
 
         # Rechte Gate-Dekoration
         ctk.CTkLabel(hdr, text="⊕", font=("Courier", 34, "bold"),
-                     text_color=C["blue_dim"]).pack(side="right", padx=(0, 10))
+                     text_color=C["blue_dim"]).pack(side="right", padx=(4, 6))
 
         # Animation starten
         self._animate_header_ctk()
@@ -1513,11 +1604,11 @@ class GoauldApp:
         inp_frame = ctk.CTkFrame(ctrl, fg_color="transparent")
         inp_frame.pack(fill="x", padx=14, pady=(8, 2))
 
-        # "EINGABE:" Label
+        # "▸ INPUT" Label
         ctk.CTkLabel(
-            inp_frame, text="EINGABE:",
+            inp_frame, text="▸ INPUT",
             font=("Courier", 10, "bold"),
-            text_color=C["gold_dim"]
+            text_color=C["orange"]
         ).pack(side="left", padx=(0, 8))
 
         # Search icon
@@ -1537,7 +1628,7 @@ class GoauldApp:
             text_color=C["text_hi"],
             placeholder_text_color=C["text_lo"],
             border_width=1,
-            corner_radius=4,
+            corner_radius=2,
             height=30,
         )
         self._entry.pack(side="left", fill="x", expand=True, padx=(4, 4))
@@ -1634,23 +1725,42 @@ class GoauldApp:
 
         left = ctk.CTkFrame(left_outer, fg_color=C["bg_panel"], corner_radius=0)
         left.pack(fill="both", expand=True)
-        left.rowconfigure(2, weight=1)
+        left.rowconfigure(3, weight=1)
         left.columnconfigure(0, weight=1)
 
         ctk.CTkFrame(left, fg_color=C["blue_gate"],
                      corner_radius=0, height=2).grid(row=0, column=0, sticky="ew")
 
+        # ── Left panel header (Intel Feed) ──────────────────────────────
+        hdr_frame = ctk.CTkFrame(left, fg_color=C["bg_panel"], corner_radius=0)
+        hdr_frame.grid(row=1, column=0, sticky="ew", padx=0, pady=0)
+        hdr_frame.columnconfigure(1, weight=1)
+
         ctk.CTkLabel(
-            left,
-            text=f"  {GLYPH_GATE}  ERGEBNISSE",
+            hdr_frame,
+            text=f"  {GLYPH_GATE}  INTERCEPT FEED",
             font=("Courier", 10, "bold"),
             text_color=C["blue_bright"],
             anchor="w",
-        ).grid(row=1, column=0, sticky="ew", padx=8, pady=(4, 2))
+        ).grid(row=0, column=0, sticky="w", padx=8, pady=(4, 2))
+
+        # Treffer-Counter rechts
+        self._intel_count_var = ctk.StringVar(value="0 HITS")
+        ctk.CTkLabel(
+            hdr_frame,
+            textvariable=self._intel_count_var,
+            font=("Courier", 9, "bold"),
+            text_color=C["mil_text_dim"],
+            anchor="e",
+        ).grid(row=0, column=1, sticky="e", padx=8, pady=(4, 2))
+
+        # Blaue Trennlinie unter Intel-Feed-Header
+        ctk.CTkFrame(left, fg_color=C["blue_gate"],
+                     corner_radius=0, height=1).grid(row=2, column=0, sticky="ew")
 
         self._result_scroll = ctk.CTkScrollableFrame(
             left, fg_color=C["bg_panel"], corner_radius=0)
-        self._result_scroll.grid(row=2, column=0, sticky="nsew")
+        self._result_scroll.grid(row=3, column=0, sticky="nsew")
         self._result_scroll.columnconfigure(0, weight=1)
         self._result_rows: list[ctk.CTkFrame | ctk.CTkLabel] = []
 
@@ -1679,15 +1789,15 @@ class GoauldApp:
             text_color_disabled=C["text_mid"],
         )
         self._tabs.pack(fill="x", padx=6, pady=(4, 0))
-        self._tabs.add("  ◈ Detail  ")
-        self._tabs.add("  ⊕ Satzanalyse  ")
+        self._tabs.add("  ◈ BRIEFING  ")
+        self._tabs.add("  ⊕ DEBRIEF  ")
         
         # Tab-Separator
         ctk.CTkFrame(right, fg_color=C["gold_dim"],
                      corner_radius=0, height=1).pack(fill="x", padx=6, pady=(0, 0))
 
         # Detail tab
-        detail_tab = self._tabs.tab("  ◈ Detail  ")
+        detail_tab = self._tabs.tab("  ◈ BRIEFING  ")
         self._detail_text = ctk.CTkTextbox(
             detail_tab,
             fg_color=C["bg_card"],
@@ -1699,7 +1809,7 @@ class GoauldApp:
         self._detail_text.pack(fill="both", expand=True, padx=2, pady=2)
 
         # Satzanalyse tab
-        sentence_tab = self._tabs.tab("  ⊕ Satzanalyse  ")
+        sentence_tab = self._tabs.tab("  ⊕ DEBRIEF  ")
         self._sentence_text = ctk.CTkTextbox(
             sentence_tab,
             fg_color=C["bg_card"],
@@ -1725,16 +1835,16 @@ class GoauldApp:
 
         ctk.CTkLabel(
             live_hdr,
-            text=f"  ⚡ LIVE-ÜBERSETZUNG",
+            text=f"  ⚡ LIVE-TRANSMISSION  ·  OUTGOING",
             font=("Courier", 10, "bold"),
             text_color=C["gold_bright"],
             anchor="w",
         ).grid(row=0, column=0, sticky="w", padx=8, pady=4)
 
         self._trans_status_lbl = ctk.CTkLabel(
-            live_hdr, text="",
+            live_hdr, text="◉ SIGNAL LOCKED",
             font=("Courier", 9, "bold"),
-            text_color=C["locked_bright"], anchor="e",
+            text_color=C["phosphor_grn"], anchor="e",
         )
         self._trans_status_lbl.grid(row=0, column=1, sticky="e", padx=8, pady=4)
 
@@ -1754,7 +1864,7 @@ class GoauldApp:
         # Token-Breakdown (kleinere Schrift)
         self._trans_token_lbl = ctk.CTkLabel(
             live_frame,
-            text="── WORT-FÜR-WORT ──",
+            text="── ⊞ TOKEN BREAKDOWN ──",
             font=("Courier", 8, "bold"),
             text_color=C["gold_dim"],
         )
@@ -1778,15 +1888,24 @@ class GoauldApp:
         self._show_welcome_detail()
 
     def _build_statusbar_ctk(self) -> None:
-        bar = ctk.CTkFrame(self.root, fg_color=C["bg_panel"],
+        # Gold-Trennlinie ÜBER der Statusbar
+        ctk.CTkFrame(self.root, fg_color=C["gold_dim"],
+                     corner_radius=0, height=1).pack(fill="x", side="bottom")
+
+        bar = ctk.CTkFrame(self.root, fg_color=C["bg_root"],
                            corner_radius=0, height=24)
         bar.pack(fill="x", side="bottom")
         bar.pack_propagate(False)
 
-        # Left accent strip (event-horizon blue)
-        ctk.CTkFrame(bar, fg_color=C["blue_gate"],
-                     corner_radius=0, width=4).pack(side="left", fill="y")
+        # DEFCON / Status-Prefix (links, fest)
+        ctk.CTkLabel(
+            bar,
+            text="▽ DEFCON 3",
+            font=("Courier", 9, "bold"),
+            text_color=C["mil_amber"],
+        ).pack(side="left", padx=(12, 14))
 
+        # Haupt-Status (dynamisch)
         self._status_var = ctk.StringVar(value="")
         ctk.CTkLabel(
             bar,
@@ -1794,14 +1913,24 @@ class GoauldApp:
             font=("Courier", 9),
             text_color=C["text_mid"],
             anchor="w",
-        ).pack(side="left", padx=10)
+        ).pack(side="left", padx=0)
 
+        # Rechts: Version
         ctk.CTkLabel(
             bar,
-            text="STARGATE SG-1  ·  Goa'uld Linguistic Interface  ·  v0.2",
+            text="▸ v0.2.5",
+            font=("Courier", 9, "bold"),
+            text_color=C["gold"],
+        ).pack(side="right", padx=(6, 12))
+
+        # MD-Datei
+        md_name = (Path(self._md_paths[0]).name if self._md_paths else "NO LEXICON")
+        ctk.CTkLabel(
+            bar,
+            text=f"◈ MD: {md_name}",
             font=("Courier", 9),
             text_color=C["text_lo"],
-        ).pack(side="right", padx=12)
+        ).pack(side="right", padx=6)
 
         # Scanline-Overlay (nur bei CustomTkinter)
         self._create_scanline_overlay()
@@ -2353,7 +2482,12 @@ class GoauldApp:
             self._display_sentence_tk(analysis, query, phrase_hit)
 
     def _display_results_ctk(self, results: list[dict]) -> None:
-        """SGC Card-basierte Ergebnisliste mit Icons, Quelle/Episode-Tags."""
+        """SGC Intel-Feed — nummerierte Zeilen mit Goa'uld-Term, Bedeutung, Quelle.
+
+        v0.2.5 Fix: Ersetzt das alte Card-Layout (wraplength-Hardcodes) durch
+        eine saubere 4-Spalten-Grid-Zeile (Nr / Goa'uld / Meaning / Score) —
+        dadurch verschwindet das Spalten-Abschneiden bei schmalem Paned-Panel.
+        """
         # Clear old rows
         for row in self._result_rows:
             row.destroy()
@@ -2362,8 +2496,8 @@ class GoauldApp:
         if not results:
             msg = ctk.CTkLabel(
                 self._result_scroll,
-                text=f"  {GLYPH_KEK}  Kein Eintrag gefunden.\n     Tek'ma'te…",
-                font=("Courier", 11),
+                text=f"  {GLYPH_KEK}  KEIN EINTRAG GEFUNDEN\n     TEK'MA'TE…",
+                font=("Courier", 11, "bold"),
                 text_color=C["text_lo"],
                 anchor="w",
                 justify="left",
@@ -2374,116 +2508,115 @@ class GoauldApp:
             return
 
         for idx, entry in enumerate(results):
-            # Card-Frame mit Border
+            # Zeilen-Frame mit Border-Left-Accent (statt Full-Border-Card)
             row = ctk.CTkFrame(
                 self._result_scroll,
-                fg_color=C["bg_card"],
-                border_width=1,
-                border_color=C["card_border"],
-                corner_radius=4,
+                fg_color=C["bg_panel"],
+                border_width=0,
+                corner_radius=0,
+                height=42,
             )
-            row.grid(row=idx, column=0, sticky="ew", padx=4, pady=2)
-            row.columnconfigure(1, weight=1)
+            row.grid(row=idx, column=0, sticky="ew", padx=0, pady=1)
+            row.grid_propagate(False)
+            # 4-Spalten-Grid:  [NR 30px] [GOA'ULD 120px] [MEANING flex] [SOURCE 28px-flex]
+            row.columnconfigure(0, weight=0, minsize=30)
+            row.columnconfigure(1, weight=0, minsize=120)
+            row.columnconfigure(2, weight=1, minsize=80)
+            row.columnconfigure(3, weight=0, minsize=44)
 
-            # Icon: exakt (◆) oder fuzzy (◐)
+            # Border-Left-Accent (ersetzt Card-Border)
             score = entry.get("score", 0)
             if score >= 90:
-                icon = GLYPH_FOUND  # ◉ exakt
-                icon_color = C["locked_bright"]
+                accent = C["phosphor_grn"]
             elif score >= 60:
-                icon = GLYPH_BULLET  # ◐ fuzzy
-                icon_color = C["gold"]
+                accent = C["gold"]
             else:
-                icon = GLYPH_CHEVRON  # schwacher Treffer
-                icon_color = C["text_mid"]
-            
-            icon_lbl = ctk.CTkLabel(
-                row,
-                text=icon,
-                font=("Courier", 12, "bold"),
-                text_color=icon_color,
-                anchor="w",
-                width=16,
-            )
-            icon_lbl.grid(row=0, column=0, rowspan=2, sticky="n", padx=(6, 6), pady=6)
+                accent = C["text_mid"]
+            accent_strip = ctk.CTkFrame(row, fg_color=accent, corner_radius=0, width=3)
+            accent_strip.grid(row=0, column=0, rowspan=2, sticky="nsw", padx=(0, 0))
 
-            # Top line: Goa'uld term (bold, gold)
+            # [NR]
+            nr_lbl = ctk.CTkLabel(
+                row,
+                text=f"{idx+1:02d}",
+                font=("Courier", 10),
+                text_color=C["mil_text_dim"],
+                anchor="w",
+                width=28,
+            )
+            nr_lbl.grid(row=0, column=0, sticky="w", padx=(8, 0), pady=(6, 0))
+
+            # [GOA'ULD] — gold, bold, eigene Spalte
+            goauld_text = entry["goauld"]
+            if len(goauld_text) > 16:
+                goauld_text = goauld_text[:14] + "…"
             goauld_lbl = ctk.CTkLabel(
                 row,
-                text=entry["goauld"],
+                text=goauld_text,
                 font=("Courier", 12, "bold"),
                 text_color=C["gold_bright"],
                 anchor="w",
             )
-            goauld_lbl.grid(row=0, column=1, sticky="ew", padx=(0, 6), pady=(6, 0))
+            goauld_lbl.grid(row=0, column=1, sticky="w", padx=(2, 6), pady=(6, 0))
 
-            # Right side: score indicator (small)
-            score_lbl = ctk.CTkLabel(
-                row,
-                text=f"{score}%",
-                font=("Courier", 8),
-                text_color=C["text_lo"],
-                anchor="e",
-                width=36,
-            )
-            score_lbl.grid(row=0, column=2, sticky="e", padx=(0, 8), pady=(6, 0))
-
-            # Second line: meaning (truncated, wrapped)
+            # [MEANING] — flex-spalte mit wraplength basierend auf Panel-Breite
             meaning = entry["meaning"]
-            if len(meaning) > 60:
-                meaning = meaning[:57] + "…"
+            if len(meaning) > 48:
+                meaning = meaning[:46] + "…"
             meaning_lbl = ctk.CTkLabel(
                 row,
-                text=f"{GLYPH_ARROW}  {meaning}",
+                text=meaning,
                 font=("Courier", 10),
                 text_color=C["text_hi"],
                 anchor="w",
-                wraplength=340,
             )
-            meaning_lbl.grid(row=1, column=1, sticky="ew", padx=(0, 6), pady=(0, 2))
+            meaning_lbl.grid(row=0, column=2, sticky="w", padx=(2, 6), pady=(6, 0))
 
-            # Third line: Source/Episode tags
-            tag_parts = []
-            if entry.get("section"):
-                sec = entry["section"]
-                # Color-code sections
-                if "Kanon" in sec or "Kanon" in entry.get("source", ""):
-                    tag_color = C["locked_bright"]
-                elif "Fanon" in sec:
-                    tag_color = C["orange"]
-                else:
-                    tag_color = C["text_mid"]
-                tag_parts.append(f"[{sec}]")
-            if entry.get("source"):
-                src = entry["source"]
-                if len(src) > 24:
-                    src = src[:21] + "…"
-                tag_parts.append(f"Ep: {src}")
-            
-            if tag_parts:
-                tag_text = "  ·  ".join(tag_parts)
-                tag_lbl = ctk.CTkLabel(
-                    row,
-                    text=f"    {tag_text}",
-                    font=("Courier", 8),
-                    text_color=C["text_mid"],
-                    anchor="w",
-                    wraplength=360,
-                )
-                tag_lbl.grid(row=2, column=1, sticky="ew", padx=(0, 6), pady=(0, 5))
+            # [SCORE]
+            score_color = C["phosphor_grn"] if score >= 90 else (
+                C["gold"] if score >= 60 else C["text_lo"]
+            )
+            score_lbl = ctk.CTkLabel(
+                row,
+                text=f"{score}%",
+                font=("Courier", 9),
+                text_color=score_color,
+                anchor="e",
+                width=40,
+            )
+            score_lbl.grid(row=0, column=3, sticky="e", padx=(0, 8), pady=(6, 0))
 
-            # Click binding
-            def _select(e, entry=entry, row=row):
+            # Zweite Zeile: Section-Tag (klein, gedämpft)
+            sec = entry.get("section", "")
+            src = entry.get("source", "")
+            tag_bits = []
+            if sec:
+                tag_bits.append(sec[:20])
+            if src and src not in ("DE_MAP",):
+                src_short = src[:24] + "…" if len(src) > 24 else src
+                tag_bits.append(src_short)
+            tag_text = "  ·  ".join(tag_bits) if tag_bits else ""
+
+            tag_lbl = ctk.CTkLabel(
+                row,
+                text=tag_text,
+                font=("Courier", 8),
+                text_color=C["text_lo"],
+                anchor="w",
+            )
+            tag_lbl.grid(row=1, column=1, columnspan=3, sticky="w",
+                         padx=(2, 6), pady=(0, 4))
+
+            # Click binding: gesamte Zeile selektierbar
+            def _select(e, entry=entry, row=row, accent_strip=accent_strip):
                 for r in self._result_rows:
                     if isinstance(r, ctk.CTkFrame):
-                        r.configure(fg_color=C["bg_card"], border_color=C["card_border"])
-                row.configure(fg_color=C["bg_select"], border_color=C["gold"])
+                        r.configure(fg_color=C["bg_panel"])
+                row.configure(fg_color=C["bg_select"])
                 self._show_detail(entry)
 
-            for w in [row, goauld_lbl, meaning_lbl, tag_lbl if 'tag_lbl' in dir() else None]:
-                if w:
-                    w.bind("<Button-1>", _select)
-            icon_lbl.bind("<Button-1>", _select)
+            for w in (row, nr_lbl, goauld_lbl, meaning_lbl, score_lbl, tag_lbl):
+                w.bind("<Button-1>", _select)
 
             self._result_rows.append(row)
 
@@ -2491,7 +2624,7 @@ class GoauldApp:
 
         # Auto-select first result
         if results:
-            self._result_rows[0].configure(fg_color=C["bg_select"], border_color=C["gold"])
+            self._result_rows[0].configure(fg_color=C["bg_select"])
             self._show_detail(results[0])
 
     def _display_results_tk(self, results: list[dict]) -> None:
@@ -3048,26 +3181,34 @@ class GoauldApp:
     def _update_status(self, result_count: Optional[int] = None,
                        mode: str = "search", total_tokens: int = 0) -> None:
         total = len(self._engine.entries)
-        self._entry_count_var.set(f"Einträge:  {total}")
-        dir_label = ("Goa'uld → Dt/En" if self._direction == "goa2de"
-                     else "Dt/En → Goa'uld")
+        # Header: Lexikon-Counter
+        self._entry_count_var.set(f"▸ LEXICON: {total:,} ENTRIES".replace(",", "."))
+        # Intel-Feed-Counter (links oben)
+        if hasattr(self, "_intel_count_var"):
+            if result_count is None:
+                self._intel_count_var.set("")
+            else:
+                self._intel_count_var.set(f"{result_count} HITS")
+
+        dir_label = ("GOA'ULD → DT/EN" if self._direction == "goa2de"
+                     else "DT/EN → GOA'ULD")
 
         if mode == "sentence":
             if result_count == total_tokens:
-                msg = (f"  {GLYPH_LOCKED}  Alle {total_tokens} Token erkannt  ·  "
-                       f"{total} Einträge  ·  {dir_label}")
+                msg = (f"  {GLYPH_LOCKED}  ALL {total_tokens} TOKENS DECRYPTED  ·  "
+                       f"{total} ENTRIES  ·  {dir_label}")
             else:
-                msg = (f"  {GLYPH_CHEVRON}  {result_count}/{total_tokens} Token erkannt  ·  "
-                       f"{total} Einträge  ·  {dir_label}")
+                msg = (f"  {GLYPH_CHEVRON}  {result_count}/{total_tokens} TOKENS DECRYPTED  ·  "
+                       f"{total} ENTRIES  ·  {dir_label}")
         elif result_count is None:
-            msg = (f"  {GLYPH_GATE}  Bereit  ·  {total} Einträge geladen  ·  "
-                   f"Richtung: {dir_label}")
+            msg = (f"  {GLYPH_GATE}  STANDBY  ·  {total} ENTRIES LOADED  ·  "
+                   f"DIR: {dir_label}")
         elif result_count == 0:
-            msg = (f"  {GLYPH_KEK}  Kek!  —  Keine Treffer  ·  "
-                   f"Richtung: {dir_label}")
+            msg = (f"  {GLYPH_KEK}  KEK!  —  NO INTERCEPTS  ·  "
+                   f"DIR: {dir_label}")
         else:
-            msg = (f"  {GLYPH_FOUND}  {result_count} Treffer  ·  "
-                   f"Gesamt: {total} Einträge  ·  {dir_label}")
+            msg = (f"  {GLYPH_FOUND}  {result_count} INTERCEPTS  ·  "
+                   f"TOTAL: {total} ENTRIES  ·  {dir_label}")
         self._status_var.set(msg)
 
     # ─── App starten ──────────────────────────────────────────────────────────
