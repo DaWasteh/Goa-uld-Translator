@@ -1,5 +1,5 @@
 # Stargate — Goa'uld Linguistic Interface ⬡
-### Version 0.2
+### Version 0.2.4
 
 A bidirectional translator for the Goa'uld language from the Stargate franchise. This tool offers both a modern graphical user interface (GUI) in an SGC terminal design and a Command-Line Interface (CLI).
 
@@ -16,6 +16,14 @@ The interface uses a combination of an embedded core vocabulary and up to four e
 - **Live Translator Tab** — A real-time translation view (*⚡ Übersetzer*) reads from the main search bar with debounced updates — no dialog popups required.
 
 - **Detail View** — The *◈ Detail* tab displays structured meaning parts, grammar tips, semantic relatives, and source-cited alternatives for any selected entry.
+
+- **DE_MAP Priority** — For German→Goa'uld translation, the direct German dictionary (DE_MAP) always takes priority over the fuzzy engine, ensuring accurate phrase-based translations.
+
+- **Multi-Word Phrase Engine Search** — The engine now also searches for multi-word phrases, not just DE_MAP, improving coverage for complex German expressions.
+
+- **Optimized Scoring** — Enhanced scoring function with direction-aware bonuses: German→Goa'uld searches receive priority for exact/partial matches, improving result ranking.
+
+- **Enhanced Stemming** — Extended lemma detection with support for German verb conjugations, noun declensions, genitive forms, superlatives, contractions (im → in dem, zum → zu dem), umlaut variants, and compound bridges.
 
 - **Fuzzy-Search Engine** — Finds entries through exact matching, prefix matching, and fuzzy matching — even typos lead to the right term. Includes language-preference scoring for German/English entries.
 

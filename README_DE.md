@@ -1,5 +1,5 @@
 # Stargate — Goa'uld Linguistic Interface ⬡
-### Version 0.2
+### Version 0.2.4
 
 Ein bidirektionaler Übersetzer für die Goa'uld-Sprache aus dem Stargate-Franchise. Dieses Tool bietet sowohl eine moderne grafische Benutzeroberfläche (GUI) im SGC-Terminal-Design als auch ein Command-Line Interface (CLI).
 
@@ -26,6 +26,14 @@ Das Interface nutzt eine Kombination aus einem eingebetteten Kernvokabular und b
 - **Markdown Auto-Parsing** — Liest Vokabeln automatisch aus Tabellen in Markdown-Dateien ein. Die vier mitgelieferten Wörterbücher decken das gesamte kanonische und erweiterte Vokabular ab.
 
 - **Auto-Installer** — Versucht bei fehlendem `customtkinter` automatisch eine Hintergrundinstallation mit `ensurepip`-Fallback-Hinweis.
+
+- **DE_MAP-Priorität** — Bei der Übersetzung von Deutsch nach Goa'uld (de2goa) hat das direkte Wörterbuch (DE_MAP) stets Vorrang vor der Fuzzy-Search-Engine.
+
+- **Multi-Wort-Phrasen in der Engine** — Die Engine sucht nun auch nach Multi-Wort-Phrasen, nicht nur DE_MAP — das verbessert die Trefferquote für Satzfragmente und längere Ausdrücke.
+
+- **Optimierte Scoring-Funktion** — Die Bewertungsfunktion wurde richtungsabhängig verbessert: Bei de2goa-Übersetzungen erhalten exakte und Präfix-Übereinstimmungen in den Bedeutungen einen Bonus, was zu einer besseren Rangfolge der Treffer führt.
+
+- **Erweitertes Stemming** — Die Lemma-Erkennung wurde um deutsche Verbkonjugationen (1. Person Singular → Infinitiv, 2. Person Singular → Infinitiv, 3. Person Singular → Infinitiv), Nomen-Pluralformen (Genitiv → Nominativ), Superlativ/Comparativ → Positiv, Kontraktionen (im → in dem, zum → zu dem, ans → an das, beim → bei dem, fürs → für das, am → an dem, aufs → auf das, ins → in das), Umlaut-Varianten (ä→a, ö→o, ü→u, ß→ss und umgekehrt) und Komposita-Brücken (ör → orer, ung → ung, bar → er, lich → keit, isch → keit) erweitert.
 
 ---
 

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v0.2                 ║
-║   SGC Xenolinguistics Division  ·  Classification: LEVEL 28    ║
+║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v0.2                  ║
+║   SGC Xenolinguistics Division  ·  Classification: LEVEL 28      ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 Bidirektionaler Übersetzer für die Goa'uld-Sprache aus der
