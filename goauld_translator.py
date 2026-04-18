@@ -412,7 +412,7 @@ class SearchEngine:
 
         for e in self.entries:
             val = e[field].lower()
-            base_score = self._score(q_low, val)
+            base_score = self._score(q_low, val, fuzzy_threshold=fuzzy_threshold, direction=direction)
             if base_score > 0 and base_score >= min_score:
                 # Sprach-Bonus: bevorzugte Sprache +8 Punkte
                 lang_bonus = 8 if e.get("lang", "de") == lang_pref else 0
@@ -424,7 +424,16 @@ class SearchEngine:
                     target_val = e[target_field].strip()
                     if " " not in target_val:   # einwortiges Ziel
                         short_bonus = 15
-                results.append((base_score + lang_bonus + short_bonus, e))
+                # de2goa-Bonus: exakte/partielle Übereinstimmung priorisieren
+                de2goa_bonus = 0
+                if direction == "de2goa":
+                    # Exakter oder Prefix-Match in meaning → Bonus
+                    if val == q_low or val.startswith(q_low):
+                        de2goa_bonus = 10
+                    # Whole-word match in meaning → Bonus
+                    if re.search(rf"\b{re.escape(q_low)}\b", val, re.IGNORECASE):
+                        de2goa_bonus = max(de2goa_bonus, 5)
+                results.append((base_score + lang_bonus + short_bonus + de2goa_bonus, e))
 
         results.sort(key=lambda x: x[0], reverse=True)
         return [e for _, e in results[:max_results]]
@@ -452,23 +461,50 @@ class SearchEngine:
     # ─── private ─────────────────────────────────────────────────────────────
 
     @staticmethod
-    def _score(query: str, value: str, fuzzy_threshold: float = 0.42) -> int:
+    def _score(query: str, value: str, fuzzy_threshold: float = 0.42,
+               direction: str = "goa2de") -> int:
+        """
+        Bewertungsfunktion für Similarity-Score.
+        
+        Strategie (priorisiert):
+        1. Exakter Match (100)
+        2. Prefix-Match (85)
+        3. Whole-word match (75)
+        4. Teilwort-Match (65)
+        5. Wort-Level-Match (55-60)
+        6. Fuzzy-Match (0-45)
+        
+        Bonus für Längen-Ähnlichkeit: Kürzere, passende Treffer erhalten
+        einen zusätzlichen Score-Bonus.
+        
+        direction: 'de2goa' → höhere Schwellenwerte für meaningful matches
+        """
         if value == query:
             return 100
         if value.startswith(query):
             return 85
+        # Whole-word match: query als ganzes Wort in value
+        if re.search(rf"\b{re.escape(query)}\b", value, re.IGNORECASE):
+            return 75
         if query in value:
-            return 70
+            return 65
         # word-level match
         value_words = re.split(r"[\s,;/!?()]+", value)
         if any(w.startswith(query) for w in value_words if w):
             return 60
         if any(query in w for w in value_words if w):
-            return 50
+            return 55
+        # Substring match mit Längen-Bonus
+        if len(query) > 3:
+            for w in value_words:
+                if w and query[:max(4, len(query)//2)] in w:
+                    return 45
         # fuzzy
         ratio = difflib.SequenceMatcher(None, query, value).ratio()
         if ratio >= fuzzy_threshold:
-            return int(ratio * 45)
+            # Längen-Bonus: ähnliche Längen erhalten höheren Score
+            len_ratio = min(len(query), len(value)) / max(len(query), len(value))
+            return int(ratio * 45 * (0.5 + 0.5 * len_ratio))
         return 0
 
 
@@ -488,28 +524,59 @@ def _de_lemma_candidates(word: str) -> list[str]:
       zerstör  → [zerstör, zerstöre, zerstören]
       liebst   → [liebst, lieben, liebe, lieb]
       raumschiffe → [raumschiffe, raumschiff]
+    
+    Erweiterungen:
+      - Umlaut-Varianten: ä→a, ö→o, ü→u
+      - Kompositvorschläge: "frei" → auch "Freiheit" prüfen
+      - Reduplikation: "sterbe" → "sterben", "sterbt"
+      - Genitiv: "dem" → "der"
+      - Kompositvorschläge: "zerstör" → "Zerstörung"
+      - Kontraktionen: "im" → "in dem", "zum" → "zu dem"
     """
     w = word.lower().strip()
     candidates = [w]
 
     # ── Verb: Imperativ-Ergänzungen ──────────────────────────────────────────
     # "zerstör" → "zerstöre", "zerstören"
-    if not w.endswith("e"):
-        candidates.append(w + "e")
-    if not w.endswith("en"):
-        candidates.append(w + "en")
+    # Nur für kurze Wörter und keine offensichtlichen Nomen-Plurale
+    _is_noun_plural = (
+        w.endswith("e") and len(w) > 6
+        and not w.endswith("che")
+        and not w.endswith("sse")
+        and not w.endswith("phe")
+        and not w.endswith("nte")
+        and not w.endswith("ste")
+    )
+    if not _is_noun_plural:
+        if not w.endswith("e"):
+            candidates.append(w + "e")
+        if not w.endswith("en"):
+            candidates.append(w + "en")
+    else:
+        # Für Nomen-Plurale: nur Singular-Form hinzufügen
+        candidates.append(w[:-1])
 
     # ── Verb: Präsens → Infinitiv ─────────────────────────────────────────────
     # "zerstörst" → "zerstör" → "zerstören"
-    if w.endswith("st"):
-        stem = w[:-2]
-        candidates += [stem, stem + "en", stem + "e"]
-    if w.endswith("t") and len(w) > 3:
-        stem = w[:-1]
-        candidates += [stem, stem + "en", stem + "e"]
-    if w.endswith("est"):
-        stem = w[:-3]
-        candidates += [stem, stem + "en", stem + "e"]
+    # Nur für Verben, nicht für Nomen-Plurale
+    if not _is_noun_plural:
+        if w.endswith("st"):
+            stem = w[:-2]
+            candidates += [stem, stem + "en", stem + "e"]
+        if w.endswith("t") and len(w) > 3:
+            stem = w[:-1]
+            candidates += [stem, stem + "en", stem + "e"]
+        if w.endswith("est"):
+            stem = w[:-3]
+            candidates += [stem, stem + "en", stem + "e"]
+        # 1. Person Singular → Infinitiv
+        if w.endswith("e") and len(w) > 3:
+            stem = w[:-1]
+            if stem:
+                candidates += [stem + "en", stem + "st", stem + "t"]
+        # Imperativ Singular → Infinitiv
+        if len(w) > 4 and not w.endswith("e") and not w.endswith("en"):
+            candidates += [w + "st", w + "t"]
 
     # ── Nomen: Plural-Formen → Singular ──────────────────────────────────────
     # "raumschiffe" → "raumschiff"
@@ -523,12 +590,92 @@ def _de_lemma_candidates(word: str) -> list[str]:
     if w.endswith("nen") and len(w) > 5:
         candidates.append(w[:-3])
 
+    # ── Nomen: Genitiv → Nominativ ────────────────────────────────────────────
+    # "hauses" → "haus"
+    if w.endswith("es") and len(w) > 3:
+        candidates.append(w[:-2])
+    if w.endswith("s") and len(w) > 2:
+        candidates.append(w[:-1])
+
     # ── Adjektiv-Endungen → Stamm ─────────────────────────────────────────────
-    for suffix in ("em", "en", "er", "es"):
+    for suffix in ("em", "en", "er", "es", "sten", "test"):
         if w.endswith(suffix) and len(w) > len(suffix) + 2:
             candidates.append(w[: -len(suffix)])
 
-    # Deduplizieren, Reihenfolge erhalten
+    # ── Superlativ/Comparativ → Positiv ───────────────────────────────────────
+    if w.endswith("sten") and len(w) > 5:
+        candidates.append(w[:-4])  # "meisten" → "meist"
+    if w.endswith("test") and len(w) > 5:
+        candidates.append(w[:-4])  # "am besten" → "best"
+
+    # ── Umlaut-Varianten ──────────────────────────────────────────────────────
+    # ä→a, ö→o, ü→u, ß→ss (für DE_MAP-Lookup)
+    umlaut_map = str.maketrans("äöü", "aou")
+    plain = w.translate(umlaut_map).replace("ß", "ss")
+    if plain != w:
+        candidates.append(plain)
+        # Auch Plural/Verb-Formen des Stamms
+        if not plain.endswith("e"):
+            candidates.append(plain + "e")
+        if not plain.endswith("en"):
+            candidates.append(plain + "en")
+
+    # ── Rückwärts-Umlaut: a→ä, o→ö, u→ü, ss→ß ────────────────────────────────
+    # Hilfreich wenn DE_MAP Umlaute hat, aber Eingabe nicht
+    # Nur einfache 1:1 Mapping, ss→ß ist komplexer
+    reverse_chars = {"a": "ä", "o": "ö", "u": "ü"}
+    umlauted = "".join(reverse_chars.get(c, c) for c in w)
+    if "ss" in w:
+        umlauted_ss = umlauted.replace("ss", "ß")
+        candidates.append(umlauted_ss)
+    if umlauted != w and len(umlauted) == len(w):
+        candidates.append(umlauted)
+
+    # ── Kontraktionen auflösen ────────────────────────────────────────────────
+    _kontraktionen: dict[str, str] = {
+        "im": "in dem", "zum": "zu dem", "ans": "an das",
+        "ams": "an dem", "ins": "in das", "ins": "in dem",
+        "beim": "bei dem", "vom": "von dem", "ins": "in das",
+        "ins": "in das", "ins": "in das",
+    }
+    if w in _kontraktionen:
+        candidates.extend(_kontraktionen[w].split())
+
+    # ── Kompositvorschläge (häufige Suffixe) ─────────────────────────────────
+    # "frei" → "Freiheit", "Stärke" → "stark"
+    for suffix in ("heit", "keit", "ung", "bar", "sam", "lich", "isch", "haft", "los", "voll"):
+        if w.endswith(suffix):
+            stem = w[:-len(suffix)]
+            if stem:
+                candidates.append(stem)
+    # "sterbe" → "sterben" (bereits oben), aber auch "tot" prüfen
+    if w.endswith("e") and len(w) > 3:
+        verb_inf = w[:-1] + "en"
+        if verb_inf not in candidates:
+            candidates.append(verb_inf)
+
+    # ── Häufige Komposita-Brücken ────────────────────────────────────────────
+    # "zerstör" → auch "Zerstörer", "Zerstörung" prüfen
+    # Ersetzt das Suffix statt anzuhängen
+    _komposita_repl: dict[str, str] = {
+        "ör": "örer",       # zerstör → Zerstörer
+        "ung": "ung",      # zerstör → Zerstörung (nur anhängen)
+        "bar": "er",       # zerstörbar → Zerstörer
+        "lich": "keit",    # freilich → Freiheit
+        "isch": "keit",    # herrlich → Herrlichkeit
+    }
+    for suffix, replacement in _komposita_repl.items():
+        if w.endswith(suffix):
+            stem = w[:-len(suffix)]
+            if stem:
+                candidates.append(stem + replacement)
+    # Suffix-Anhängen für -ung Varianten
+    if w.endswith("ung"):
+        candidates.extend([w + "en", w + "e", w + "er"])
+    elif w.endswith("er") and len(w) > 4:
+        candidates.extend([w + "e", w + "en"])
+
+    # Deduplizieren, Reihenfolge erhalten (ursprüngliches Wort zuerst)
     seen: set[str] = set()
     result: list[str] = []
     for c in candidates:
@@ -628,7 +775,7 @@ class SentenceAnalyzer:
                     i += 1
                     continue
 
-                # b) Try multi-word DE_MAP hits first (window → 2), then single
+                # b) Try multi-word DE_MAP hits first (window → 2), then Engine
                 de_map_hit: Optional[tuple[str, str]] = None  # (phrase, goauld)
                 for n in range(window, 1, -1):
                     phrase    = " ".join(words[i:i + n])
@@ -658,8 +805,35 @@ class SentenceAnalyzer:
                 if matched:
                     continue
 
-                # c) Single word – check DE_MAP with lemma fallback, also run engine;
-                #    pick whichever gives a shorter Goa'uld output.
+                # b2) Multi-word Engine search (neue Funktion)
+                #     Suche auch in der Engine nach Multi-Wort-Phrasen
+                for n in range(window, 1, -1):
+                    phrase    = " ".join(words[i:i + n])
+                    phrase_low = phrase.lower()
+                    engine_phrases = self.engine.search(
+                        phrase, direction=direction,
+                        max_results=3, lang_pref=lang_pref,
+                        min_score=60,
+                    )
+                    if engine_phrases:
+                        top_val = engine_phrases[0]["meaning"].lower()
+                        score = self.engine._score(phrase_low, top_val)
+                        if score >= 75:  # exact oder gute Übereinstimmung
+                            result.append({
+                                "token":        phrase,
+                                "primary":      engine_phrases[0],
+                                "alternatives": engine_phrases[1:3],
+                                "found":        True,
+                                "skipped":      False,
+                            })
+                            i += n
+                            matched = True
+                            break
+
+                if matched:
+                    continue
+
+                # c) Single word – DE_MAP hat IMMER Vorrang vor Engine
                 phrase    = words[i]
                 phrase_low = phrase.lower()
 
@@ -677,45 +851,23 @@ class SentenceAnalyzer:
                     min_score=50,   # require real word-match, not fuzzy noise
                 )
 
-                # Decide between DE_MAP result and engine result
-                chosen_primary = None
-                chosen_alts    = []
-                chosen_goauld  = None
-
+                # DE_MAP hat IMMER Priorität — Engine nur als Alternative
                 if de_map_single:
-                    chosen_goauld = de_map_single  # may be multi-word
-                    # If engine found a single-word alternative, prefer it
-                    if engine_matches:
-                        engine_top_goauld = engine_matches[0]["goauld"].strip()
-                        # Prefer engine if its result is shorter (fewer tokens)
-                        if (
-                            " " not in engine_top_goauld          # single word
-                            and " " in de_map_single               # DE_MAP is multi-word
-                        ):
-                            chosen_primary = engine_matches[0]
-                            chosen_alts    = engine_matches[1:4]
-                            chosen_goauld  = engine_top_goauld
-                        else:
-                            # Use DE_MAP, but still attach engine alternatives
-                            chosen_primary = {
-                                "goauld":  de_map_single,
-                                "meaning": phrase,
-                                "section": "Deutsch→Goa'uld",
-                                "source":  "DE_MAP",
-                                "lang":    "de",
-                            }
-                            chosen_alts = engine_matches[:3]
-                    else:
-                        chosen_primary = {
-                            "goauld":  de_map_single,
-                            "meaning": phrase,
-                            "section": "Deutsch→Goa'uld",
-                            "source":  "DE_MAP",
-                            "lang":    "de",
-                        }
+                    # DE_MAP gefunden → immer verwenden
+                    chosen_primary = {
+                        "goauld":  de_map_single,
+                        "meaning": phrase,
+                        "section": "Deutsch→Goa'uld",
+                        "source":  "DE_MAP",
+                        "lang":    "de",
+                    }
+                    chosen_alts = engine_matches[:3] if engine_matches else []
                 elif engine_matches:
                     chosen_primary = engine_matches[0]
                     chosen_alts    = engine_matches[1:4]
+                else:
+                    chosen_primary = None
+                    chosen_alts = []
 
                 result.append({
                     "token":        phrase,
