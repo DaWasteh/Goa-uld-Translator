@@ -1,0 +1,671 @@
+════════════════════════════════════════════════════════════════════════
+GOA'ULD LEXICON MIGRATION — REPORT
+════════════════════════════════════════════════════════════════════════
+
+Source files:
+  • Goa_uld-Dictionary.md
+  • Goa_uld-Wörterbuch.md
+  • Goa_uld-Fictionary.md
+  • Goa_uld-Neologikum.md
+
+Raw senses parsed : 3,402
+Unique entries    : 751
+Dedup ratio       : 4.53x
+
+Language gap fill:
+  Senses filled via cross-bridge   : 1,499
+  Senses filled via manual table   : 6
+  Remaining monolingual            : 0
+
+By register:
+  abydonian         21
+  canon            227
+  fanon            503
+
+By tier (sense-level):
+  canon_series         (100)     234
+  canon_guide          ( 90)      80
+  canon_rpg            ( 85)      34
+  canon_game           ( 80)       4
+  canon_rda            ( 75)     175
+  abydonian            ( 70)      24
+  fanon_strict         ( 60)     891
+  fanon_derived        ( 50)      14
+  fanon_synonym        ( 40)      70
+
+By morphology:
+  compound         551
+  phrase           107
+  root              93
+
+Canon↔Fanon conflicts detected: 136
+  canon_polysemy             122
+  dialect_variant            10
+  fanon_specialization       4
+
+────────────────────────────────────────────────────────────────────────
+CONFLICT DETAILS (grouped by type)
+────────────────────────────────────────────────────────────────────────
+
+═══ FANON_SPECIALIZATION — 4 cases ═══
+    → Keep both, but SHARPEN fanon 'bashaak'tar' glosses to reflect its specialized meaning vs. the broader canon term 'dis'tra'.
+
+[de] "meister"
+    ★ dis'tra                       p=100  canon
+      bashaak'tar                   p= 60  fanon
+
+[de] "ehre"
+    ★ shal tek                      p= 75  canon
+      dan'lok'sha                   p= 60  fanon
+
+[en] "master"
+    ★ dis'tra                       p=100  canon
+      bashaak'tar                   p= 60  fanon
+
+[en] "honor"
+    ★ shal tek                      p= 75  canon
+      dan'lok'sha                   p= 60  fanon
+
+
+═══ CANON_POLYSEMY — 122 cases ═══
+    → Keep both — 'kree' is polysemous (77 glosses). Fanon term 'kree'dan'lok' is a legitimate specialization.
+
+[de] "befehl"
+    ★ kree                          p=100  canon
+      leaa                          p= 85  canon
+      kree'dan'lok                  p= 60  fanon
+
+[de] "tot"
+    ★ kek                           p=100  canon
+      kek'le                        p= 60  fanon
+
+[de] "krieg"
+    ★ kek                           p=100  canon
+      mel'tok'sha                   p= 60  fanon
+
+[de] "was ist"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'shak                      p= 40  fanon
+      kel'nok                       p= 40  fanon
+
+[de] "wann"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'nok                       p= 60  fanon
+      kel'shak                      p= 40  fanon
+
+[de] "wer"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'tar                       p= 40  fanon
+      kel'shak                      p= 40  fanon
+      kel'nok                       p= 40  fanon
+
+[de] "was"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'shak                      p= 40  fanon
+      kel'nok                       p= 40  fanon
+
+[de] "fragewort: wo"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'shak                      p= 40  fanon
+      kel'nok                       p= 40  fanon
+
+[de] "wo"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'shak                      p= 40  fanon
+      kel'pac                       p= 40  fanon
+      kel'nok                       p= 40  fanon
+
+[de] "wann?"
+    ★ kel                           p= 90  canon
+      kel'nok                       p= 60  fanon
+
+[de] "welcher"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'shak                      p= 40  fanon
+
+[de] "da"
+    ★ nok                           p= 90  canon
+      pac'mel                       p= 60  fanon
+      dan'mel                       p= 60  fanon
+
+[de] "sterben"
+    ★ mel                           p= 90  canon
+      shakka                        p= 60  fanon
+
+[de] "enden"
+    ★ mel                           p= 90  canon
+      shakka                        p= 60  fanon
+
+[de] "auch "danach"
+    ★ mel                           p= 90  canon
+      shakka                        p= 60  fanon
+
+[de] "stirb"
+    ★ mel                           p= 90  canon
+      shakka                        p= 60  fanon
+
+[de] "sterbe"
+    ★ mel                           p= 90  canon
+      shakka                        p= 60  fanon
+
+[de] "sterbt"
+    ★ mel                           p= 90  canon
+      shakka                        p= 60  fanon
+
+[de] "stehen"
+    ★ hol                           p= 90  canon
+      kor'hol                       p= 60  fanon
+
+[de] "warte"
+    ★ tal                           p= 90  canon
+      hol'sha                       p= 60  fanon
+      lota                          p= 40  fanon
+
+[de] "auch "sterben" in manchen kontexten"
+    ★ tal                           p= 90  canon
+      hol'sha                       p= 60  fanon
+      lota                          p= 40  fanon
+
+[de] "warten"
+    ★ tal                           p= 90  canon
+      lota                          p= 60  fanon
+      hol'sha                       p= 60  fanon
+
+[de] "wartet"
+    ★ tal                           p= 90  canon
+      hol'sha                       p= 60  fanon
+      lota                          p= 40  fanon
+
+[de] "gedulden"
+    ★ tal                           p= 90  canon
+      lota                          p= 60  fanon
+      hol'sha                       p= 60  fanon
+
+[de] "täuschung"
+    ★ tak                           p= 90  canon
+      tak'tal                       p= 60  fanon
+
+[de] "lüge"
+    ★ tak                           p= 90  canon
+      tak'tal                       p= 60  fanon
+
+[de] "wider"
+    ★ tok                           p=100  canon
+      tok'nok                       p= 60  fanon
+
+[de] "gegen"
+    ★ tok                           p=100  canon
+      tok'nok                       p= 60  fanon
+
+[de] "widerstehen"
+    ★ tok                           p=100  canon
+      tok'nok                       p= 60  fanon
+
+[de] "groß"
+    ★ onak                          p=100  canon
+      tun'le                        p= 60  fanon
+
+[de] "komme"
+    ★ re                            p= 75  canon
+      chula                         p= 40  fanon
+
+[de] "kommen"
+    ★ re                            p= 75  canon
+      chula                         p= 60  fanon
+
+[de] "kommt"
+    ★ re                            p= 75  canon
+      chula                         p= 40  fanon
+
+[de] "komm"
+    ★ re                            p= 75  canon
+      chula                         p= 40  fanon
+
+[de] "gehen"
+    ★ kree hol                      p=100  canon
+      hol'ryn                       p= 60  fanon
+
+[de] "schweigen"
+    ★ dal'shak kree                 p=100  canon
+      meta'hol                      p= 60  fanon
+
+[de] "kämpfen"
+    ★ tal shak                      p= 90  canon
+      mel'shak'ryn                  p= 60  fanon
+
+[de] "angreifen"
+    ★ tal shak                      p= 90  canon
+      mel'shak                      p= 60  fanon
+
+[de] "zerstören"
+    ★ mol kek                       p= 90  canon
+      kek'mel                       p= 60  fanon
+
+[de] "strategie"
+    ★ ring kol nok                  p= 90  canon
+      rin'kal'noc                   p= 90  canon
+      mel'shak'kal                  p= 60  fanon
+
+[de] "taktik"
+    ★ ring kol nok                  p= 90  canon
+      rin'kal'noc                   p= 90  canon
+      mel'shak'kal                  p= 60  fanon
+
+[de] "plan"
+    ★ ring kol nok                  p= 90  canon
+      rin'kal'noc                   p= 90  canon
+      mel'shak'kal                  p= 60  fanon
+
+[de] "mission"
+    ★ ring kol nok                  p= 90  canon
+      rin'kal'noc                   p= 90  canon
+      mel'shak'kal                  p= 60  fanon
+
+[de] "krieger"
+    ★ jaffa                         p=100  canon
+      mel'shak'tar                  p= 60  fanon
+
+[de] "erde"
+    ★ tau'ri                        p=100  canon
+      pac'tal                       p= 60  fanon
+
+[de] "stark"
+    ★ teal'c                        p=100  canon
+      kor'le                        p= 60  fanon
+
+[de] "zufluchtsort"
+    ★ cal mah                       p=100  canon
+      kelmah                        p=100  canon
+      onak'tal                      p= 60  fanon
+      hak'tal                       p= 60  fanon
+
+[de] "heiligtum"
+    ★ cal mah                       p=100  canon
+      kelmah                        p=100  canon
+      onak'tal                      p= 60  fanon
+
+[de] "tempel"
+    ★ cal mah                       p=100  canon
+      kelmah                        p=100  canon
+      onak'tal                      p= 60  fanon
+
+[de] "zuflucht"
+    ★ cal mah                       p=100  canon
+      kelmah                        p=100  canon
+      onak'tal                      p= 60  fanon
+
+[de] "jenseits"
+    ★ kheb                          p=100  canon
+      kal'kek'sha                   p= 60  fanon
+
+[de] "früher"
+    ★ nokia                         p= 75  canon
+      nokia'mel                     p= 60  fanon
+
+[de] "vorher"
+    ★ nokia                         p= 75  canon
+      nokia'mel                     p= 60  fanon
+
+[de] "bevor"
+    ★ nokia                         p= 60  canon
+      nokia'mel                     p= 60  fanon
+
+[de] "ehe"
+    ★ nokia                         p= 60  canon
+      nokia'mel                     p= 60  fanon
+
+[en] "attention"
+    ★ kree                          p=100  canon
+      kree'dan'lok                  p= 60  fanon
+
+[en] "listen"
+    ★ kree                          p=100  canon
+      leaa                          p= 85  canon
+      kree'dan'lok                  p= 60  fanon
+
+[en] "concentrate"
+    ★ kree                          p=100  canon
+      kree'dan'lok                  p= 60  fanon
+
+[en] "yoo-hoo"
+    ★ kree                          p=100  canon
+      kree'dan'lok                  p= 60  fanon
+
+[en] "general imperative: attention! listen! stop! do it!"
+    ★ kree                          p=100  canon
+      kree'dan'lok                  p= 60  fanon
+
+[en] "decree"
+    ★ kree                          p= 75  canon
+      kree'dan'lok                  p= 60  fanon
+
+[en] "edict"
+    ★ kree                          p= 75  canon
+      kree'dan'lok                  p= 60  fanon
+
+[en] "death and weakness ("if one is weak, one may as well be dead")"
+    ★ kek                           p=100  canon
+      mel'tok'sha                   p= 60  fanon
+
+[en] "kill"
+    ★ kek                           p=100  canon
+      mel'tok'sha                   p= 60  fanon
+
+[en] "to kill"
+    ★ kek                           p=100  canon
+      mol kek                       p= 75  canon
+      mel'tok'sha                   p= 60  fanon
+
+[en] "dead"
+    ★ kek                           p= 75  canon
+      kek'le                        p= 60  fanon
+
+[en] "conflict"
+    ★ kek                           p= 75  canon
+      mel'tok'sha                   p= 60  fanon
+
+[en] "war"
+    ★ kek                           p= 75  canon
+      mel'tok'sha                   p= 60  fanon
+
+[en] "enmity"
+    ★ kek                           p= 75  canon
+      mel'tok'sha                   p= 60  fanon
+
+[en] "interrogative: where"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'nok                       p= 40  fanon
+
+[en] "when"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'nok                       p= 60  fanon
+
+[en] "what"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'shak                      p= 40  fanon
+      kel'nok                       p= 40  fanon
+
+[en] "what is"
+    ★ kel                           p= 90  canon
+      shal                          p= 90  canon
+      kel'nok                       p= 40  fanon
+
+[en] "when?"
+    ★ kel                           p= 90  canon
+      kel'nok                       p= 60  fanon
+
+[en] "who"
+    ★ kel                           p= 75  canon
+      kel'tar                       p= 40  fanon
+
+[en] "where"
+    ★ kel                           p= 75  canon
+      kel'pac                       p= 40  fanon
+
+[en] "now"
+    ★ nok                           p= 90  canon
+      dan'mel                       p= 60  fanon
+
+[en] "currently"
+    ★ nok                           p= 90  canon
+      dan'mel                       p= 60  fanon
+
+[en] "for"
+    ★ nok                           p= 75  canon
+      pac'mel                       p= 60  fanon
+      dan'mel                       p= 60  fanon
+
+[en] "since"
+    ★ nok                           p= 75  canon
+      dan'mel                       p= 60  fanon
+
+[en] "because"
+    ★ nok                           p= 75  canon
+      dan'mel                       p= 60  fanon
+
+[en] "to die"
+    ★ mel                           p= 90  canon
+      shakka                        p= 60  fanon
+
+[en] "to stand"
+    ★ hol                           p= 75  canon
+      kor'hol                       p= 60  fanon
+
+[en] "stand"
+    ★ hol                           p= 75  canon
+      kor'hol                       p= 40  fanon
+
+[en] "wait"
+    ★ tal                           p= 90  canon
+      hol'sha                       p= 60  fanon
+      lota                          p= 40  fanon
+
+[en] "also "die" in some contexts"
+    ★ tal                           p= 90  canon
+      hol'sha                       p= 60  fanon
+
+[en] "to wait"
+    ★ tal                           p= 90  canon
+      lota                          p= 60  fanon
+      hol'sha                       p= 60  fanon
+
+[en] "to be patient"
+    ★ tal                           p= 90  canon
+      hol'sha                       p= 60  fanon
+
+[en] "trick"
+    ★ tak                           p= 90  canon
+      tak'tal                       p= 60  fanon
+
+[en] "dishonesty"
+    ★ tak                           p= 90  canon
+      tak'tal                       p= 60  fanon
+
+[en] "lie"
+    ★ tak                           p= 75  canon
+      tak'tal                       p= 60  fanon
+
+[en] "illusion"
+    ★ tak                           p= 75  canon
+      tak'tal                       p= 60  fanon
+
+[en] "against"
+    ★ tok                           p=100  canon
+      tok'nok                       p= 60  fanon
+
+[en] "resist"
+    ★ tok                           p=100  canon
+      tok'nok                       p= 60  fanon
+
+[en] "big"
+    ★ onak                          p= 75  canon
+      tun'le                        p= 60  fanon
+
+[en] "great"
+    ★ onak                          p= 75  canon
+      tun'le                        p= 60  fanon
+
+[en] "large"
+    ★ onak                          p= 75  canon
+      tun'le                        p= 60  fanon
+
+[en] "come"
+    ★ re                            p= 75  canon
+      chula                         p= 40  fanon
+
+[en] "to come"
+    ★ re                            p= 75  canon
+      chula                         p= 60  fanon
+
+[en] "to walk"
+    ★ kree hol                      p= 75  canon
+      hol'ryn                       p= 60  fanon
+
+[en] "walk"
+    ★ kree hol                      p= 75  canon
+      hol'ryn                       p= 40  fanon
+
+[en] "shut up!"
+    ★ dal'shak kree                 p=100  canon
+      meta'hol                      p= 60  fanon
+
+[en] "silence"
+    ★ dal'shak kree                 p= 75  canon
+      meta'hol                      p= 60  fanon
+
+[en] "attack!" / "be on guard"
+    ★ tal shak                      p= 90  canon
+      mel'shak                      p= 60  fanon
+
+[en] "to fight"
+    ★ tal shak                      p= 75  canon
+      mel'shak'ryn                  p= 60  fanon
+
+[en] "to destroy"
+    ★ mol kek                       p= 75  canon
+      kek'mel                       p= 60  fanon
+
+[en] "destroy"
+    ★ mol kek                       p= 75  canon
+      kek'mel                       p= 40  fanon
+
+[en] "strategy"
+    ★ ring kol nok                  p= 90  canon
+      rin'kal'noc                   p= 90  canon
+      mel'shak'kal                  p= 60  fanon
+
+[en] "battle plan"
+    ★ ring kol nok                  p= 90  canon
+      rin'kal'noc                   p= 90  canon
+      mel'shak'kal                  p= 60  fanon
+
+[en] "tactics"
+    ★ ring kol nok                  p= 90  canon
+      rin'kal'noc                   p= 90  canon
+      mel'shak'kal                  p= 60  fanon
+
+[en] "servant warriors / symbiote incubators"
+    ★ jaffa                         p=100  canon
+      mel'shak'tar                  p= 60  fanon
+
+[en] "warrior"
+    ★ jaffa                         p= 75  canon
+      mel'shak'tar                  p= 60  fanon
+
+[en] "fighter"
+    ★ jaffa                         p= 75  canon
+      mel'shak'tar                  p= 60  fanon
+
+[en] "soldier"
+    ★ jaffa                         p= 75  canon
+      mel'shak'tar                  p= 60  fanon
+
+[en] "earth"
+    ★ tau'ri                        p= 75  canon
+      pac'tal                       p= 60  fanon
+
+[en] "strong"
+    ★ teal'c                        p= 75  canon
+      kor'le                        p= 60  fanon
+
+[en] "sanctuary"
+    ★ cal mah                       p=100  canon
+      kelmah                        p=100  canon
+      onak'tal                      p= 60  fanon
+      hak'tal                       p= 60  fanon
+
+[en] "temple"
+    ★ cal mah                       p= 75  canon
+      onak'tal                      p= 60  fanon
+
+[en] "jaffa afterlife / place of enlightenment"
+    ★ kheb                          p=100  canon
+      kal'kek'sha                   p= 60  fanon
+
+[en] "underworld"
+    ★ kheb                          p= 75  canon
+      kal'kek'sha                   p= 60  fanon
+
+[en] "afterlife"
+    ★ kheb                          p= 75  canon
+      kal'kek'sha                   p= 60  fanon
+
+[en] "before"
+    ★ nokia                         p= 75  canon
+      nokia'mel                     p= 60  fanon
+
+
+═══ DIALECT_VARIANT — 10 cases ═══
+    → Keep both — 'ka' is Standard-Goa'uld, others are Abydonian dialect variants. No action needed.
+
+[de] "keine"
+    ★ ka                            p= 75  canon
+      noc                           p= 70  abydonian
+
+[de] "keinen"
+    ★ ka                            p= 75  canon
+      noc                           p= 70  abydonian
+
+[de] "kein"
+    ★ ka                            p= 75  canon
+      noc                           p= 70  abydonian
+
+[de] "nein"
+    ★ ka                            p= 75  canon
+      na-nay                        p= 70  abydonian
+      ne'nai                        p= 70  abydonian
+      noc                           p= 70  abydonian
+
+[de] "nicht"
+    ★ ka                            p= 75  canon
+      ia                            p= 75  canon
+      na-nay                        p= 70  abydonian
+      ne'nai                        p= 70  abydonian
+      noc                           p= 70  abydonian
+
+[de] "ja"
+    ★ arik                          p= 75  canon
+      ti'u                          p= 70  abydonian
+
+[en] "no"
+    ★ ka                            p= 75  canon
+      ia                            p= 75  canon
+      na-nay                        p= 70  abydonian
+      ne'nai                        p= 70  abydonian
+      noc                           p= 70  abydonian
+
+[en] "no (blunt refusal)"
+    ★ ka                            p= 75  canon
+      noc                           p= 70  abydonian
+
+[en] "don't"
+    ★ ka                            p= 75  canon
+      ia                            p= 75  canon
+      na-nay                        p= 70  abydonian
+      ne'nai                        p= 70  abydonian
+      noc                           p= 70  abydonian
+
+[en] "yes"
+    ★ arik                          p= 75  canon
+      ti'u                          p= 70  abydonian
+
+
+────────────────────────────────────────────────────────────────────────
+STILL MONOLINGUAL  (6 senses — samples below)
+────────────────────────────────────────────────────────────────────────
+  yu'yu  [en→de]  ['see']
+  ren'ryn  [en→de]  ['breathe']
+  meta  [en→de]  ['speak', 'say']
+  shakka  [en→de]  ['die']
+  tak'ryn  [en→de]  ['deceive']
+  hak'tal  [de→en]  ['versteck']

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v0.2.5                ║
+║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v0.2.6                ║
 ║   SGC Xenolinguistics Division  ·  Classification: LEVEL 28      ║
 ╚══════════════════════════════════════════════════════════════════╝
 
@@ -29,6 +29,15 @@ import threading
 from pathlib import Path
 from typing import Optional
 
+_YAML_LOADER_WARNING: Optional[str] = None
+try:
+    from yaml_loader import find_lexicon_yaml, load_lexicon_yaml
+    YAML_LOADER_AVAILABLE = True
+except ImportError:
+    YAML_LOADER_AVAILABLE = False
+    # HINWEIS: `log` ist hier noch nicht definiert (Setup passiert weiter unten).
+    # Warnung wird nach dem Logging-Setup erneut ausgegeben.
+    _YAML_LOADER_WARNING = "yaml_loader.py nicht gefunden — falle auf MD-Loader zurück"
 
 # ── Logging Setup ─────────────────────────────────────────────────────────────
 # Bei --noconsole (PyInstaller) gibt es kein stdout — Ausgabe in Logdatei.
@@ -54,6 +63,10 @@ def _setup_logging() -> logging.Logger:
     return logging.getLogger(__name__)
 
 log = _setup_logging()
+
+# Verspätete Warnung, falls der YAML-Loader-Import scheiterte
+if _YAML_LOADER_WARNING:
+    log.warning(_YAML_LOADER_WARNING)
 
 
 # ── Dependency Check ──────────────────────────────────────────────────────────
@@ -1234,6 +1247,40 @@ def find_md_files(hint_en: Optional[str] = None,
     de = _find_all(MD_CANDIDATES_DE, hint_de)
     return en, de
 
+def _load_lexicon() -> tuple[list[dict], list[str], dict, dict, dict, dict]:
+    """
+    Bevorzugter Loader: versucht zuerst goauld_lexicon.yaml, fällt bei
+    Fehlen auf die vier MD-Dateien zurück. Gibt zurück:
+        (entries, found_paths, de_map, en_map, secondary_de, secondary_en)
+    Die letzten vier Maps sind bei MD-Fallback nur teilweise gefüllt
+    (de_map kommt aus DE_GOAULD_MAP, en_map/secondary_* sind leer).
+    """
+    global DE_GOAULD_MAP
+
+    # Bevorzugt: YAML-Loader
+    if YAML_LOADER_AVAILABLE:
+        # Suchreihenfolge beachtet frozen-Kontext:
+        #   1. EXE-Verzeichnis (neben der ausgelieferten .exe)
+        #   2. _MEIPASS (PyInstaller --onefile Extrakt-Verzeichnis, enthält
+        #      --add-data Ressourcen)
+        # Beides explizit mitgeben — `yaml_loader` prüft darüber hinaus auch
+        # CWD und sein eigenes Verzeichnis.
+        search_dirs: list = [_get_app_dir()]
+        _meipass = getattr(sys, '_MEIPASS', None)
+        if _meipass:
+            search_dirs.append(Path(_meipass))
+        yaml_path = find_lexicon_yaml(search_dirs=search_dirs)
+        if yaml_path:
+            entries, de_map, en_map, sec_de, sec_en = load_lexicon_yaml(yaml_path)
+            # DE_GOAULD_MAP wird aus dem YAML-primary-map befüllt
+            DE_GOAULD_MAP = {k: v.lower() for k, v in de_map.items()}
+            log.info("Lexikon aus YAML geladen: %s (%d Einträge)",
+                     yaml_path, len(entries))
+            return entries, [yaml_path], de_map, en_map, sec_de, sec_en
+
+    # Fallback: alte MD-Loader-Logik
+    entries, paths = _load_mds()
+    return entries, paths, dict(DE_GOAULD_MAP), {}, {}, {}
 
 def _load_mds(hint_en: Optional[str] = None,
               hint_de: Optional[str] = None) -> tuple[list[dict], list[str]]:
@@ -1381,6 +1428,11 @@ class GoauldApp:
     def __init__(self, md_path: Optional[str] = None) -> None:
         self._all_entries: list[dict] = []
         self._md_paths: list[str] = []
+        # Secondary-Maps für "auch:"-UI — werden von _load_mds_app befüllt,
+        # hier vorinitialisiert, damit die UI-Routinen (_run_live_translation,
+        # _show_sentence_detail) sie sicher ansprechen können.
+        self._secondary_de: dict[str, list[str]] = {}
+        self._secondary_en: dict[str, list[str]] = {}
         self._load_mds_app(md_path)
         self._engine = SearchEngine(self._all_entries)
         self._analyzer = SentenceAnalyzer(self._engine)
@@ -1394,10 +1446,41 @@ class GoauldApp:
     # ─── Datenladen ──────────────────────────────────────────────────────────
 
     def _load_mds_app(self, hint: Optional[str] = None) -> None:
-        """Lädt EN- und DE-Wörterbuch; bei manuellem hint wird er als EN-Pfad probiert."""
-        entries, paths = _load_mds(hint_en=hint)
-        self._all_entries = entries
-        self._md_paths    = paths
+        """Lädt Lexikon. Mit explizitem `hint` → MD-Modus (User zeigt auf
+        eine bestimmte Datei). Ohne hint → YAML bevorzugt, MD als Fallback.
+        Füllt _all_entries, _md_paths sowie die Secondary-Maps für die UI."""
+        if hint:
+            # Expliziter MD-Pfad → klassischer MD-Loader (kein YAML-Lookup)
+            entries, paths = _load_mds(hint_en=hint)
+            secondary_de: dict[str, list[str]] = {}
+            secondary_en: dict[str, list[str]] = {}
+        else:
+            entries, paths, _de_map, _en_map, secondary_de, secondary_en = _load_lexicon()
+        self._all_entries  = entries
+        self._md_paths     = paths
+        self._secondary_de = secondary_de
+        self._secondary_en = secondary_en
+
+    def _get_secondary_alts(self, token: str, primary_goauld: str = "") -> list[str]:
+        """Alternative Goa'uld-Übersetzungen für einen Quell-Token (nur bei
+        DE/EN → Goa'uld sinnvoll).
+
+        Respektiert `lang_pref`: EN-Nutzer bekommen zuerst die EN-Secondary-
+        Map, DE-Nutzer die DE-Map; die jeweils andere dient als Fallback
+        (z. B. englische Lehnwörter in deutschen Sätzen oder umgekehrt).
+
+        Der Primärtreffer wird — falls übergeben — aus der Liste entfernt,
+        damit die UI ihn nicht redundant als „auch:"-Alternative zeigt.
+        """
+        key = token.lower().strip()
+        if self._lang_pref == "en":
+            alts = self._secondary_en.get(key) or self._secondary_de.get(key, [])
+        else:
+            alts = self._secondary_de.get(key) or self._secondary_en.get(key, [])
+        if primary_goauld:
+            pg = primary_goauld.lower().strip()
+            alts = [a for a in alts if a.lower() != pg]
+        return alts
 
     # Legacy-Alias für den Datei-Browser (wird weiter unten aufgerufen)
     @property
@@ -1621,7 +1704,7 @@ class GoauldApp:
         self._entry = ctk.CTkEntry(
             inp_frame,
             textvariable=self._search_var,
-            placeholder_text="Jaffa, kree!  —  Deutsch oder Goa'uld …",
+            placeholder_text="Jaffa, kree!  —  Deutsch, Englisch oder Goa'uld …",
             font=("Courier", 13),
             fg_color=C["bg_input"],
             border_color=C["gold_dim"],
@@ -1657,8 +1740,8 @@ class GoauldApp:
         self._dir_var = ctk.StringVar(value="de2goa")
         seg = ctk.CTkSegmentedButton(
             btn_frame,
-            values=["  DE → Goa'uld  ",
-                    "  Goa'uld → DE  "],
+            values=["  DE/EN → Goa'uld  ",
+                    "  Goa'uld → DE/EN  "],
             variable=self._dir_var,
             command=self._on_direction_change,
             fg_color=C["bg_card"],
@@ -1671,7 +1754,7 @@ class GoauldApp:
             font=("Courier", 10, "bold"),
         )
         seg.pack(side="left", padx=(0, 8))
-        seg.set("  DE → Goa'uld  ")
+        seg.set("  DE/EN → Goa'uld  ")
         self._direction = "de2goa"
 
         # Language preference toggle (DE / EN)
@@ -1918,7 +2001,7 @@ class GoauldApp:
         # Rechts: Version
         ctk.CTkLabel(
             bar,
-            text="▸ v0.2.5",
+            text="▸ v0.2.6",
             font=("Courier", 9, "bold"),
             text_color=C["gold"],
         ).pack(side="right", padx=(6, 12))
@@ -2095,7 +2178,7 @@ class GoauldApp:
 
         tk.Radiobutton(
             btn_frame,
-            text="  DE → Goa'uld  ",
+            text="  DE/EN → Goa'uld  ",
             variable=self._dir_var,
             value="de2goa",
             command=self._on_direction_change,
@@ -2113,7 +2196,7 @@ class GoauldApp:
 
         tk.Radiobutton(
             btn_frame,
-            text="  Goa'uld → DE  ",
+            text="  Goa'uld → DE/EN  ",
             variable=self._dir_var,
             value="goa2de",
             command=self._on_direction_change,
@@ -2349,6 +2432,12 @@ class GoauldApp:
                     # col_a = Eingabe, col_b = Goa'uld
                     result_word = prim["goauld"].strip()
                     lines.append(f"  {t_icon}  {tok:<20}  {result_word}")
+                    # Secondary-Alternativen aus YAML — respektiert lang_pref
+                    # (EN-User: EN-Map zuerst; DE-User: DE-Map zuerst).
+                    sec_alts = self._get_secondary_alts(tok, result_word)
+                    if sec_alts:
+                        alt_str = ", ".join(sec_alts[:3])
+                        lines.append(f"       auch: {alt_str}")
                 else:
                     # col_a = Goa'uld, col_b = Deutsche Bedeutung
                     best = prim
@@ -2412,11 +2501,14 @@ class GoauldApp:
 
     def _on_direction_change(self, *_) -> None:
         if CTK_AVAILABLE:
+            # CTK-SegmentedButton speichert das Label als Var-Wert, nicht
+            # "de2goa"/"goa2de". Richtung aus Label-Struktur ableiten:
+            # was VOR dem Pfeil steht ist die Quellsprache.
             val = self._dir_var.get()
-            # "  DE  →  Goa'uld  " → de2goa
-            # "  Goa'uld  →  DE  " → goa2de
-            self._direction = ("de2goa" if "DE  →  Goa" in val else "goa2de")
+            left, _, _right = val.partition("→")
+            self._direction = "goa2de" if "Goa'uld" in left else "de2goa"
         else:
+            # Tk-Radio speichert direkt "de2goa"/"goa2de" als value
             self._direction = self._dir_var.get()
         self._do_search()
         if CTK_AVAILABLE and hasattr(self, "_trans_output"):
@@ -3047,6 +3139,20 @@ class GoauldApp:
                     lines.append(f"    {'  ·  '.join(meta)}")
                     lines.append("")
 
+                # Secondary-Alternativen aus YAML (nur bei DE/EN → Goa'uld):
+                # polysemische Quellbegriffe mit mehreren Goa'uld-Übersetzungen.
+                # Der Helper prüft beide Sprachmaps gemäß lang_pref.
+                if self._direction == "de2goa":
+                    sec_alts = self._get_secondary_alts(
+                        tok, prim.get("goauld", "")
+                    )
+                    if sec_alts:
+                        lines.append("  AUCH")
+                        lines.append("")
+                        for sa in sec_alts[:5]:
+                            lines.append(f"    {GLYPH_ARROW}  {sa}")
+                        lines.append("")
+
                 # Alternatives
                 if alts:
                     lines.append("  ALTERNATIVEN")
@@ -3161,7 +3267,9 @@ class GoauldApp:
         tagged = [{**e, "lang": lang} for e in new_entries]
 
         # Reload everything fresh from both MDs, then replace matching lang
-        entries, paths = _load_mds()
+        entries, paths, de_map, en_map, secondary_de, secondary_en = _load_lexicon()
+        self._secondary_de = secondary_de      # für "auch:"-UI
+        self._secondary_en = secondary_en
         # Remove any old entries of the same lang and add new ones
         entries = [e for e in entries if e.get("lang") != lang] + tagged
         if path not in paths:
@@ -3190,8 +3298,8 @@ class GoauldApp:
             else:
                 self._intel_count_var.set(f"{result_count} HITS")
 
-        dir_label = ("GOA'ULD → DT/EN" if self._direction == "goa2de"
-                     else "DT/EN → GOA'ULD")
+        dir_label = ("GOA'ULD → DE/EN" if self._direction == "goa2de"
+                     else "DE/EN → GOA'ULD")
 
         if mode == "sentence":
             if result_count == total_tokens:
@@ -3222,6 +3330,11 @@ class GoauldApp:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_cli(args: argparse.Namespace) -> None:
+    # Guard: bei --noconsole-EXE ist sys.stdout None → print würde crashen.
+    # In diesem Fall ist der interaktive CLI-Modus ohnehin nicht bedienbar.
+    if sys.stdout is None:
+        log.error("CLI-Modus ist in der --noconsole-EXE nicht verfügbar.")
+        return
     print("\n" + "=" * 62)
     print("   JAFFA, KREE!  —  Goa'uld Linguistic Interface  v0.2")
     print("=" * 62)
@@ -3337,9 +3450,10 @@ Beispiele (CLI):
             # Versuche, Fehler in einer MessageBox anzuzeigen
             try:
                 import tkinter as tk
+                from tkinter import messagebox as _mb
                 _root = tk.Tk()
                 _root.withdraw()
-                tk.messagebox.showerror("GUI-Fehler", f"FEHLER: {_gui_err}\n\n{_tb}")
+                _mb.showerror("GUI-Fehler", f"FEHLER: {_gui_err}\n\n{_tb}")
                 _root.destroy()
             except Exception:
                 pass

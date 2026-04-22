@@ -1,28 +1,29 @@
 # Stargate — Goa'uld Linguistic Interface ⬡
-### Version 0.2.5
+### Version 0.2.6
 
 A bidirectional translator for the Goa'uld language from the Stargate franchise. This tool offers both an immersive graphical user interface (GUI) styled as an SGC command terminal and a Command-Line Interface (CLI).
 
-The interface uses a combination of an embedded core vocabulary and up to four extensible Markdown dictionary files to analyze individual words and entire sentences.
+The interface combines a structured YAML lexicon, four extensible Markdown dictionary files, and an embedded core vocabulary to analyze individual words and entire sentences.
 
 ---
 
-## 🆕 What's new in v0.2.5
+## 🆕 What's new in v0.2.6
 
-- **Parser fix for reversed sections** — Sections titled `Deutsch → Goa'uld: Direktzuordnung (Neologikum)` and `English → Goa'uld: Direct lookup` are now correctly recognized as reversed-column tables. Previously, over 1,200 entries from the Neologikum and Fictionary were loaded with swapped fields, which corrupted lookups (e.g. `tap'tar → menschheit` instead of `menschheit → tap'tar`). A robust regex replaces the previous rigid exact-match.
+- **YAML lexicon as the primary data format** — The new `goauld_lexicon.yaml` consolidates all four dictionaries into a single structured source with **~5,850 entries**, priority tiers (`canon_series` → `fanon_derived`), per-sense `glosses.de/en` fields, and explicit source attribution. The four Markdown files remain as a full **fallback** — if the YAML is missing, the legacy MD loader kicks in automatically and the tool runs without any loss of functionality.
 
-- **Complete UI redesign: Level 28 / SGC command terminal** — The interface has been militarized:
-  - Persistent **`TOP SECRET // SCI // STARGATE COMMAND`** classification bar at the very top
-  - Expanded header with **Operator ID**, **Stardate/Zulu timestamp**, and **lexicon counter**
-  - Expanded subtitle: *SGC Xenolinguistics Div · SG-1 Ops · Facility: Cheyenne Mountain*
-  - Tabs renamed: **`◈ BRIEFING`** (formerly Detail) and **`⊕ DEBRIEF`** (formerly Satzanalyse)
-  - Results panel is now **`⊕ INTERCEPT FEED`** with hit counter
-  - Live translation is now **`⚡ LIVE-TRANSMISSION · OUTGOING`** with Signal-Locked indicator
-  - **DEFCON 3** status bar at the bottom with version badge
+- **"Also:" alternatives for polysemous terms** — When a German or English word maps to multiple Goa'uld translations (e.g. `warrior → Jaffa` with the alternative `mel'shak'tar`), the canonical choice is shown as the primary hit and any additional variants appear in a compact **`auch:`** line directly below it. The sentence analysis tab (`⊕ DEBRIEF`) now shows a dedicated **`AUCH`** block per token with up to five alternatives.
 
-- **Bugfix: truncated columns in the results list** — The old card-based layout with hardcoded `wraplength` values cut off words whenever the left panel fell below 400px. Replaced with a clean 4-column grid (Nr / Goa'uld / Meaning / Score) with a colored left accent strip (phosphor green for ≥90 % score, gold for ≥60 %, gray below).
+- **Bilingual UI** — The direction buttons now consistently read **`DE/EN → Goa'uld`** and **`Goa'uld → DE/EN`** (previously just `DE`). The status bar and input placeholder have been aligned accordingly. The language toggle (🇩🇪 DE / 🇬🇧 EN) now decides which secondary map is consulted first for polysemous terms — with automatic fallback to the other language for loan words.
 
-- **Fallback for "Mensch"** — The gap-fill vocabulary now includes `mensch → tau'ri` (SG1 canonical) as a low-priority fallback when the main dictionary has no entry.
+- **Robustness in `.exe` bundles** — YAML and `yaml_loader.py` are now reliably loaded from `sys._MEIPASS` (PyInstaller `--onefile` extraction directory) **and** the directory next to the `.exe`. This supports both embedded deployment and an externally swappable YAML file without needing to rebuild.
+
+- **Bugfixes** —
+  - **Direction toggle** was never correctly matching its second label due to fragile whitespace-sensitive substring checks (masked by the hardcoded initial state); now handled via a robust arrow-split.
+  - **Indentation bug in `_browse_md`** broke the `GoauldApp` class as seen by the parser (cascading into 38+ Pylance errors) — fixed.
+  - **`log.warning()` before logger initialization** raised `NameError` if the YAML loader failed to import — now deferred until after `_setup_logging()`.
+  - **`tk.messagebox`** crashed in the GUI error fallback due to a missing explicit submodule import — fixed via `from tkinter import messagebox`.
+  - **`--cli` mode inside a `--noconsole` EXE** crashed on `print` because `sys.stdout is None` — guarded at the start of `run_cli()`.
+  - **Type annotations** tightened for Optional variables (now mypy-clean).
 
 ---
 
@@ -30,7 +31,7 @@ The interface uses a combination of an embedded core vocabulary and up to four e
 
 - **Bidirectional Translation** — Translates fluently from Goa'uld to English/German and vice versa. Direction and language can be toggled at any time.
 
-- **Intelligent Sentence Analysis** — Analyzes entire sentences token by token, showing primary meanings, alternatives, and linguistic tips in the `⊕ DEBRIEF` tab.
+- **Intelligent Sentence Analysis** — Analyzes entire sentences token by token, showing primary meanings, alternatives, polysemous `auch:` variants, and linguistic tips in the `⊕ DEBRIEF` tab.
 
 - **Live Transmission** — A real-time translation view (`⚡ LIVE-TRANSMISSION`) reads from the main search bar with debounced updates — no dialog popups required.
 
@@ -42,7 +43,9 @@ The interface uses a combination of an embedded core vocabulary and up to four e
 
 - **Terminal / CLI Mode** — For quick translations directly in your console using the `--cli` flag.
 
-- **Markdown Auto-Parsing** — Automatically reads vocabulary from tables within Markdown files. Supports both direct `Goa'uld → English/German` tables and reversed `Deutsch → Goa'uld: Direktzuordnung` sections, including variants with suffixes (`(Neologikum)`, `(Fictionary)`, etc.).
+- **YAML Lexicon with Tier System** — Canonical sources (`canon_series`, `canon_film`) outrank fanon extensions, so polysemous terms get a canonically grounded primary choice while every additional variant is surfaced as `secondary`.
+
+- **Markdown Auto-Parsing as fallback** — Automatically reads vocabulary from tables within Markdown files. Supports both direct `Goa'uld → English/German` tables and reversed `Deutsch → Goa'uld: Direktzuordnung` sections, including variants with suffixes (`(Neologikum)`, `(Fictionary)`, etc.).
 
 - **Auto-Installer** — Automatically attempts to install `customtkinter` in the background if it is missing, with `ensurepip` fallback guidance.
 
@@ -62,15 +65,15 @@ The interface uses a combination of an embedded core vocabulary and up to four e
 
 Make sure you have **Python 3** installed on your system.
 
-Clone the repository and install the required library for the modern GUI:
+Clone the repository and install the required libraries:
 
 ```bash
 git clone https://github.com/DaWasteh/goauld-translator.git
 cd goauld-translator
-pip install customtkinter
+pip install customtkinter pyyaml
 ```
 
-> **Note:** The script will attempt an automatic background installation if it detects that `customtkinter` is missing.
+> **Note:** The script will attempt an automatic background installation if it detects that `customtkinter` is missing. If `pyyaml` is missing, the tool falls back to the Markdown loader automatically, with a corresponding warning in the log.
 
 ---
 
@@ -84,7 +87,7 @@ Simply start the application without any parameters to open the GUI:
 python goauld_translator.py
 ```
 
-To load a specific Markdown dictionary file directly:
+To load a specific Markdown dictionary file directly (forces MD mode, skipping YAML):
 
 ```bash
 python goauld_translator.py --md path/to/file.md
@@ -109,12 +112,15 @@ python goauld_translator.py --cli --dir goa2de --text "Jaffa kree"
 Distribute the script as a standalone Windows application using `pyinstaller`:
 
 ```powershell
-pip install pyinstaller
+pip install pyinstaller pyyaml
 pyinstaller --noconsole --onefile `
   --add-data "Goa'uld-Dictionary.md;." `
   --add-data "Goa'uld-Wörterbuch.md;." `
   --add-data "Goa'uld-Fictionary.md;." `
   --add-data "Goa'uld-Neologikum.md;." `
+  --add-data "goauld_lexicon.yaml;." `
+  --add-data "yaml_loader.py;." `
+  --hidden-import yaml `
   goauld_translator.py
 ```
 
@@ -122,11 +128,15 @@ The finished `.exe` will be located inside the newly created `dist` folder.
 
 > **PowerShell note:** Line continuation uses backtick (`` ` ``), not caret (`^`). Adjust accordingly for Bash/CMD.
 
+> **If you hit a `PermissionError` during the build:** Make sure no old `goauld_translator.exe` is still running in the Task Manager, and that no Explorer window has the `dist` folder open. Running `Remove-Item -Recurse -Force .\build, .\dist` first clears any leftovers from previous builds.
+
+> **Swappable YAML:** The tool looks for `goauld_lexicon.yaml` both inside the `_MEIPASS` bundle **and** next to the `.exe`. This lets you ship an updated YAML without rebuilding the EXE — just drop the new file into the same directory.
+
 ---
 
 ## 📚 Vocabulary & Data
 
-This project ships with four Markdown dictionary files and an embedded gap-fill vocabulary covering commonly used terms. The dictionaries are automatically parsed at startup and merged into a unified lexicon of **~3,244 deduplicated entries** (3,463 raw).
+This project ships with a structured YAML lexicon alongside four Markdown dictionary files. On startup, `goauld_lexicon.yaml` is loaded preferentially (**~5,850 entries** with priority tiers and bilingual glosses); if the YAML is missing, the fallback loader parses all four Markdown files into a unified lexicon (**~3,463 entries, 3,244 after deduplication**).
 
 ### Official Dictionaries
 
@@ -154,6 +164,17 @@ These two dictionaries systematically extend the canonical vocabulary into areas
 
 ---
 
+### Consolidated YAML Lexicon
+
+`goauld_lexicon.yaml` is the merged distillation of all four Markdown dictionaries with additional per-sense metadata:
+
+- **Tier system** (`canon_series`, `canon_film`, `canon_guide`, `canon_rpg`, `abydonian`, `fanon_strict`, `fanon_derived`, …) as an authority signal
+- **Priorities** for tiebreakers among polysemous terms (canonical choice wins primary)
+- **`glosses.de` / `glosses.en`** per sense for clean bilingual lookup
+- **~163 DE and ~132 EN secondary entries** powering the new `auch:` display
+
+---
+
 ## 🤝 Contributing
 
 **Kree!** Want to expand the dictionary or improve the code? Pull requests are always welcome.
@@ -162,5 +183,6 @@ These two dictionaries systematically extend the canonical vocabulary into areas
 - For reverse mappings (German → Goa'uld), use a section with title `Deutsch → Goa'uld: Direktzuordnung` (or variants with suffixes).
 - Entries can carry language tags (`lang: "de"` / `lang: "en"`) for improved search scoring.
 - The fictional dictionaries follow strict canonical morphological rules — please maintain consistency with attested roots.
+- For structured YAML contributions: add new entries to `goauld_lexicon.yaml` with appropriate `tier` and `priority`; `yaml_loader.py` handles expansion.
 
 **Tek'ma'te.**
