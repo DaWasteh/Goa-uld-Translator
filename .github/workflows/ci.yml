@@ -31,6 +31,9 @@ concurrency:
 # ─────────────────────────────────────────────────────────────────────────────
 env:
   PYTHON_VERSION_DEFAULT: "3.11"
+  # Node.js 24 opt-in: verhindert Deprecation-Warnings für actions/checkout & setup-python
+  # (GitHub erzwingt Node 24 ab Juni 2026 — wir aktivieren es jetzt schon)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   # Alle Dictionary-Dateien und Hilfsskripte, die der Translator benötigt
   DATA_FILES: >-
     Goa_uld-Dictionary.md
@@ -60,7 +63,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
-          cache: pip
+          # KEIN cache: pip — das Projekt hat keine requirements.txt/pyproject.toml.
+          # Wir cachen manuell über actions/cache (funktioniert ohne Lock-Datei).
+
+      # Manueller pip-Cache: kein requirements.txt nötig, Cache-Key = OS
+      - name: "💾 pip-Cache (Lint)"
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/AppData/Local/pip/Cache
+          key: ${{ runner.os }}-pip-lint-ruff-mypy
+          restore-keys: ${{ runner.os }}-pip-lint-
 
       - name: "📦 Lint-Tools installieren"
         run: pip install ruff mypy
@@ -105,12 +119,20 @@ jobs:
       - name: "⬇ Checkout"
         uses: actions/checkout@v4
 
-      # pip-Cache: OS + Python-Version als eindeutiger Schlüssel
+      # pip-Cache: manuell, kein requirements.txt nötig
       - name: "🐍 Python ${{ matrix.python-version }} einrichten"
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: pip
+
+      - name: "💾 pip-Cache (Test)"
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/AppData/Local/pip/Cache
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-test
+          restore-keys: ${{ runner.os }}-pip-${{ matrix.python-version }}-
 
       # customtkinter wird installiert, aber auf dem CI-Runner nicht gerendert
       - name: "📦 Abhängigkeiten installieren"
@@ -193,7 +215,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
-          cache: pip
+
+      - name: "💾 pip-Cache (Build)"
+        uses: actions/cache@v4
+        with:
+          path: ~/AppData/Local/pip/Cache
+          key: windows-pip-build-pyinstaller
+          restore-keys: windows-pip-build-
 
       - name: "📦 Build-Abhängigkeiten installieren"
         run: pip install pyinstaller pyyaml customtkinter
