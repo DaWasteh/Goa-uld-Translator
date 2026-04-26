@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 ╔══════════════════════════════════════════════════════════════════╗
 ║   STARGATE — GOA'ULD LINGUISTIC INTERFACE  v0.2.6                ║
@@ -19,17 +18,15 @@ Verwendung:
     python goauld_translator_gui.py --cli --dir goa2de --text "Jaffa kree"
 """
 
-import re
-import os
-import sys
 import argparse
 import difflib
 import logging
-import threading
+import re
+import sys
 from pathlib import Path
 from typing import Optional
 
-_YAML_LOADER_WARNING: Optional[str] = None
+_YAML_LOADER_WARNING: str | None = None
 try:
     from yaml_loader import find_lexicon_yaml, load_lexicon_yaml
     YAML_LOADER_AVAILABLE = True
@@ -73,7 +70,6 @@ if _YAML_LOADER_WARNING:
 
 try:
     import customtkinter as ctk
-    from customtkinter import ThemeManager
     CTK_AVAILABLE = True
 except ImportError:
     CTK_AVAILABLE = False
@@ -90,8 +86,7 @@ except ImportError:
                 capture_output=True, text=True, timeout=60,
             )
             if result.returncode == 0:
-                import customtkinter as ctk                 # type: ignore[import-untyped]
-                from customtkinter import ThemeManager
+                import customtkinter as ctk  # type: ignore[import-untyped]  # noqa: I001
                 CTK_AVAILABLE = True
                 log.info("CustomTkinter erfolgreich installiert!")
             else:
@@ -106,9 +101,9 @@ except ImportError:
 
 try:
     import tkinter as tk
-    import tkinter.ttk as ttk
-    import tkinter.messagebox as messagebox
     import tkinter.filedialog as filedialog
+    import tkinter.messagebox as messagebox
+    import tkinter.ttk as ttk
     TK_AVAILABLE = True
 except ImportError:
     TK_AVAILABLE = False
@@ -310,7 +305,7 @@ def parse_markdown_dictionary(filepath: str) -> list[dict]:
     """
     entries: list[dict] = []
     try:
-        with open(filepath, "r", encoding="utf-8") as fh:
+        with open(filepath, encoding="utf-8") as fh:
             lines = fh.readlines()
     except OSError as exc:
         log.warning("Markdown-Datei nicht lesbar: %s", exc)
@@ -567,7 +562,7 @@ class SearchEngine:
                direction: str = "goa2de") -> int:
         """
         Bewertungsfunktion für Similarity-Score.
-        
+
         Strategie (priorisiert):
         1. Exakter Match (100)
         2. Prefix-Match (85)
@@ -575,10 +570,10 @@ class SearchEngine:
         4. Teilwort-Match (65)
         5. Wort-Level-Match (55-60)
         6. Fuzzy-Match (0-45)
-        
+
         Bonus für Längen-Ähnlichkeit: Kürzere, passende Treffer erhalten
         einen zusätzlichen Score-Bonus.
-        
+
         direction: 'de2goa' → höhere Schwellenwerte für meaningful matches
         """
         if value == query:
@@ -626,7 +621,7 @@ def _de_lemma_candidates(word: str) -> list[str]:
       zerstör  → [zerstör, zerstöre, zerstören]
       liebst   → [liebst, lieben, liebe, lieb]
       raumschiffe → [raumschiffe, raumschiff]
-    
+
     Erweiterungen:
       - Umlaut-Varianten: ä→a, ö→o, ü→u
       - Kompositvorschläge: "frei" → auch "Freiheit" prüfen
@@ -736,9 +731,8 @@ def _de_lemma_candidates(word: str) -> list[str]:
     # ── Kontraktionen auflösen ────────────────────────────────────────────────
     _kontraktionen: dict[str, str] = {
         "im": "in dem", "zum": "zu dem", "ans": "an das",
-        "ams": "an dem", "ins": "in das", "ins": "in dem",
-        "beim": "bei dem", "vom": "von dem", "ins": "in das",
-        "ins": "in das", "ins": "in das",
+        "ams": "an dem", "ins": "in das",
+        "beim": "bei dem", "vom": "von dem",
     }
     if w in _kontraktionen:
         candidates.extend(_kontraktionen[w].split())
@@ -878,13 +872,13 @@ class SentenceAnalyzer:
                     continue
 
                 # b) Try multi-word DE_MAP hits first (window → 2), then Engine
-                de_map_hit: Optional[tuple[str, str]] = None  # (phrase, goauld)
+                _de_map_hit: Optional[tuple[str, str]] = None  # (phrase, goauld)
                 for n in range(window, 1, -1):
                     phrase    = " ".join(words[i:i + n])
                     # Try exact phrase first, then lemma candidates for multi-word
                     hit = DE_GOAULD_MAP.get(phrase.lower())
                     if hit:
-                        de_map_hit = (phrase, hit)
+                        _de_map_hit = (phrase, hit)
                         # Immediately consume multi-word phrase and move on
                         synthetic = {
                             "goauld":  hit,
@@ -1662,7 +1656,7 @@ class GoauldApp:
         if not hasattr(self, '_chev_buttons'):
             return
         # Chevron pulsierend
-        base = C["chevron"]
+        _base = C["chevron"]
         for i, btn in enumerate(self._chev_buttons):
             phase = (self._eh_phase + i) % 5
             if phase < 2:
@@ -1874,7 +1868,7 @@ class GoauldApp:
         self._tabs.pack(fill="x", padx=6, pady=(4, 0))
         self._tabs.add("  ◈ BRIEFING  ")
         self._tabs.add("  ⊕ DEBRIEF  ")
-        
+
         # Tab-Separator
         ctk.CTkFrame(right, fg_color=C["gold_dim"],
                      corner_radius=0, height=1).pack(fill="x", padx=6, pady=(0, 0))
@@ -1918,7 +1912,7 @@ class GoauldApp:
 
         ctk.CTkLabel(
             live_hdr,
-            text=f"  ⚡ LIVE-TRANSMISSION  ·  OUTGOING",
+            text="  ⚡ LIVE-TRANSMISSION  ·  OUTGOING",
             font=("Courier", 10, "bold"),
             text_color=C["gold_bright"],
             anchor="w",
@@ -2381,7 +2375,7 @@ class GoauldApp:
             badge_icon = GLYPH_KEK
             badge_color = C["warning_red"]
             badge_text = f"{badge_icon}  0/{total_n} Token"
-        
+
         self._trans_status_lbl.configure(
             text=badge_text,
             text_color=badge_color,
@@ -2802,7 +2796,7 @@ class GoauldApp:
             row.columnconfigure(0, weight=1)
 
             icon = GLYPH_LOCKED if found else GLYPH_KEK
-            icon_color = C["locked_bright"] if found else C["text_kek"]
+            _icon_color = C["locked_bright"] if found else C["text_kek"]
             tok_label_color = C["gold_bright"] if found else C["text_mid"]
 
             ctk.CTkLabel(row,
@@ -2987,7 +2981,7 @@ class GoauldApp:
         lines += [f"  {sep}", ""]
         lines.append("  BEDEUTUNG")
         lines.append("")
-        
+
         full_meaning = entry["meaning"]
         meaning_parts = re.split(r"\s*([;—])\s*", full_meaning)
         if len(meaning_parts) == 1:
@@ -2997,9 +2991,9 @@ class GoauldApp:
             i = 0
             while i < len(meaning_parts):
                 part = meaning_parts[i]
-                sep_char = ""
+                _sep_char = ""
                 if i + 1 < len(meaning_parts) and meaning_parts[i + 1] in (";", "—"):
-                    sep_char = meaning_parts[i + 1]
+                    _sep_char = meaning_parts[i + 1]
                     i += 2
                 else:
                     i += 1

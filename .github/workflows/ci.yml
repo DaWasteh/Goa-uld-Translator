@@ -79,11 +79,13 @@ jobs:
       - name: "📦 Lint-Tools installieren"
         run: pip install ruff mypy
 
-      # ruff ist ein extrem schneller Linter (ersetzt flake8 + isort + pyupgrade)
-      - name: "✅ ruff — Stil & Importe prüfen"
+      # ruff: E=PEP8-Fehler, W=Warnungen, F=echte Fehler (unused vars, f-strings etc.)
+      # UP (pyupgrade) und I (isort) sind reine Stilregeln — für dieses Projekt
+      # zu pedantisch und erzeugen Rauschen ohne Bugfix-Wert.
+      - name: "✅ ruff — Code-Qualität prüfen"
         run: |
           ruff check goauld_translator.py yaml_loader.py migrate_to_yaml.py \
-            --select E,W,F,I,UP \
+            --select E,W,F \
             --ignore E501,E402 \
             --output-format=github
 
