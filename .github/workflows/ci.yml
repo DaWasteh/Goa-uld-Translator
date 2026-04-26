@@ -160,13 +160,19 @@ jobs:
           python -c "
           import os, pathlib, sys
           files = os.listdir('.')
-          for f in ['Goa_uld-Dictionary.md','Goa_uld-Fictionary.md','Goa_uld-Neologikum.md']:
-              assert f in files and len(pathlib.Path(f).read_text(encoding='utf-8')) > 500, f'FAIL: {f}'
-              print('[OK]', f)
-          wb = next((f for f in files if 'rterbuch' in f and f.endswith('.md')), None)
-          assert wb, 'Woerterbuch fehlt'
-          print('[OK]', wb)
-          print('Alle Checks bestanden')
+          keywords = ['Dictionary', 'Fictionary', 'Neologikum', 'rterbuch']
+          failed = False
+          for kw in keywords:
+              match = next((f for f in files if kw in f and f.endswith('.md')), None)
+              if not match:
+                  print('FAIL: keine Datei mit', kw)
+                  failed = True
+              elif len(pathlib.Path(match).read_text(encoding='utf-8')) < 500:
+                  print('FAIL: zu kurz:', match)
+                  failed = True
+              else:
+                  print('[OK]', match)
+          sys.exit(1 if failed else 0)
           "
 
       - name: "🔄 Migrations-Smoke-Test (migrate_to_yaml.py --help)"
