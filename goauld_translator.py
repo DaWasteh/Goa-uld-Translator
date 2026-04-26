@@ -224,14 +224,10 @@ GLYPH_KEK      = "☓"
 # Beide Schreibweisen: Apostroph (Windows/Mac) und Unterstrich (Linux/Mount)
 MD_CANDIDATES_EN = [
     "Goauld-Dictionary.md",
-    "Goauld-Dictionary.md",
-    "Goauld-Fictionary.md",
     "Goauld-Fictionary.md",
 ]
 MD_CANDIDATES_DE = [
     "Goauld-Woerterbuch.md",
-    "Goauld-Woerterbuch.md",
-    "Goauld-Neologikum.md",
     "Goauld-Neologikum.md",
 ]
 
@@ -428,12 +424,8 @@ class SearchEngine:
     # Quellen-Priorität: Haupt-Wörterbuch > Fictionary > Neologikum
     _SOURCE_PRIORITY: dict[str, int] = {
         "Goauld-Woerterbuch.md": 3,
-        "Goauld-Woerterbuch.md": 3,
-        "Goauld-Dictionary.md": 3,
         "Goauld-Dictionary.md": 3,
         "Goauld-Fictionary.md": 2,
-        "Goauld-Fictionary.md": 2,
-        "Goauld-Neologikum.md": 1,
         "Goauld-Neologikum.md": 1,
         "Gap-Fill": 2,
         "Kanon": 3,
@@ -523,8 +515,7 @@ class SearchEngine:
                 # FIX 5 (translation-bugs-findings.md): Sekundäre Quellen strafen
                 source_penalty = 0
                 src = e.get("source", "")
-                if src in ("Goauld-Fictionary.md", "Goauld-Fictionary.md",
-                           "Goauld-Neologikum.md", "Goauld-Neologikum.md"):
+                if src in ("Goauld-Fictionary.md", "Goauld-Neologikum.md"):
                     source_penalty = 15  # -15 Punkte für Fictionary/Neologikum
                 final_score = base_score + lang_bonus + short_bonus + de2goa_bonus - source_penalty
                 # FIX 4 (translation-bugs-findings.md): Debug-Logging für fehlende Wörter

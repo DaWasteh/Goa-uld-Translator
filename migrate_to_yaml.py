@@ -1842,13 +1842,13 @@ def write_report(entries: dict, conflicts: list, raw_count: int,
 # ──────────────────────────────────────────────────────────────────────────
 
 def find_source_files(input_dir: Path) -> list[Path]:
-    """Locate the 4 source MDs — supports both apostrophe and underscore variants."""
+    """Locate the 4 source MDs."""
     candidates = []
     patterns = [
-        "Goauld-Dictionary.md",  "Goauld-Dictionary.md",
-        "Goauld-Woerterbuch.md",  "Goauld-Woerterbuch.md",
-        "Goauld-Fictionary.md",  "Goauld-Fictionary.md",
-        "Goauld-Neologikum.md",  "Goauld-Neologikum.md",
+        "Goauld-Dictionary.md",
+        "Goauld-Woerterbuch.md",
+        "Goauld-Fictionary.md",
+        "Goauld-Neologikum.md",
     ]
     seen_stems = set()
     for pat in patterns:
