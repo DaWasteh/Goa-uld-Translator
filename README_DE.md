@@ -1,5 +1,5 @@
 # Stargate — Goa'uld Linguistic Interface ⬡
-### Version 0.2.6
+### Version 0.2.8
 
 Ein bidirektionaler Übersetzer für die Goa'uld-Sprache aus dem Stargate-Franchise. Dieses Tool bietet sowohl eine immersive grafische Benutzeroberfläche (GUI) im Stil eines SGC-Kommandoterminals als auch ein Command-Line Interface (CLI).
 
@@ -114,10 +114,10 @@ Wenn du das Skript als eigenständige Windows-Anwendung weitergeben willst, komp
 ```powershell
 pip install pyinstaller pyyaml
 pyinstaller --noconsole --onefile `
-  --add-data "Goa'uld-Dictionary.md;." `
-  --add-data "Goa'uld-Wörterbuch.md;." `
-  --add-data "Goa'uld-Fictionary.md;." `
-  --add-data "Goa'uld-Neologikum.md;." `
+  --add-data "Goauld-Dictionary.md;." `
+  --add-data "Goauld-Woerterbuch.md;." `
+  --add-data "Goauld-Fictionary.md;." `
+  --add-data "Goauld-Neologikum.md;." `
   --add-data "goauld_lexicon.yaml;." `
   --add-data "yaml_loader.py;." `
   --hidden-import yaml `
@@ -144,8 +144,8 @@ Diese beiden Wörterbücher dokumentieren das kanonische Vokabular aus dem Starg
 
 | Datei | Sprache | Beschreibung |
 |-------|---------|--------------|
-| `Goa_uld-Dictionary.md` | Englisch | Vollständiges kanonisches Goa'uld-Vokabular mit Etymologien, Grammatikhinweisen und Episodenquellen |
-| `Goa_uld-Wörterbuch.md` | Deutsch | Deutschsprachiges Pendant zum kanonischen Wörterbuch |
+| `Goauld-Dictionary.md` | Englisch | Vollständiges kanonisches Goa'uld-Vokabular mit Etymologien, Grammatikhinweisen und Episodenquellen |
+| `Goauld-Woerterbuch.md` | Deutsch | Deutschsprachiges Pendant zum kanonischen Wörterbuch |
 
 > **Erstellt von:** Claude Opus 4.6 Erweiterte Recherche
 
@@ -157,8 +157,8 @@ Diese beiden Wörterbücher erweitern das kanonische Vokabular systematisch in B
 
 | Datei | Sprache | Beschreibung |
 |-------|---------|--------------|
-| `Goa_uld-Fictionary.md` | Englisch | Swadesh-Grundlage, semantische Erweiterungen und moderne Konzepte |
-| `Goa_uld-Neologikum.md` | Deutsch | Deutschsprachige Neologismen für moderne und abstrakte Begriffe |
+| `Goauld-Fictionary.md` | Englisch | Swadesh-Grundlage, semantische Erweiterungen und moderne Konzepte |
+| `Goauld-Neologikum.md` | Deutsch | Deutschsprachige Neologismen für moderne und abstrakte Begriffe |
 
 > **Erstellt durch:** Gemeinschaftsarbeit von **Google Gemini 3.1 Pro Deep Research** und **Claude Opus 4.6 Erweiterte Recherche**
 

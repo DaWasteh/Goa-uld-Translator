@@ -1,5 +1,5 @@
 # Stargate — Goa'uld Linguistic Interface ⬡
-### Version 0.2.6
+### Version 0.2.8
 
 A bidirectional translator for the Goa'uld language from the Stargate franchise. This tool offers both an immersive graphical user interface (GUI) styled as an SGC command terminal and a Command-Line Interface (CLI).
 
@@ -114,10 +114,10 @@ Distribute the script as a standalone Windows application using `pyinstaller`:
 ```powershell
 pip install pyinstaller pyyaml
 pyinstaller --noconsole --onefile `
-  --add-data "Goa'uld-Dictionary.md;." `
-  --add-data "Goa'uld-Wörterbuch.md;." `
-  --add-data "Goa'uld-Fictionary.md;." `
-  --add-data "Goa'uld-Neologikum.md;." `
+  --add-data "Goauld-Dictionary.md;." `
+  --add-data "Goauld-Woerterbuch.md;." `
+  --add-data "Goauld-Fictionary.md;." `
+  --add-data "Goauld-Neologikum.md;." `
   --add-data "goauld_lexicon.yaml;." `
   --add-data "yaml_loader.py;." `
   --hidden-import yaml `
@@ -144,8 +144,8 @@ These two dictionaries document the canonical vocabulary attested across the Sta
 
 | File | Language | Description |
 |------|----------|-------------|
-| `Goa_uld-Dictionary.md` | English | Complete canonical Goa'uld vocabulary with etymologies, grammar notes, and episode sources |
-| `Goa_uld-Wörterbuch.md` | German | German-language counterpart of the canonical dictionary |
+| `Goauld-Dictionary.md` | English | Complete canonical Goa'uld vocabulary with etymologies, grammar notes, and episode sources |
+| `Goauld-Woerterbuch.md` | German | German-language counterpart of the canonical dictionary |
 
 > **Created by:** Claude Opus 4.6 Extended Research
 
@@ -157,8 +157,8 @@ These two dictionaries systematically extend the canonical vocabulary into areas
 
 | File | Language | Description |
 |------|----------|-------------|
-| `Goa_uld-Fictionary.md` | English | Swadesh foundation, semantic extensions, and modern concepts |
-| `Goa_uld-Neologikum.md` | German | German-language neologisms for modern and abstract vocabulary |
+| `Goauld-Fictionary.md` | English | Swadesh foundation, semantic extensions, and modern concepts |
+| `Goauld-Neologikum.md` | German | German-language neologisms for modern and abstract vocabulary |
 
 > **Created by:** Collaborative effort between **Google Gemini 3.1 Pro Deep Research** and **Claude Opus 4.6 Extended Research**
 
