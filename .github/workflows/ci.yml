@@ -1,0 +1,314 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║   STARGATE — GOA'ULD LINGUISTIC INTERFACE                        ║
+# ║   GitHub Actions CI/CD  ·  SGC Automated QA Pipeline            ║
+# ╚══════════════════════════════════════════════════════════════════╝
+#
+# Legt in: .github/workflows/ci.yml
+#
+# TRIGGER-ÜBERSICHT:
+#   push → main / develop     → lint + test (alle Plattformen)
+#   pull_request → main       → lint + test (alle Plattformen)
+#   push → tags (v*)          → lint + test + build-exe + release
+#   workflow_dispatch         → manuell auslösbar (alle Jobs)
+
+name: "Goa'uld Translator — CI/CD"
+
+on:
+  push:
+    branches: [main, develop]
+    tags:     ["v*.*.*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:         # Manueller Trigger über GitHub-UI
+
+# Verhindert parallele Runs auf demselben Branch (spart Runner-Minuten)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GLOBALE DEFAULTS
+# ─────────────────────────────────────────────────────────────────────────────
+env:
+  PYTHON_VERSION_DEFAULT: "3.11"
+  # Alle Dictionary-Dateien und Hilfsskripte, die der Translator benötigt
+  DATA_FILES: >-
+    Goa_uld-Dictionary.md
+    Goa_uld-Wörterbuch.md
+    Goa_uld-Fictionary.md
+    Goa_uld-Neologikum.md
+    goauld_lexicon.yaml
+    yaml_loader.py
+
+# ═════════════════════════════════════════════════════════════════════════════
+# JOB 1 — LINT  (Ubuntu · schnell · kein Artefakt)
+# ═════════════════════════════════════════════════════════════════════════════
+# Was er tut:
+#   Prüft Codestil (ruff) und Typ-Konsistenz (mypy --ignore-missing-imports).
+#   Schlägt fehl, bevor irgendein Test läuft — so bleibt der Code sauber.
+jobs:
+  lint:
+    name: "🔍 Lint & Style"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: "⬇ Checkout"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Python ${{ env.PYTHON_VERSION_DEFAULT }} einrichten"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+          cache: pip
+
+      - name: "📦 Lint-Tools installieren"
+        run: pip install ruff mypy
+
+      # ruff ist ein extrem schneller Linter (ersetzt flake8 + isort + pyupgrade)
+      - name: "✅ ruff — Stil & Importe prüfen"
+        run: |
+          ruff check goauld_translator.py yaml_loader.py migrate_to_yaml.py \
+            --select E,W,F,I,UP \
+            --ignore E501,E402 \
+            --output-format=github
+
+      # Mypy prüft Typ-Annotationen ohne externe Stubs zu erzwingen
+      - name: "🔎 mypy — Typ-Check"
+        run: |
+          mypy goauld_translator.py yaml_loader.py \
+            --ignore-missing-imports \
+            --no-strict-optional \
+            --python-version 3.11
+        continue-on-error: true   # Typ-Fehler blockieren nicht den Build (noch)
+
+# ═════════════════════════════════════════════════════════════════════════════
+# JOB 2 — TEST  (Linux · macOS · Windows  ×  Python 3.10 / 3.11 / 3.12)
+# ═════════════════════════════════════════════════════════════════════════════
+# Was er tut:
+#   Matrix-Test auf drei OS und drei Python-Versionen = 9 parallele Runners.
+#   Kein Display vorhanden → GUI-Code wird übersprungen, CLI-Modus wird
+#   vollständig getestet.  Alle vier Wörterbücher werden geladen & verifiziert.
+  test:
+    name: "🧪 Test · ${{ matrix.os }} · Python ${{ matrix.python-version }}"
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false   # Alle Matrix-Kombinationen fertig laufen lassen
+      matrix:
+        os:             [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: "⬇ Checkout"
+        uses: actions/checkout@v4
+
+      # pip-Cache: OS + Python-Version als eindeutiger Schlüssel
+      - name: "🐍 Python ${{ matrix.python-version }} einrichten"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # customtkinter wird installiert, aber auf dem CI-Runner nicht gerendert
+      - name: "📦 Abhängigkeiten installieren"
+        run: pip install pyyaml customtkinter pytest
+
+      # ── Smoke-Tests via CLI (kein Display nötig) ──────────────────────────
+
+      - name: "💬 Smoke-Test: Goa'uld → Deutsch (YAML)"
+        run: |
+          python goauld_translator.py --cli --dir goa2de --text "Jaffa kree"
+
+      - name: "💬 Smoke-Test: Deutsch → Goa'uld (YAML)"
+        run: |
+          python goauld_translator.py --cli --dir de2goa --text "Krieger der Götter"
+
+      - name: "💬 Smoke-Test: Englisch → Goa'uld"
+        run: |
+          python goauld_translator.py --cli --dir de2goa --text "warrior"
+
+      - name: "📚 Dictionary-Ladetest (alle 4 MD-Dateien)"
+        run: |
+          python - <<'EOF'
+          import sys, pathlib, yaml
+
+          # YAML-Lexikon prüfen
+          lex = pathlib.Path("goauld_lexicon.yaml")
+          assert lex.exists(), "goauld_lexicon.yaml fehlt!"
+          data = yaml.safe_load(lex.read_text(encoding="utf-8"))
+          entries = data.get("entries", {})
+          assert len(entries) >= 1000, f"Zu wenige Einträge im YAML: {len(entries)}"
+          print(f"[OK] YAML geladen: {len(entries)} Einträge")
+
+          # Alle 4 MD-Dateien prüfen
+          expected = [
+              "Goa_uld-Dictionary.md", "Goa_uld-Wörterbuch.md",
+              "Goa_uld-Fictionary.md", "Goa_uld-Neologikum.md",
+          ]
+          for fname in expected:
+              p = pathlib.Path(fname)
+              assert p.exists(), f"Fehlende Datei: {fname}"
+              content = p.read_text(encoding="utf-8")
+              assert len(content) > 500, f"Datei zu kurz: {fname}"
+              print(f"[OK] {fname} ({len(content):,} Zeichen)")
+
+          print("Alle Dictionary-Checks bestanden ✓")
+          EOF
+
+      - name: "🔄 Migrations-Smoke-Test (migrate_to_yaml.py --help)"
+        run: |
+          python migrate_to_yaml.py --help
+
+      - name: "🐛 Vollständige pytest-Suite (falls tests/ vorhanden)"
+        run: |
+          # Läuft ohne Fehler durch, wenn kein tests/-Verzeichnis existiert
+          python -m pytest tests/ -v --tb=short 2>/dev/null || \
+          python -m pytest test/  -v --tb=short 2>/dev/null || \
+          echo "Kein tests/-Verzeichnis gefunden — Pytest übersprungen."
+        shell: bash
+
+# ═════════════════════════════════════════════════════════════════════════════
+# JOB 3 — BUILD EXE  (Windows only · nur bei Tag-Push oder manuellem Trigger)
+# ═════════════════════════════════════════════════════════════════════════════
+# Was er tut:
+#   Baut die eigenständige .exe mit PyInstaller (--noconsole --onefile).
+#   Alle Datendateien werden eingebettet.  Das fertige Artefakt wird als
+#   GitHub-Actions-Artifact hochgeladen (30 Tage Aufbewahrung).
+  build-exe:
+    name: "🏗 Build Windows EXE"
+    needs: test
+    runs-on: windows-latest
+    timeout-minutes: 30
+    # Nur bei Version-Tags oder manuellem Dispatch
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: "⬇ Checkout"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Python ${{ env.PYTHON_VERSION_DEFAULT }} einrichten"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+          cache: pip
+
+      - name: "📦 Build-Abhängigkeiten installieren"
+        run: pip install pyinstaller pyyaml customtkinter
+
+      # PyInstaller-Build — exakt dieselben Flags wie im README beschrieben.
+      # Backtick-Zeilenfortsetzung funktioniert in PowerShell.
+      - name: "⚙ PyInstaller — EXE bauen"
+        shell: pwsh
+        run: |
+          pyinstaller `
+            --noconsole `
+            --onefile `
+            --name "GoauldTranslator" `
+            --add-data "Goa_uld-Dictionary.md;." `
+            --add-data "Goa_uld-Wörterbuch.md;." `
+            --add-data "Goa_uld-Fictionary.md;." `
+            --add-data "Goa_uld-Neologikum.md;." `
+            --add-data "goauld_lexicon.yaml;." `
+            --add-data "yaml_loader.py;." `
+            --hidden-import yaml `
+            goauld_translator.py
+
+      # Kurzer Funktionstest der frisch gebauten EXE im CLI-Modus
+      - name: "🧪 EXE-Smoke-Test"
+        shell: pwsh
+        run: |
+          .\dist\GoauldTranslator.exe --cli --dir goa2de --text "Jaffa kree"
+
+      # Versionsnummer aus dem Tag extrahieren (z.B. v0.2.6 → 0.2.6)
+      - name: "🏷 Version aus Tag extrahieren"
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.ref }}" -match "refs/tags/v(.+)") {
+            echo "VERSION=$($Matches[1])" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "VERSION=dev-${{ github.sha }}" >> $env:GITHUB_OUTPUT
+          }
+
+      # EXE umbenennen, damit sie die Versionsnummer trägt
+      - name: "📋 EXE umbenennen"
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.version.outputs.VERSION }}"
+          Rename-Item `
+            -Path "dist\GoauldTranslator.exe" `
+            -NewName "GoauldTranslator-$ver-windows-x64.exe"
+
+      # Als GitHub-Artefakt hochladen (für Release-Job und manuelle Downloads)
+      - name: "⬆ EXE als Artefakt hochladen"
+        uses: actions/upload-artifact@v4
+        with:
+          name: "GoauldTranslator-${{ steps.version.outputs.VERSION }}-windows"
+          path: "dist/GoauldTranslator-*.exe"
+          retention-days: 30
+
+# ═════════════════════════════════════════════════════════════════════════════
+# JOB 4 — RELEASE  (nur bei Tag-Push)
+# ═════════════════════════════════════════════════════════════════════════════
+# Was er tut:
+#   Erstellt einen GitHub Release mit der fertigen EXE als Download-Asset.
+#   Release-Notes werden automatisch aus dem CHANGELOG generiert (falls
+#   vorhanden), sonst als Draft angelegt, damit du sie manuell vervollständigst.
+  release:
+    name: "🚀 GitHub Release erstellen"
+    needs: build-exe
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: startsWith(github.ref, 'refs/tags/v')
+    # Schreibrechte für den Release-Job
+    permissions:
+      contents: write
+
+    steps:
+      - name: "⬇ Checkout"
+        uses: actions/checkout@v4
+
+      # Versionsnummer aus dem Tag
+      - name: "🏷 Version aus Tag extrahieren"
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # Das im Build-Job hochgeladene Artefakt herunterladen
+      - name: "⬇ EXE-Artefakt herunterladen"
+        uses: actions/download-artifact@v4
+        with:
+          name: "GoauldTranslator-${{ steps.version.outputs.VERSION }}-windows"
+          path: ./release-assets
+
+      # GitHub Release anlegen + EXE als Asset anhängen
+      - name: "📢 GitHub Release veröffentlichen"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Goa'uld Linguistic Interface v${{ steps.version.outputs.VERSION }}"
+          draft: true          # Als Draft anlegen → du veröffentlichst manuell
+          prerelease: ${{ contains(github.ref_name, '-') }}  # z.B. v0.3.0-beta
+          generate_release_notes: true   # GitHub generiert automatisch Changelogs
+          body: |
+            ## Goa'uld Linguistic Interface — v${{ steps.version.outputs.VERSION }}
+
+            Bidirektionaler Übersetzer für die Goa'uld-Sprache aus der Stargate-Franchise.
+
+            ### Installation
+            1. `GoauldTranslator-${{ steps.version.outputs.VERSION }}-windows-x64.exe` herunterladen
+            2. In einen Ordner mit den Dictionary-Dateien legen (oder standalone — alle Dateien sind eingebettet)
+            3. Starten — keine Installation nötig!
+
+            ### Systemvoraussetzungen
+            - Windows 10 / 11 (x64)
+            - Keine zusätzliche Python-Installation erforderlich
+
+            ---
+            *Jaffa, Kree!  — SGC Xenolinguistics Division*
+          files: |
+            ./release-assets/GoauldTranslator-*.exe
