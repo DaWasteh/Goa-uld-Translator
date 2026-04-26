@@ -154,45 +154,19 @@ jobs:
         run: |
           python goauld_translator.py --cli --dir de2goa --text "warrior"
 
+      # ci_dict_check.py liegt im Repo (cross-platform, kein heredoc nötig)
       - name: "📚 Dictionary-Ladetest (alle 4 MD-Dateien)"
-        run: |
-          python - <<'EOF'
-          import sys, pathlib, yaml
-
-          # YAML-Lexikon prüfen
-          lex = pathlib.Path("goauld_lexicon.yaml")
-          assert lex.exists(), "goauld_lexicon.yaml fehlt!"
-          data = yaml.safe_load(lex.read_text(encoding="utf-8"))
-          entries = data.get("entries", {})
-          assert len(entries) >= 1000, f"Zu wenige Einträge im YAML: {len(entries)}"
-          print(f"[OK] YAML geladen: {len(entries)} Einträge")
-
-          # Alle 4 MD-Dateien prüfen
-          expected = [
-              "Goa_uld-Dictionary.md", "Goa_uld-Wörterbuch.md",
-              "Goa_uld-Fictionary.md", "Goa_uld-Neologikum.md",
-          ]
-          for fname in expected:
-              p = pathlib.Path(fname)
-              assert p.exists(), f"Fehlende Datei: {fname}"
-              content = p.read_text(encoding="utf-8")
-              assert len(content) > 500, f"Datei zu kurz: {fname}"
-              print(f"[OK] {fname} ({len(content):,} Zeichen)")
-
-          print("Alle Dictionary-Checks bestanden ✓")
-          EOF
+        run: python ci_dict_check.py
 
       - name: "🔄 Migrations-Smoke-Test (migrate_to_yaml.py --help)"
-        run: |
-          python migrate_to_yaml.py --help
+        run: python migrate_to_yaml.py --help
 
-      - name: "🐛 Vollständige pytest-Suite (falls tests/ vorhanden)"
-        run: |
-          # Läuft ohne Fehler durch, wenn kein tests/-Verzeichnis existiert
-          python -m pytest tests/ -v --tb=short 2>/dev/null || \
-          python -m pytest test/  -v --tb=short 2>/dev/null || \
-          echo "Kein tests/-Verzeichnis gefunden — Pytest übersprungen."
+      - name: "🐛 pytest-Suite (falls tests/ vorhanden)"
         shell: bash
+        run: |
+          python -m pytest tests/ -v --tb=short 2>/dev/null ||
+          python -m pytest test/  -v --tb=short 2>/dev/null ||
+          echo "Kein tests/-Verzeichnis — pytest uebersprungen."
 
 # ═════════════════════════════════════════════════════════════════════════════
 # JOB 3 — BUILD EXE  (Windows only · nur bei Tag-Push oder manuellem Trigger)
