@@ -223,16 +223,16 @@ GLYPH_KEK      = "☓"
 # Candidate MD filenames to try automatically
 # Beide Schreibweisen: Apostroph (Windows/Mac) und Unterstrich (Linux/Mount)
 MD_CANDIDATES_EN = [
-    "Goa'uld-Dictionary.md",
-    "Goa_uld-Dictionary.md",
-    "Goa'uld-Fictionary.md",
-    "Goa_uld-Fictionary.md",
+    "Goauld-Dictionary.md",
+    "Goauld-Dictionary.md",
+    "Goauld-Fictionary.md",
+    "Goauld-Fictionary.md",
 ]
 MD_CANDIDATES_DE = [
-    "Goa'uld-Wörterbuch.md",
-    "Goa_uld-Wörterbuch.md",
-    "Goa'uld-Neologikum.md",
-    "Goa_uld-Neologikum.md",
+    "Goauld-Woerterbuch.md",
+    "Goauld-Woerterbuch.md",
+    "Goauld-Neologikum.md",
+    "Goauld-Neologikum.md",
 ]
 
 # Legacy single-file candidates (backwards-compat for --md flag)
@@ -427,14 +427,14 @@ class SearchEngine:
 
     # Quellen-Priorität: Haupt-Wörterbuch > Fictionary > Neologikum
     _SOURCE_PRIORITY: dict[str, int] = {
-        "Goa'uld-Wörterbuch.md": 3,
-        "Goa_uld-Wörterbuch.md": 3,
-        "Goa'uld-Dictionary.md": 3,
-        "Goa_uld-Dictionary.md": 3,
-        "Goa'uld-Fictionary.md": 2,
-        "Goa_uld-Fictionary.md": 2,
-        "Goa'uld-Neologikum.md": 1,
-        "Goa_uld-Neologikum.md": 1,
+        "Goauld-Woerterbuch.md": 3,
+        "Goauld-Woerterbuch.md": 3,
+        "Goauld-Dictionary.md": 3,
+        "Goauld-Dictionary.md": 3,
+        "Goauld-Fictionary.md": 2,
+        "Goauld-Fictionary.md": 2,
+        "Goauld-Neologikum.md": 1,
+        "Goauld-Neologikum.md": 1,
         "Gap-Fill": 2,
         "Kanon": 3,
         "Kanon-ext": 2,
@@ -523,8 +523,8 @@ class SearchEngine:
                 # FIX 5 (translation-bugs-findings.md): Sekundäre Quellen strafen
                 source_penalty = 0
                 src = e.get("source", "")
-                if src in ("Goa'uld-Fictionary.md", "Goa_uld-Fictionary.md",
-                           "Goa'uld-Neologikum.md", "Goa_uld-Neologikum.md"):
+                if src in ("Goauld-Fictionary.md", "Goauld-Fictionary.md",
+                           "Goauld-Neologikum.md", "Goauld-Neologikum.md"):
                     source_penalty = 15  # -15 Punkte für Fictionary/Neologikum
                 final_score = base_score + lang_bonus + short_bonus + de2goa_bonus - source_penalty
                 # FIX 4 (translation-bugs-findings.md): Debug-Logging für fehlende Wörter

@@ -34,12 +34,13 @@ env:
   # Node.js 24 opt-in: verhindert Deprecation-Warnings für actions/checkout & setup-python
   # (GitHub erzwingt Node 24 ab Juni 2026 — wir aktivieren es jetzt schon)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  PYTHONUTF8: "1"            # Windows-CP1252-Crash verhindern (migrate_to_yaml --help)
   # Alle Dictionary-Dateien und Hilfsskripte, die der Translator benötigt
   DATA_FILES: >-
-    Goa_uld-Dictionary.md
-    Goa_uld-Wörterbuch.md
-    Goa_uld-Fictionary.md
-    Goa_uld-Neologikum.md
+    Goauld-Dictionary.md
+    Goauld-Woerterbuch.md
+    Goauld-Fictionary.md
+    Goauld-Neologikum.md
     goauld_lexicon.yaml
     yaml_loader.py
 
@@ -95,6 +96,7 @@ jobs:
           mypy goauld_translator.py yaml_loader.py \
             --ignore-missing-imports \
             --no-strict-optional \
+            --disable-error-code=import-untyped \
             --python-version 3.11
         continue-on-error: true   # Typ-Fehler blockieren nicht den Build (noch)
 
@@ -228,10 +230,10 @@ jobs:
             --noconsole `
             --onefile `
             --name "GoauldTranslator" `
-            --add-data "Goa_uld-Dictionary.md;." `
-            --add-data "Goa_uld-Wörterbuch.md;." `
-            --add-data "Goa_uld-Fictionary.md;." `
-            --add-data "Goa_uld-Neologikum.md;." `
+            --add-data "Goauld-Dictionary.md;." `
+            --add-data "Goauld-Woerterbuch.md;." `
+            --add-data "Goauld-Fictionary.md;." `
+            --add-data "Goauld-Neologikum.md;." `
             --add-data "goauld_lexicon.yaml;." `
             --add-data "yaml_loader.py;." `
             --hidden-import yaml `

@@ -1,5 +1,5 @@
 """
-CI Dictionary Check — wird von GitHub Actions aufgerufen.
+CI Dictionary Check -- wird von GitHub Actions aufgerufen.
 Prueft: goauld_lexicon.yaml + alle 4 MD-Woerterbuechdateien.
 Cross-platform (Linux / macOS / Windows), keine Sonderzeichen im Code.
 """
@@ -7,7 +7,7 @@ import os
 import pathlib
 import sys
 
-# ── YAML-Lexikon ──────────────────────────────────────────────────────────────
+# YAML-Lexikon
 try:
     import yaml
     lex = pathlib.Path("goauld_lexicon.yaml")
@@ -17,18 +17,17 @@ try:
     assert len(entries) >= 500, f"Zu wenige Eintraege im YAML: {len(entries)}"
     print(f"[OK] YAML geladen: {len(entries)} Eintraege")
 except ImportError:
-    print("[SKIP] pyyaml nicht installiert — YAML-Check uebersprungen")
+    print("[SKIP] pyyaml nicht installiert -- YAML-Check uebersprungen")
 
-# ── Markdown-Dateien ───────────────────────────────────────────────────────────
-# Umlaut-robuste Suche: Datei-Listing statt hardcoded Pfad
-files = os.listdir(".")
-
+# Markdown-Dateien (alle Namen ohne Sonderzeichen)
 REQUIRED = [
-    "Goa_uld-Dictionary.md",
-    "Goa_uld-Fictionary.md",
-    "Goa_uld-Neologikum.md",
+    "Goauld-Dictionary.md",
+    "Goauld-Fictionary.md",
+    "Goauld-Neologikum.md",
+    "Goauld-Woerterbuch.md",
 ]
 
+files = os.listdir(".")
 failed = False
 
 for fname in REQUIRED:
@@ -42,19 +41,6 @@ for fname in REQUIRED:
         failed = True
     else:
         print(f"[OK] {fname} ({len(content):,} Zeichen)")
-
-# Woerterbuch: Dateiname enthaelt Umlaut, daher flexibler Match
-woerterbuch = next((f for f in files if "rterbuch" in f and f.endswith(".md")), None)
-if not woerterbuch:
-    print("[FAIL] Goa_uld-Woerterbuch.md nicht gefunden!")
-    failed = True
-else:
-    content = pathlib.Path(woerterbuch).read_text(encoding="utf-8")
-    if len(content) < 500:
-        print(f"[FAIL] {woerterbuch} zu kurz ({len(content)} Zeichen)")
-        failed = True
-    else:
-        print(f"[OK] {woerterbuch} ({len(content):,} Zeichen)")
 
 if failed:
     print("\nEin oder mehrere Dictionary-Checks fehlgeschlagen!")

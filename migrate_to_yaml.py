@@ -1845,10 +1845,10 @@ def find_source_files(input_dir: Path) -> list[Path]:
     """Locate the 4 source MDs — supports both apostrophe and underscore variants."""
     candidates = []
     patterns = [
-        "Goa'uld-Dictionary.md",  "Goa_uld-Dictionary.md",
-        "Goa'uld-Wörterbuch.md",  "Goa_uld-Wörterbuch.md",
-        "Goa'uld-Fictionary.md",  "Goa_uld-Fictionary.md",
-        "Goa'uld-Neologikum.md",  "Goa_uld-Neologikum.md",
+        "Goauld-Dictionary.md",  "Goauld-Dictionary.md",
+        "Goauld-Woerterbuch.md",  "Goauld-Woerterbuch.md",
+        "Goauld-Fictionary.md",  "Goauld-Fictionary.md",
+        "Goauld-Neologikum.md",  "Goauld-Neologikum.md",
     ]
     seen_stems = set()
     for pat in patterns:
