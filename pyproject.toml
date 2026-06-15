@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+exclude = [".git", ".venv", "build", "dist", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = [
+  "E501",  # the UI contains long label strings and comments
+]
+
+[tool.mypy]
+python_version = "3.14"
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = false
+exclude = "(?x)(^build/|^dist/|^\\.venv/)"

@@ -1,0 +1,87 @@
+cases:
+  - text: "Ich bin nicht Jaffa"
+    direction: de2goa
+    lang: de
+    expected: "Tel ia Jaffa"
+    must_contain: ["ia", "Jaffa"]
+    forbidden: ["Koracca aseemu", "Tak mal tiak"]
+
+  - text: "You are a traitor"
+    direction: de2goa
+    lang: en
+    expected: "Lo Shol'va"
+    must_contain: ["Lo", "Shol'va"]
+    forbidden: ["Tak mal tiak", "arik"]
+
+  - text: "Du bist ein Verräter"
+    direction: de2goa
+    lang: de
+    expected: "Lo Shol'va"
+    forbidden: ["Kree cho"]
+
+  - text: "I am not Jaffa"
+    direction: de2goa
+    lang: en
+    expected: "Tel ia Jaffa"
+    must_contain: ["ia", "Jaffa"]
+    forbidden: ["Koracca aseemu"]
+
+  - text: "mensch"
+    direction: de2goa
+    lang: de
+    expected: "Tau'ri"
+
+  - text: "menschen"
+    direction: de2goa
+    lang: de
+    expected: "Tau'ri"
+
+  - text: "human"
+    direction: de2goa
+    lang: en
+    expected: "Tau'ri"
+
+  - text: "humans"
+    direction: de2goa
+    lang: en
+    expected: "Tau'ri"
+
+  - text: "Die Menschheit"
+    direction: de2goa
+    lang: de
+    expected: "Tap'tar"
+
+  - text: "human slave"
+    direction: de2goa
+    lang: en
+    expected: "Tar"
+
+  - text: "Ich liebe dich"
+    direction: de2goa
+    lang: de
+    expected: "Tel Kal'sha Lo"
+
+  - text: "I love you"
+    direction: de2goa
+    lang: en
+    expected: "Tel Kal'sha Lo"
+
+  - text: "Jaffa, greift an"
+    direction: de2goa
+    lang: de
+    expected: "Jaffa Tal shak!"
+
+  - text: "Ergebt euch oder sterbt"
+    direction: de2goa
+    lang: de
+    expected: "Shel norak"
+
+  - text: "Wir kommen in Frieden"
+    direction: de2goa
+    lang: de
+    expected: "Tek'ma'tek"
+
+  - text: "We come in peace"
+    direction: de2goa
+    lang: en
+    expected: "Re Dan'kal'sha"

@@ -1886,8 +1886,8 @@ entries:
       - id: 1
         category: "Core vocabulary: individual words and root morphemes"
         glosses:
-          en: [To die, to end, "also \"after"]
-          de: [sterben, enden, "auch \"danach", stirb, sterbe, sterbt]
+          en: [To die, to end]
+          de: [sterben, enden, stirb, sterbe, sterbt]
         auto_filled: [de]  # translated via cross-bridge — please verify
         source:
           tier: canon_guide
@@ -1897,8 +1897,8 @@ entries:
       - id: 2
         category: "Kernvokabular: Einzelwörter und Wurzelmorpheme"
         glosses:
-          de: [Sterben, enden, "auch \"danach"]
-          en: [to end, to die, "also \"after", fire]
+          de: [Sterben, enden]
+          en: [to end, to die, fire]
         auto_filled: [en]  # translated via cross-bridge — please verify
         source:
           tier: canon_guide
@@ -1909,7 +1909,7 @@ entries:
         category: Kampf
         glosses:
           de: [sterbe, stirb, sterbt]
-          en: [to end, to die, "also \"after", fire]
+          en: [to end, to die, fire]
         auto_filled: [en]  # translated via cross-bridge — please verify
         source:
           tier: canon_rda
@@ -1919,7 +1919,7 @@ entries:
         category: The natural world
         glosses:
           en: [Fire]
-          de: [sterben, enden, "auch \"danach", stirb, sterbe, sterbt]
+          de: [sterben, enden, stirb, sterbe, sterbt]
         auto_filled: [de]  # translated via cross-bridge — please verify
         source:
           tier: fanon_strict
@@ -2316,8 +2316,8 @@ entries:
       - id: 1
         category: "Core vocabulary: individual words and root morphemes"
         glosses:
-          en: [Wait, "also \"die\" in some contexts"]
-          de: [warte, "auch \"sterben\" in manchen kontexten", warten, wartet, gedulden]
+          en: [Wait]
+          de: [warte, warten, wartet, gedulden]
         auto_filled: [de]  # translated via cross-bridge — please verify
         source:
           tier: canon_guide
@@ -2327,8 +2327,8 @@ entries:
       - id: 2
         category: "Kernvokabular: Einzelwörter und Wurzelmorpheme"
         glosses:
-          de: [Warten, "auch \"sterben\" in manchen Kontexten"]
-          en: [wait, to wait, to be patient, "also \"die\" in some contexts"]
+          de: [Warten]
+          en: [wait, to wait, to be patient]
         auto_filled: [en]  # translated via cross-bridge — please verify
         source:
           tier: canon_guide
@@ -2340,7 +2340,7 @@ entries:
         category: Basisverb
         glosses:
           de: [warte, wartet]
-          en: [wait, "also \"die\" in some contexts"]
+          en: [wait]
         auto_filled: [en]  # translated via cross-bridge — please verify
         source:
           tier: canon_rda
@@ -12287,7 +12287,7 @@ entries:
         category: Verb
         glosses:
           en: [sit, wait]
-          de: [warte, "auch \"sterben\" in manchen kontexten", warten, wartet, gedulden]
+          de: [warte, warten, wartet, gedulden]
         auto_filled: [de]  # translated via cross-bridge — please verify
         source:
           tier: fanon_synonym
@@ -12544,7 +12544,7 @@ entries:
         category: Core verbs
         glosses:
           en: [To die]
-          de: [sterben, enden, "auch \"danach", stirb, sterbe, sterbt]
+          de: [sterben, enden, stirb, sterbe, sterbt]
         auto_filled: [de]  # translated via cross-bridge — please verify
         source:
           tier: fanon_strict
@@ -16685,7 +16685,7 @@ entries:
         category: Expanded Verbs
         glosses:
           en: [To wait, To be patient, Wait]
-          de: [warten, gedulden, warte, "auch \"sterben\" in manchen kontexten", wartet]
+          de: [warten, gedulden, warte, wartet]
         auto_filled: [de]  # translated via cross-bridge — please verify
         source:
           tier: fanon_strict
@@ -16697,7 +16697,7 @@ entries:
         category: Erweiterte Verben
         glosses:
           de: [Warten, Gedulden]
-          en: [wait, to wait, to be patient, "also \"die\" in some contexts"]
+          en: [wait, to wait, to be patient]
         auto_filled: [en]  # translated via cross-bridge — please verify
         source:
           tier: fanon_strict

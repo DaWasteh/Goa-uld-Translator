@@ -49,6 +49,11 @@ LEXICON_YAML_CANDIDATES = (
     "goauld_lexicon.yml",
 )
 
+LEXICON_OVERLAY_CANDIDATES = (
+    "goauld_overrides.yaml",
+    "goauld_overrides.yml",
+)
+
 
 def find_lexicon_yaml(hint: Optional[str] = None,
                       search_dirs: Optional[list] = None) -> Optional[str]:
@@ -79,6 +84,40 @@ def find_lexicon_yaml(hint: Optional[str] = None,
     return None
 
 
+def find_lexicon_overlays(yaml_path: str,
+                          search_dirs: Optional[list] = None) -> list[str]:
+    """
+    Locate optional YAML overlay files that carry runtime corrections.
+
+    Overlays are part of the YAML runtime source of truth: they let the app
+    ship curated lookup fixes without re-introducing hard-coded gap-fills.
+    Search order is deterministic and duplicate paths are removed:
+      1. directory containing the base YAML
+      2. each directory in search_dirs (if provided)
+      3. current working directory
+      4. directory of this loader
+    """
+    dirs: list[Path] = [Path(yaml_path).resolve().parent]
+    if search_dirs:
+        dirs.extend(Path(d) for d in search_dirs)
+    dirs.append(Path.cwd())
+    dirs.append(Path(__file__).parent)
+
+    found: list[str] = []
+    seen: set[str] = set()
+    for d in dirs:
+        for name in LEXICON_OVERLAY_CANDIDATES:
+            p = d / name
+            if not p.is_file():
+                continue
+            resolved = str(p.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            found.append(resolved)
+    return found
+
+
 # ──────────────────────────────────────────────────────────────────────────
 # REGISTER / TIER → SEARCH-ENGINE SOURCE STRING
 # ──────────────────────────────────────────────────────────────────────────
@@ -106,11 +145,60 @@ _TIER_TO_SOURCE = {
 # MAIN LOADER
 # ──────────────────────────────────────────────────────────────────────────
 
+def _load_yaml_mapping(path: str) -> dict:
+    """Read a YAML file and require a mapping at the document root."""
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    if not isinstance(data, dict):
+        raise ValueError(f"{path} must contain a YAML mapping at document root")
+    return data
+
+
+def _merge_overlay_entries(base_data: dict, overlay_data: dict,
+                           overlay_path: str) -> None:
+    """
+    Merge overlay entries into base_data in-place.
+
+    Existing entry keys keep their base metadata, while overlay metadata can
+    update top-level fields and overlay senses are appended. New overlay keys
+    are inserted as normal lexicon entries. This supports both small targeted
+    corrections and standalone app-only entries.
+    """
+    overlay_entries = overlay_data.get("entries") or {}
+    if not isinstance(overlay_entries, dict):
+        raise ValueError(f"{overlay_path} has an invalid 'entries' section")
+
+    base_entries = base_data.setdefault("entries", {})
+    if not isinstance(base_entries, dict):
+        raise ValueError("base lexicon has an invalid 'entries' section")
+
+    for key, overlay_entry in overlay_entries.items():
+        if not isinstance(overlay_entry, dict):
+            raise ValueError(f"{overlay_path}: entry {key!r} must be a mapping")
+        if key not in base_entries:
+            base_entries[key] = overlay_entry
+            continue
+
+        base_entry = dict(base_entries[key])
+        base_senses = list(base_entry.get("senses") or [])
+        overlay_senses = list(overlay_entry.get("senses") or [])
+        for field, value in overlay_entry.items():
+            if field != "senses":
+                base_entry[field] = value
+        base_entry["senses"] = base_senses + overlay_senses
+        base_entries[key] = base_entry
+
+
 def load_lexicon_yaml(yaml_path: str) -> tuple[list[dict], dict, dict,
                                                 dict, dict]:
     """
     Load goauld_lexicon.yaml and expand it into the flat entry list
     the SearchEngine consumes, plus four reverse-lookup maps.
+
+    If a goauld_overrides.yaml file exists next to the base YAML (or in the
+    loader search path), it is merged first. That overlay is the app's place
+    for deterministic runtime corrections; hard-coded gap-fills are avoided in
+    YAML mode.
 
     Returns:
         entries          — list[dict], each {goauld, meaning, section,
@@ -123,11 +211,17 @@ def load_lexicon_yaml(yaml_path: str) -> tuple[list[dict], dict, dict,
                                                   DE words (excluding primary)
         secondary_en     — dict[str, list[str]]  same for EN
     """
-    with open(yaml_path, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+    data = _load_yaml_mapping(yaml_path)
 
-    if not data or "entries" not in data:
+    if "entries" not in data:
         raise ValueError(f"{yaml_path} has no 'entries' section")
+
+    overlay_paths = find_lexicon_overlays(yaml_path)
+    for overlay_path in overlay_paths:
+        overlay_data = _load_yaml_mapping(overlay_path)
+        _merge_overlay_entries(data, overlay_data, overlay_path)
+    if overlay_paths:
+        log.info("YAML overlays loaded: %s", ", ".join(Path(p).name for p in overlay_paths))
 
     raw_entries = data["entries"]
     flat_entries: list[dict] = []
@@ -167,6 +261,7 @@ def load_lexicon_yaml(yaml_path: str) -> tuple[list[dict], dict, dict,
                         "priority": sense_priority,
                         "tier":     tier,
                         "context":  context,
+                        "phrase_exact": bool(sense.get("phrase_exact", False)),
                         "auto_filled": sense.get("auto_filled") or [],
                     })
                     # Track for reverse map

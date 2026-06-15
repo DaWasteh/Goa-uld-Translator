@@ -411,6 +411,24 @@ def parse_de_map_from_entries(entries: list[dict]) -> dict[str, str]:
     return result
 
 
+def _build_reverse_map_for_lang(entries: list[dict], lang: str) -> dict[str, str]:
+    """Best-effort reverse map used only by the Markdown fallback loader."""
+    result: dict[str, str] = {}
+    ranked: dict[str, tuple[int, str]] = {}
+    for entry in entries:
+        if entry.get("lang") != lang:
+            continue
+        meaning = _normalize_lookup(str(entry.get("meaning", "")))
+        goauld = str(entry.get("goauld", "")).strip()
+        if not meaning or not goauld:
+            continue
+        priority = int(entry.get("priority", 0) or 0)
+        if meaning not in ranked or priority > ranked[meaning][0]:
+            ranked[meaning] = (priority, goauld)
+    for meaning, (_priority, goauld) in ranked.items():
+        result[meaning] = goauld
+    return result
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SEARCH ENGINE
@@ -602,6 +620,14 @@ class SearchEngine:
 
 # Goa'uld hat keine Artikel, keine Hilfsverben im deutschen Sinne und kaum
 # Präpositionen — diese Wörter werden bei DE→Goa'uld stumm übersprungen.
+def _normalize_lookup(text: str) -> str:
+    """Normalize lookup keys while preserving Goa'uld glottal stops."""
+    normalized = text.strip().lower()
+    normalized = normalized.replace("’", "'").replace("´", "'").replace("`", "'")
+    normalized = re.sub(r"\s+", " ", normalized)
+    return normalized
+
+
 def _de_lemma_candidates(word: str) -> list[str]:
     """
     Gibt mögliche Grundformen für ein deutsches Wort zurück.
@@ -772,26 +798,103 @@ def _de_lemma_candidates(word: str) -> list[str]:
     return result
 
 
+def _en_lemma_candidates(word: str) -> list[str]:
+    """Small English lemmatizer for low-resource direct lookup."""
+    w = _normalize_lookup(word)
+    candidates = [w]
+
+    irregular: dict[str, list[str]] = {
+        "am": ["be"],
+        "are": ["be"],
+        "is": ["be"],
+        "was": ["be"],
+        "were": ["be"],
+        "i'm": ["i"],
+        "you're": ["you"],
+        "we're": ["we"],
+        "they're": ["they"],
+        "don't": ["do not", "not"],
+        "dont": ["do not", "not"],
+        "doesn't": ["does not", "not"],
+        "doesnt": ["does not", "not"],
+        "didn't": ["did not", "not"],
+        "didnt": ["did not", "not"],
+    }
+    candidates.extend(irregular.get(w, []))
+
+    if w.endswith("ies") and len(w) > 4:
+        candidates.append(w[:-3] + "y")
+    if w.endswith("es") and len(w) > 3:
+        candidates.append(w[:-2])
+    if w.endswith("s") and len(w) > 3 and not w.endswith("ss"):
+        candidates.append(w[:-1])
+    if w.endswith("ing") and len(w) > 5:
+        stem = w[:-3]
+        candidates.extend([stem, stem + "e"])
+    if w.endswith("ed") and len(w) > 4:
+        stem = w[:-2]
+        candidates.extend([stem, stem + "e"])
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for candidate in candidates:
+        if candidate and candidate not in seen:
+            seen.add(candidate)
+            result.append(candidate)
+    return result
+
+
 # ─────────────────────────────────────────────────────────────────────────────
-# STOP WORDS  (Deutsche Funktionswörter ohne Goa'uld-Äquivalent)
+# FUNKTIONSWÖRTER UND TRANSFER-KLASSEN
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Goa'uld hat keine Artikel, keine Hilfsverben im deutschen Sinne und kaum
-# Präpositionen — diese Wörter werden bei DE→Goa'uld stumm übersprungen.
-GERMAN_STOP_WORDS: frozenset[str] = frozenset({
-    # Artikel
+# Nur echte Funktionswörter werden stumm übersprungen. Semantische Marker
+# wie Negation (nicht/kein/not/no), Ja/Nein und koordinierende Konjunktionen
+# bleiben übersetzbar und werden über die YAML-Maps aufgelöst.
+GERMAN_ARTICLES: frozenset[str] = frozenset({
     "der", "die", "das", "dem", "den", "des",
     "ein", "eine", "einen", "einem", "einer", "eines",
-    # Präpositionen
+})
+GERMAN_PREPOSITIONS: frozenset[str] = frozenset({
     "in", "im", "an", "am", "auf", "bei", "mit", "nach", "seit", "von",
     "vor", "zu", "zum", "zur", "durch", "für", "gegen", "ohne", "um",
     "über", "unter", "zwischen", "aus", "bis", "hinter", "neben",
-    # Konjunktionen (koordinierend)
-    "und", "oder", "aber", "doch", "sondern", "denn", "als", "wie",
-    # Partikel / sonstige Funktionswörter
-    "auch", "nur", "schon", "noch", "ja", "nicht", "kein", "keine",
+})
+GERMAN_AUXILIARIES: frozenset[str] = frozenset({
+    "bin", "bist", "ist", "sind", "seid", "sein", "sei", "war", "waren",
+    "wart", "gewesen", "habe", "hast", "hat", "haben", "habt", "hatte",
+    "hatten", "werde", "wirst", "wird", "werden", "werdet", "würde",
+    "würden", "kann", "kannst", "können", "könnt", "muss", "musst",
+    "müssen", "soll", "sollen", "sollst",
+})
+GERMAN_LIGHT_PARTICLES: frozenset[str] = frozenset({
+    "auch", "nur", "schon", "noch", "doch", "sondern", "denn", "als", "wie",
     "sehr", "gar", "mal", "nun", "so",
 })
+GERMAN_STOP_WORDS: frozenset[str] = (
+    GERMAN_ARTICLES | GERMAN_PREPOSITIONS | GERMAN_AUXILIARIES | GERMAN_LIGHT_PARTICLES
+)
+
+ENGLISH_ARTICLES: frozenset[str] = frozenset({"a", "an", "the"})
+ENGLISH_PREPOSITIONS: frozenset[str] = frozenset({
+    "in", "on", "at", "by", "with", "from", "for", "to", "of", "into",
+    "onto", "over", "under", "between", "through", "before", "after",
+    "within", "without", "as",
+})
+ENGLISH_AUXILIARIES: frozenset[str] = frozenset({
+    "am", "are", "is", "be", "being", "been", "was", "were", "do", "does",
+    "did", "have", "has", "had", "will", "would", "shall", "should", "can",
+    "could", "may", "might", "must",
+})
+ENGLISH_LIGHT_PARTICLES: frozenset[str] = frozenset({"just", "very", "already", "still"})
+ENGLISH_STOP_WORDS: frozenset[str] = (
+    ENGLISH_ARTICLES | ENGLISH_PREPOSITIONS | ENGLISH_AUXILIARIES | ENGLISH_LIGHT_PARTICLES
+)
+
+STOP_WORDS_BY_LANG: dict[str, frozenset[str]] = {
+    "de": GERMAN_STOP_WORDS,
+    "en": ENGLISH_STOP_WORDS,
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -813,6 +916,181 @@ class SentenceAnalyzer:
         """True wenn der Text mehr als ein Wort enthält."""
         return len(text.strip().split()) > 1
 
+    def _language_order(self, lang_pref: str) -> list[str]:
+        primary = "en" if lang_pref == "en" else "de"
+        secondary = "de" if primary == "en" else "en"
+        return [primary, secondary]
+
+    @staticmethod
+    def _stop_reason(token: str, lang: str) -> str:
+        low = _normalize_lookup(token)
+        if lang == "en":
+            if low in ENGLISH_ARTICLES:
+                return "article"
+            if low in ENGLISH_AUXILIARIES:
+                return "auxiliary"
+            if low in ENGLISH_PREPOSITIONS:
+                return "preposition"
+            return "function"
+        if low in GERMAN_ARTICLES:
+            return "Artikel"
+        if low in GERMAN_AUXILIARIES:
+            return "Hilfsverb"
+        if low in GERMAN_PREPOSITIONS:
+            return "Präposition"
+        return "Funktionswort"
+
+    def _is_stop_word(self, token: str, lang_pref: str) -> bool:
+        lang = "en" if lang_pref == "en" else "de"
+        return _normalize_lookup(token) in STOP_WORDS_BY_LANG[lang]
+
+    def _lemma_candidates(self, token: str, lang: str) -> list[str]:
+        return _en_lemma_candidates(token) if lang == "en" else _de_lemma_candidates(token)
+
+    @staticmethod
+    def _entry_rank(entry: dict, lang_pref: str) -> tuple[int, int, int, int]:
+        lang_bonus = 10 if entry.get("lang") == lang_pref else 0
+        priority = int(entry.get("priority", 0) or 0)
+        source = str(entry.get("source", ""))
+        source_priority = SearchEngine._SOURCE_PRIORITY.get(source, 0)
+        exact_phrase = 1 if entry.get("phrase_exact") else 0
+        return priority, source_priority, lang_bonus, exact_phrase
+
+    def _find_entry_metadata(self, goauld: str, meaning_key: str, lang: str) -> Optional[dict]:
+        goauld_low = _normalize_lookup(goauld)
+        meaning_low = _normalize_lookup(meaning_key)
+        candidates = [
+            e for e in self.engine.entries
+            if _normalize_lookup(str(e.get("goauld", ""))) == goauld_low
+            and _normalize_lookup(str(e.get("meaning", ""))) == meaning_low
+            and e.get("lang") == lang
+        ]
+        if not candidates:
+            candidates = [
+                e for e in self.engine.entries
+                if _normalize_lookup(str(e.get("goauld", ""))) == goauld_low
+                and e.get("lang") == lang
+            ]
+        if not candidates:
+            return None
+        return max(candidates, key=lambda e: self._entry_rank(e, lang))
+
+    def _synthetic_map_entry(self, token: str, matched_key: str, goauld: str,
+                             lang: str, confidence: float = 0.94) -> dict:
+        metadata = self._find_entry_metadata(goauld, matched_key, lang)
+        entry = dict(metadata) if metadata else {
+            "goauld": goauld,
+            "meaning": token,
+            "section": "YAML primary map",
+            "source": "YAML",
+            "lang": lang,
+        }
+        entry.update({
+            "goauld": goauld,
+            "meaning": token,
+            "lang": lang,
+            "matched_key": matched_key,
+            "match_type": "primary_map",
+            "confidence": confidence,
+        })
+        return entry
+
+    @staticmethod
+    def _select_lexical_override(matched_key: str, goauld: str, lang: str,
+                                 context_words: list[str]) -> str:
+        """Rule-based lexical selection for high-conflict glosses."""
+        del lang  # rules are currently key/context based, not UI-language based
+        key = _normalize_lookup(matched_key)
+        ctx = {_normalize_lookup(w) for w in context_words}
+
+        collective = {
+            "menschheit", "menschenvolk", "volk der menschen", "menschliche rasse",
+            "humanity", "humankind", "human race", "human people", "race", "rasse",
+        }
+        generic = {
+            "menschlich", "generischer mensch", "menschlicher sklave", "sklave",
+            "generic human", "human slave", "slave", "human (generic)",
+        }
+        human_default = {"mensch", "menschen", "human", "humans", "erdmensch", "erdmenschen"}
+        if key in collective or ctx.intersection(collective):
+            return "Tap'tar"
+        if key in generic or ctx.intersection({"sklave", "slave"}):
+            return "Tar"
+        if key in human_default:
+            return "Tau'ri"
+
+        if key in {"nicht", "not", "don't", "dont", "do not", "does not", "did not"}:
+            return "ia"
+        if key in {"kein", "keine", "keinen", "keinem", "keiner", "keines", "nein", "no", "none", "not any"}:
+            return "Ka"
+
+        if key in {"groß", "grosse", "große", "gross", "big", "large"}:
+            physical_context = {
+                "körper", "koerper", "physisch", "schiff", "haus", "raum", "tor",
+                "body", "physical", "ship", "house", "room", "gate",
+            }
+            divine_context = {"gott", "goa'uld", "macht", "mächtig", "god", "power", "powerful"}
+            if ctx.intersection(physical_context):
+                return "Tun'le"
+            if ctx.intersection(divine_context):
+                return "Onak"
+
+        return goauld
+
+    def _lookup_primary_map(self, token: str, lang_pref: str,
+                            context_words: list[str], *,
+                            allow_lemma: bool) -> tuple[Optional[dict], list[dict]]:
+        token_key = _normalize_lookup(token)
+        for lang in self._language_order(lang_pref):
+            keys = [token_key]
+            if allow_lemma and " " not in token_key:
+                keys = self._lemma_candidates(token_key, lang)
+            for key in keys:
+                goauld = PRIMARY_GOAULD_MAPS.get(lang, {}).get(key)
+                if not goauld:
+                    continue
+                selected = self._select_lexical_override(key, goauld, lang, context_words)
+                primary = self._synthetic_map_entry(token, key, selected, lang)
+                alternatives: list[dict] = []
+                for alt in SECONDARY_GOAULD_MAPS.get(lang, {}).get(key, [])[:5]:
+                    if _normalize_lookup(alt) == _normalize_lookup(selected):
+                        continue
+                    alternatives.append(self._synthetic_map_entry(token, key, alt, lang, confidence=0.72))
+                return primary, alternatives
+        return None, []
+
+    def _exact_engine_matches(self, phrase: str, direction: str,
+                              lang_pref: str) -> list[dict]:
+        """Translation-mode phrase lookup: exact only, no prefix/fuzzy."""
+        phrase_low = _normalize_lookup(phrase)
+        field = "goauld" if direction == "goa2de" else "meaning"
+        matches = [
+            e for e in self.engine.entries
+            if _normalize_lookup(str(e.get(field, ""))) == phrase_low
+        ]
+        lang_order = self._language_order(lang_pref)
+
+        def sort_key(entry: dict) -> tuple[int, int, int, int, int]:
+            entry_lang = str(entry.get("lang", ""))
+            lang_score = len(lang_order) - lang_order.index(entry_lang) if entry_lang in lang_order else 0
+            priority, source_priority, lang_bonus, exact_phrase = self._entry_rank(entry, lang_pref)
+            return lang_score, priority, source_priority, lang_bonus, exact_phrase
+
+        matches.sort(key=sort_key, reverse=True)
+        return matches
+
+    def _append_skip(self, result: list[dict], token: str, lang_pref: str) -> None:
+        lang = "en" if lang_pref == "en" else "de"
+        result.append({
+            "token": token,
+            "primary": None,
+            "alternatives": [],
+            "found": False,
+            "skipped": True,
+            "skip_reason": self._stop_reason(token, lang),
+            "confidence": 1.0,
+        })
+
     def analyze(self, text: str, direction: str, lang_pref: str = "de") -> list[dict]:
         """
         Returns list of token dicts:
@@ -820,70 +1098,50 @@ class SentenceAnalyzer:
             primary      – best-match entry or None
             alternatives – up to 3 further entries
             found        – True/False
-            skipped      – True when a stop word was silently dropped
+            skipped      – True when a transfer-only function word was dropped
 
-        Uses greedy longest-phrase-first matching:
-          • DE→Goa'uld: articles/particles are silently dropped (no Goa'uld equivalent).
-            DE_MAP multi-word hits are only used when no shorter Goa'uld entry exists.
-          • Goa'uld→DE: multi-word Goa'uld phrases are recognised as one unit.
+        Translation mode is deliberately stricter than SearchEngine UI mode:
+        multi-word spans are consumed only by exact primary-map hits or exact
+        dictionary phrases. Prefix/fuzzy matches are suggestions only, never
+        automatic translation units.
         """
-        # ── 1. Flatten to clean word list ─────────────────────────────────────
         raw_tokens = re.split(r"(\s+)", text.strip())
         words: list[str] = []
         for tok in raw_tokens:
-            clean = tok.strip(".,!?;:")
+            clean = tok.strip(".,!?;:()[]{}\"“”„")
             if clean and self._WORD_RE.match(clean):
                 words.append(clean)
 
         if not words:
             return []
 
-        _MAX_PHRASE = 6        # max window size (words)
+        max_phrase = 6
         result: list[dict] = []
         i = 0
 
-        # ── 2. Greedy longest-match loop ──────────────────────────────────────
         while i < len(words):
             matched = False
-            window = min(_MAX_PHRASE, len(words) - i)
+            window = min(max_phrase, len(words) - i)
 
-            # ── DE → Goa'uld ─────────────────────────────────────────────────
             if direction == "de2goa":
-
-                # a) Stop word? → skip silently, don't add to translation
-                if words[i].lower() in GERMAN_STOP_WORDS:
-                    result.append({
-                        "token":        words[i],
-                        "primary":      None,
-                        "alternatives": [],
-                        "found":        False,
-                        "skipped":      True,   # stop-word, not a failure
-                    })
+                if self._is_stop_word(words[i], lang_pref):
+                    self._append_skip(result, words[i], lang_pref)
                     i += 1
                     continue
 
-                # b) Try multi-word DE_MAP hits first (window → 2), then Engine
-                _de_map_hit: Optional[tuple[str, str]] = None  # (phrase, goauld)
                 for n in range(window, 1, -1):
-                    phrase    = " ".join(words[i:i + n])
-                    # Try exact phrase first, then lemma candidates for multi-word
-                    hit = DE_GOAULD_MAP.get(phrase.lower())
-                    if hit:
-                        _de_map_hit = (phrase, hit)
-                        # Immediately consume multi-word phrase and move on
-                        synthetic = {
-                            "goauld":  hit,
-                            "meaning": phrase,
-                            "section": "Deutsch→Goa'uld",
-                            "source":  "DE_MAP",
-                            "lang":    "de",
-                        }
+                    phrase = " ".join(words[i:i + n])
+                    primary, alternatives = self._lookup_primary_map(
+                        phrase, lang_pref, words, allow_lemma=False,
+                    )
+                    if primary:
                         result.append({
-                            "token":        phrase,
-                            "primary":      synthetic,
-                            "alternatives": [],
-                            "found":        True,
-                            "skipped":      False,
+                            "token": phrase,
+                            "primary": primary,
+                            "alternatives": alternatives[:3],
+                            "found": True,
+                            "skipped": False,
+                            "confidence": primary.get("confidence", 0.94),
                         })
                         i += n
                         matched = True
@@ -892,127 +1150,78 @@ class SentenceAnalyzer:
                 if matched:
                     continue
 
-                # b2) Multi-word Engine search (neue Funktion)
-                #     Suche auch in der Engine nach Multi-Wort-Phrasen
                 for n in range(window, 1, -1):
-                    phrase    = " ".join(words[i:i + n])
-                    phrase_low = phrase.lower()
-                    engine_phrases = self.engine.search(
-                        phrase, direction=direction,
-                        max_results=3, lang_pref=lang_pref,
-                        min_score=60,
-                    )
-                    if engine_phrases:
-                        top_val = engine_phrases[0]["meaning"].lower()
-                        score = self.engine._score(phrase_low, top_val)
-                        if score >= 75:  # exact oder gute Übereinstimmung
-                            result.append({
-                                "token":        phrase,
-                                "primary":      engine_phrases[0],
-                                "alternatives": engine_phrases[1:3],
-                                "found":        True,
-                                "skipped":      False,
-                            })
-                            i += n
-                            matched = True
-                            break
+                    phrase = " ".join(words[i:i + n])
+                    matches = self._exact_engine_matches(phrase, direction, lang_pref)
+                    if matches:
+                        primary = dict(matches[0])
+                        primary.setdefault("match_type", "exact_phrase")
+                        primary.setdefault("confidence", 0.9)
+                        result.append({
+                            "token": phrase,
+                            "primary": primary,
+                            "alternatives": matches[1:3],
+                            "found": True,
+                            "skipped": False,
+                            "confidence": primary.get("confidence", 0.9),
+                        })
+                        i += n
+                        matched = True
+                        break
 
                 if matched:
                     continue
 
-                # c) Single word – DE_MAP hat IMMER Vorrang vor Engine
-                phrase    = words[i]
-                phrase_low = phrase.lower()
-
-                # Lemma fallback: try "zerstör" → "zerstöre" → "zerstören" etc.
-                de_map_single: Optional[str] = None
-                for candidate in _de_lemma_candidates(phrase_low):
-                    de_map_single = DE_GOAULD_MAP.get(candidate)
-                    if de_map_single:
-                        break
-
-                engine_matches = self.engine.search(
-                    phrase, direction=direction,
-                    max_results=7, lang_pref=lang_pref,
-                    prefer_short_target=True,
-                    min_score=50,   # require real word-match, not fuzzy noise
+                token = words[i]
+                primary, alternatives = self._lookup_primary_map(
+                    token, lang_pref, words, allow_lemma=True,
                 )
-
-                # DE_MAP hat IMMER Priorität — Engine nur als Alternative
-                if de_map_single:
-                    # DE_MAP gefunden → immer verwenden
-                    chosen_primary = {
-                        "goauld":  de_map_single,
-                        "meaning": phrase,
-                        "section": "Deutsch→Goa'uld",
-                        "source":  "DE_MAP",
-                        "lang":    "de",
-                    }
-                    chosen_alts = engine_matches[:3] if engine_matches else []
-                elif engine_matches:
-                    chosen_primary = engine_matches[0]
-                    chosen_alts    = engine_matches[1:4]
-                else:
-                    chosen_primary = None
-                    chosen_alts = []
+                if not primary:
+                    matches = self._exact_engine_matches(token, direction, lang_pref)
+                    if matches:
+                        primary = dict(matches[0])
+                        primary.setdefault("match_type", "exact_token")
+                        primary.setdefault("confidence", 0.86)
+                        alternatives = matches[1:4]
 
                 result.append({
-                    "token":        phrase,
-                    "primary":      chosen_primary,
-                    "alternatives": chosen_alts,
-                    "found":        chosen_primary is not None,
-                    "skipped":      False,
+                    "token": token,
+                    "primary": primary,
+                    "alternatives": alternatives[:3] if alternatives else [],
+                    "found": primary is not None,
+                    "skipped": False,
+                    "confidence": primary.get("confidence", 0.0) if primary else 0.0,
                 })
                 i += 1
                 continue
 
-            # ── Goa'uld → DE ─────────────────────────────────────────────────
             for n in range(window, 0, -1):
-                phrase     = " ".join(words[i:i + n])
-                phrase_low = phrase.lower()
-
-                if n > 1:
-                    # Multi-word: only use if goauld field matches phrase exactly/nearly
-                    matches = self.engine.search(phrase, direction=direction,
-                                                 max_results=3, lang_pref=lang_pref)
-                    if matches:
-                        top_val = matches[0]["goauld"].lower()
-                        score = self.engine._score(phrase_low, top_val)
-                        if score >= 85:   # exact (100) or prefix (85)
-                            result.append({
-                                "token":        phrase,
-                                "primary":      matches[0],
-                                "alternatives": matches[1:3],
-                                "found":        True,
-                                "skipped":      False,
-                            })
-                            i += n
-                            matched = True
-                            break
-                else:
-                    # Single word: prefer entries with shorter German meanings
-                    matches = self.engine.search(phrase, direction=direction,
-                                                 max_results=7, lang_pref=lang_pref,
-                                                 prefer_short_target=True,
-                                                 min_score=40)
+                phrase = " ".join(words[i:i + n])
+                matches = self._exact_engine_matches(phrase, direction, lang_pref)
+                if matches:
+                    primary = dict(matches[0])
+                    primary.setdefault("match_type", "exact_phrase" if n > 1 else "exact_token")
+                    primary.setdefault("confidence", 0.9 if n > 1 else 0.86)
                     result.append({
-                        "token":        phrase,
-                        "primary":      matches[0] if matches else None,
-                        "alternatives": matches[1:4] if matches else [],
-                        "found":        bool(matches),
-                        "skipped":      False,
+                        "token": phrase,
+                        "primary": primary,
+                        "alternatives": matches[1:4],
+                        "found": True,
+                        "skipped": False,
+                        "confidence": primary.get("confidence", 0.9),
                     })
-                    i += 1
+                    i += n
                     matched = True
                     break
 
             if not matched:
                 result.append({
-                    "token":        words[i],
-                    "primary":      None,
+                    "token": words[i],
+                    "primary": None,
                     "alternatives": [],
-                    "found":        False,
-                    "skipped":      False,
+                    "found": False,
+                    "skipped": False,
+                    "confidence": 0.0,
                 })
                 i += 1
 
@@ -1047,13 +1256,36 @@ class SentenceAnalyzer:
             shortest = " ".join(words_in_shortest[:3]) + "…"
         return re.sub(r"\s+", " ", shortest).strip()
 
+    @staticmethod
+    def _is_canonical_entry(entry: dict) -> bool:
+        tier = str(entry.get("tier", "")).lower()
+        source = str(entry.get("source", "")).lower()
+        return tier.startswith("canon") or source in {
+            "sg1-kanon", "kanon", "kanon-ext", "rpg-lexikon",
+        }
+
+    @staticmethod
+    def _apply_goauld_style(text: str) -> str:
+        """Lightweight martial/register polish without changing core tokens."""
+        if not text or text == "—":
+            return text
+        if "Tal shak!" in text and not text.endswith("Kree!"):
+            return f"{text} Kree!"
+        return text
+
     def build_translation(self, analysis: list[dict],
-                          direction: str = "goa2de") -> str:
+                          direction: str = "goa2de",
+                          mode: str = "extended") -> str:
         """
         Erzeugt die kompakte Übersetzung.
         goa2de → gibt die deutsche/englische Kernbedeutung aus
         de2goa → gibt das Goa'uld-Wort aus
-        Stop words (skipped=True) werden stillschweigend ignoriert.
+
+        Modes:
+          extended     Canon + Fanon (default)
+          canonical    Prefer/require canonical entries; unresolved Fanon is marked
+          literal      Strict token-by-token output
+          goauld_style Extended output plus light martial/register polish
         """
         parts: list[str] = []
         for item in analysis:
@@ -1067,7 +1299,17 @@ class SentenceAnalyzer:
             prim = item["primary"]
 
             if direction == "de2goa":
-                word = prim["goauld"].strip()
+                chosen = prim
+                if mode == "canonical" and not self._is_canonical_entry(prim):
+                    canonical_alt = next(
+                        (alt for alt in item["alternatives"] if self._is_canonical_entry(alt)),
+                        None,
+                    )
+                    if canonical_alt is None:
+                        parts.append(f"[{item['token']}?]")
+                        continue
+                    chosen = canonical_alt
+                word = chosen["goauld"].strip()
                 if word:
                     parts.append(word)
             else:
@@ -1087,7 +1329,10 @@ class SentenceAnalyzer:
                     m = self._extract_core_meaning(best["meaning"])
                 if m:
                     parts.append(m)
-        return " ".join(parts) if parts else "—"
+        output = " ".join(parts) if parts else "—"
+        if direction == "de2goa" and mode == "goauld_style":
+            return self._apply_goauld_style(output)
+        return output
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1096,8 +1341,12 @@ class SentenceAnalyzer:
 # Priorität vor dem Fuzzy-Engine — direkte 1:1 Übersetzungen.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Mutable module-level dict – wird von _load_mds() befüllt.
+# Mutable module-level dicts – werden vom YAML-Loader befüllt.
+# DE_GOAULD_MAP bleibt als Legacy-Alias für bestehende UI-Codepfade erhalten.
 DE_GOAULD_MAP: dict[str, str] = {}
+EN_GOAULD_MAP: dict[str, str] = {}
+PRIMARY_GOAULD_MAPS: dict[str, dict[str, str]] = {"de": DE_GOAULD_MAP, "en": EN_GOAULD_MAP}
+SECONDARY_GOAULD_MAPS: dict[str, dict[str, list[str]]] = {"de": {}, "en": {}}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1132,9 +1381,11 @@ def translate_text(text: str, mapping: dict[str, str],
     text_stripped = text.strip()
     text_lower = text_stripped.lower()
 
-    # DE→Goa'uld: kompletten Satz zuerst im expliziten Map prüfen
-    if direction == "de2goa" and text_lower in DE_GOAULD_MAP:
-        return DE_GOAULD_MAP[text_lower]
+    # DE/EN→Goa'uld: kompletten Satz zuerst in den expliziten YAML-Maps prüfen
+    if direction == "de2goa":
+        direct = DE_GOAULD_MAP.get(text_lower) or EN_GOAULD_MAP.get(text_lower)
+        if direct:
+            return direct
 
     if text_lower in mapping:
         return preserve_case(text_stripped, mapping[text_lower])
@@ -1146,8 +1397,8 @@ def translate_text(text: str, mapping: dict[str, str],
             continue
         if re.match(r"^[A-Za-zÄÖÜäöüßÀ-ÿ']+$", tok):
             low = tok.lower()
-            if direction == "de2goa" and low in DE_GOAULD_MAP:
-                result.append(DE_GOAULD_MAP[low])
+            if direction == "de2goa" and (low in DE_GOAULD_MAP or low in EN_GOAULD_MAP):
+                result.append(DE_GOAULD_MAP.get(low) or EN_GOAULD_MAP[low])
             elif low in mapping:
                 result.append(preserve_case(tok, mapping[low]))
             else:
@@ -1240,7 +1491,7 @@ def _load_lexicon() -> tuple[list[dict], list[str], dict, dict, dict, dict]:
     Die letzten vier Maps sind bei MD-Fallback nur teilweise gefüllt
     (de_map kommt aus DE_GOAULD_MAP, en_map/secondary_* sind leer).
     """
-    global DE_GOAULD_MAP
+    global DE_GOAULD_MAP, EN_GOAULD_MAP, PRIMARY_GOAULD_MAPS, SECONDARY_GOAULD_MAPS
 
     # Bevorzugt: YAML-Loader
     if YAML_LOADER_AVAILABLE:
@@ -1257,15 +1508,21 @@ def _load_lexicon() -> tuple[list[dict], list[str], dict, dict, dict, dict]:
         yaml_path = find_lexicon_yaml(search_dirs=search_dirs)
         if yaml_path:
             entries, de_map, en_map, sec_de, sec_en = load_lexicon_yaml(yaml_path)
-            # DE_GOAULD_MAP wird aus dem YAML-primary-map befüllt
-            DE_GOAULD_MAP = {k: v.lower() for k, v in de_map.items()}
+            # Primary-Maps werden aus YAML + optionalem YAML-Overlay befüllt.
+            DE_GOAULD_MAP = dict(de_map)
+            EN_GOAULD_MAP = dict(en_map)
+            PRIMARY_GOAULD_MAPS = {"de": DE_GOAULD_MAP, "en": EN_GOAULD_MAP}
+            SECONDARY_GOAULD_MAPS = {"de": sec_de, "en": sec_en}
             log.info("Lexikon aus YAML geladen: %s (%d Einträge)",
                      yaml_path, len(entries))
             return entries, [yaml_path], de_map, en_map, sec_de, sec_en
 
     # Fallback: alte MD-Loader-Logik
     entries, paths = _load_mds()
-    return entries, paths, dict(DE_GOAULD_MAP), {}, {}, {}
+    EN_GOAULD_MAP = _build_reverse_map_for_lang(entries, "en")
+    PRIMARY_GOAULD_MAPS = {"de": DE_GOAULD_MAP, "en": EN_GOAULD_MAP}
+    SECONDARY_GOAULD_MAPS = {"de": {}, "en": {}}
+    return entries, paths, dict(DE_GOAULD_MAP), dict(EN_GOAULD_MAP), {}, {}
 
 def _load_mds(hint_en: Optional[str] = None,
               hint_de: Optional[str] = None) -> tuple[list[dict], list[str]]:
@@ -1273,8 +1530,11 @@ def _load_mds(hint_en: Optional[str] = None,
     Lädt EN- und DE-Wörterbuchdateien, gibt (alle_eintraege, gefundene_pfade) zurück.
     Befüllt außerdem das globale DE_GOAULD_MAP aus der DE-Datei.
     """
-    global DE_GOAULD_MAP
+    global DE_GOAULD_MAP, EN_GOAULD_MAP, PRIMARY_GOAULD_MAPS, SECONDARY_GOAULD_MAPS
     DE_GOAULD_MAP = {}   # FIX P4a: Map vor jedem Rebuild leeren — verhindert kumulative
+    EN_GOAULD_MAP = {}
+    PRIMARY_GOAULD_MAPS = {"de": DE_GOAULD_MAP, "en": EN_GOAULD_MAP}
+    SECONDARY_GOAULD_MAPS = {"de": {}, "en": {}}
                          # Einträge bei mehrfachem _browse_md()-Aufruf in derselben Sitzung.
     all_entries: list[dict] = []
     found_paths: list[str] = []
@@ -1395,6 +1655,9 @@ def _load_mds(hint_en: Optional[str] = None,
 
     # Add gap entries to the main pool so they appear in search results too
     all_entries = _GAP_FILL + all_entries  # low priority (prepended, MD wins via dedup)
+    EN_GOAULD_MAP = _build_reverse_map_for_lang(all_entries, "en")
+    PRIMARY_GOAULD_MAPS = {"de": DE_GOAULD_MAP, "en": EN_GOAULD_MAP}
+    SECONDARY_GOAULD_MAPS = {"de": {}, "en": {}}
 
     if not all_entries:
         log.error("Kein Vokabular geladen — bitte Wörterbuch-Dateien prüfen.")
@@ -1423,6 +1686,7 @@ class GoauldApp:
         self._analyzer = SentenceAnalyzer(self._engine)
         self._direction = "goa2de"
         self._lang_pref: str = "de"          # DE = Deutsch bevorzugt
+        self._translation_mode: str = "extended"
         self._search_after_id: Optional[str] = None
         self._selected_entry: Optional[dict] = None
         self._sentence_mode: bool = False
@@ -1757,6 +2021,29 @@ class GoauldApp:
             command=self._toggle_lang_pref,
         )
         self._lang_btn.pack(side="left", padx=(0, 8))
+
+        # Output mode selector (Canon / Extended / Literal / Goa'uld style)
+        self._mode_label_to_value = {
+            "Kanonisch": "canonical",
+            "Erweitert": "extended",
+            "Literal": "literal",
+            "Goa'uld-Stil": "goauld_style",
+        }
+        self._mode_var = ctk.StringVar(value="Erweitert")
+        self._mode_menu = ctk.CTkOptionMenu(
+            btn_frame,
+            values=list(self._mode_label_to_value.keys()),
+            variable=self._mode_var,
+            command=self._on_mode_change,
+            width=122,
+            height=28,
+            fg_color=C["bg_card"],
+            button_color=C["gold_dim"],
+            button_hover_color=C["gold"],
+            text_color=C["text_hi"],
+            font=("Courier", 10, "bold"),
+        )
+        self._mode_menu.pack(side="left", padx=(0, 8))
 
         # Clear button
         ctk.CTkButton(
@@ -2345,7 +2632,9 @@ class GoauldApp:
                                            lang_pref=lang_pref)
         found_n   = sum(1 for t in analysis if t["found"])
         total_n   = sum(1 for t in analysis if not t.get("skipped"))  # exclude stop-words
-        trans_str = self._analyzer.build_translation(analysis, direction=direction)
+        trans_str = self._analyzer.build_translation(
+            analysis, direction=direction, mode=self._translation_mode,
+        )
 
         # Translation output
         self._trans_output.configure(state="normal")
@@ -2389,9 +2678,9 @@ class GoauldApp:
 
         # Token breakdown — verbesserte Tabelle mit Farbcodierung
         if direction == "goa2de":
-            col_a_hdr, col_b_hdr = "GOA'ULD", "BEDEUTUNG (DE)"
+            col_a_hdr, col_b_hdr = "GOA'ULD", "BEDEUTUNG (DE/EN)"
         else:
-            col_a_hdr, col_b_hdr = "EINGABE (DE)", "GOA'ULD"
+            col_a_hdr, col_b_hdr = f"EINGABE ({lang_pref.upper()})", "GOA'ULD"
 
         lines: list[str] = [
             f"\n  {col_a_hdr:<22}  {col_b_hdr}\n",
@@ -2406,7 +2695,8 @@ class GoauldApp:
             skipped = td.get("skipped", False)
 
             if skipped:
-                lines.append(f"  {GLYPH_CHEVRON}  {tok:<20}  (Stoppwort, übersprungen)")
+                reason = td.get("skip_reason", "Funktionswort")
+                lines.append(f"  {GLYPH_CHEVRON}  {tok:<20}  ({reason}, Transferregel: ausgelassen)")
                 lines.append("")
                 continue
 
@@ -2433,10 +2723,19 @@ class GoauldApp:
                     mea = re.split(r"[;—]", best["meaning"])[0].strip()[:50]
                     lines.append(f"  {t_icon}  {tok:<20}  {mea}")
 
-                # Source (DE_MAP braucht keine Quelle)
+                # Source + confidence
                 src = prim.get("source", "")
+                confidence = prim.get("confidence") or td.get("confidence")
+                meta_bits = []
                 if src and src != "DE_MAP":
-                    lines.append(f"       [{src}]")
+                    meta_bits.append(str(src))
+                if confidence is not None:
+                    try:
+                        meta_bits.append(f"Confidence {float(confidence):.0%}")
+                    except (TypeError, ValueError):
+                        pass
+                if meta_bits:
+                    lines.append(f"       [{' · '.join(meta_bits)}]")
 
                 # Alternativen
                 if alts:
@@ -2448,12 +2747,13 @@ class GoauldApp:
                         lines.append(f"       {GLYPH_ARROW}  Alt: {a_out}")
             else:
                 lines.append(f"  {GLYPH_KEK}  {tok:<20}  — nicht gefunden")
-                # DE→Goa'uld: Fuzzy-Vorschläge aus DE_MAP
+                # DE/EN→Goa'uld: Fuzzy-Vorschläge aus der gewählten Primary-Map
                 if direction == "de2goa":
+                    suggestion_map = PRIMARY_GOAULD_MAPS.get(lang_pref, {}) or DE_GOAULD_MAP
                     close = difflib.get_close_matches(
-                        tok.lower(), DE_GOAULD_MAP.keys(), n=2, cutoff=0.6)
+                        _normalize_lookup(tok), suggestion_map.keys(), n=2, cutoff=0.6)
                     for c in close:
-                        lines.append(f"       {GLYPH_CHEVRON}  Meinten Sie: {c} → {DE_GOAULD_MAP[c]}")
+                        lines.append(f"       {GLYPH_CHEVRON}  Meinten Sie: {c} → {suggestion_map[c]}")
                 else:
                     sug = self._engine.search(tok, direction=direction,
                                               max_results=2, lang_pref=lang_pref)
@@ -2480,6 +2780,14 @@ class GoauldApp:
                 self._lang_btn_var.set("🇬🇧 EN")
                 self._lang_btn.configure(fg_color=C["blue_mid"],
                                           text_color=C["blue_bright"])
+        self._do_search()
+        if CTK_AVAILABLE and hasattr(self, "_trans_output"):
+            self._run_live_translation()
+
+    def _on_mode_change(self, label: str) -> None:
+        """Wechselt den Ausgabe-Modus für Live-Übersetzung und Debrief."""
+        label_to_value = getattr(self, "_mode_label_to_value", {})
+        self._translation_mode = label_to_value.get(label, "extended")
         self._do_search()
         if CTK_AVAILABLE and hasattr(self, "_trans_output"):
             self._run_live_translation()
@@ -2518,24 +2826,29 @@ class GoauldApp:
             self._display_results([])
             return
 
-        # DE→Goa'uld: kompletten Satz direkt im Wörterbuch nachschlagen
+        # DE/EN→Goa'uld: kompletten Satz direkt in der sprachspezifischen YAML-Map nachschlagen
         if self._direction == "de2goa":
-            direct = DE_GOAULD_MAP.get(query.lower())
-            if direct:
-                self._sentence_mode = False
-                self._display_results([{
-                    "goauld":  direct,
-                    "meaning": query,
-                    "section": "Direktübersetzung",
-                    "source":  "DE_MAP",
-                    "lang":    "de",
-                }])
-                return
+            query_key = _normalize_lookup(query)
+            lang_order = [self._lang_pref, "de" if self._lang_pref == "en" else "en"]
+            for lang in lang_order:
+                direct = PRIMARY_GOAULD_MAPS.get(lang, {}).get(query_key)
+                if direct:
+                    self._sentence_mode = False
+                    self._display_results([{
+                        "goauld":  direct,
+                        "meaning": query,
+                        "section": "Direktübersetzung",
+                        "source":  f"{lang.upper()}_PRIMARY_MAP",
+                        "lang":    lang,
+                        "confidence": 0.94,
+                    }])
+                    return
 
         if self._analyzer.is_sentence(query):
             self._sentence_mode = True
-            phrase_hit = self._engine.search(query, direction=self._direction,
-                                             max_results=1, lang_pref=self._lang_pref)
+            phrase_hit = self._analyzer._exact_engine_matches(
+                query, direction=self._direction, lang_pref=self._lang_pref,
+            )
             analysis = self._analyzer.analyze(query, direction=self._direction,
                                               lang_pref=self._lang_pref)
             self._display_sentence(analysis, query, phrase_hit[0] if phrase_hit else None)
@@ -2730,7 +3043,9 @@ class GoauldApp:
             row.destroy()
         self._result_rows.clear()
 
-        translation = self._analyzer.build_translation(analysis, direction=self._direction)
+        translation = self._analyzer.build_translation(
+            analysis, direction=self._direction, mode=self._translation_mode,
+        )
         found_count = sum(1 for t in analysis if t["found"] and not t.get("skipped"))
         total_count = sum(1 for t in analysis if not t.get("skipped"))
 
@@ -2842,7 +3157,9 @@ class GoauldApp:
         """Tkinter results panel in sentence mode."""
         self._listbox.delete(0, "end")
         self._tk_results = []
-        translation = self._analyzer.build_translation(analysis, direction=self._direction)
+        translation = self._analyzer.build_translation(
+            analysis, direction=self._direction, mode=self._translation_mode,
+        )
         found_count = sum(1 for t in analysis if t["found"] and not t.get("skipped"))
 
         self._listbox.insert("end", f"  {GLYPH_GATE} SATZ: {query[:35]}")
@@ -3048,7 +3365,9 @@ class GoauldApp:
         """Vollständige Satzanalyse in der Detailansicht."""
         sep   = "═" * 52
         sep_s = "─" * 52
-        translation = self._analyzer.build_translation(analysis, direction=self._direction)
+        translation = self._analyzer.build_translation(
+            analysis, direction=self._direction, mode=self._translation_mode,
+        )
         found_count = sum(1 for t in analysis if t["found"] and not t.get("skipped"))
         total_count = sum(1 for t in analysis if not t.get("skipped"))
 
@@ -3101,6 +3420,12 @@ class GoauldApp:
                 "",
             ]
 
+            if td.get("skipped"):
+                reason = td.get("skip_reason", "Funktionswort")
+                lines.append(f"    {GLYPH_CHEVRON}  Transferregel: {reason} ausgelassen.")
+                lines.append("")
+                continue
+
             if found and prim:
                 # Primary meaning — structured display
                 full = prim["meaning"]
@@ -3119,7 +3444,15 @@ class GoauldApp:
                 if prim.get("section"):
                     meta.append(f"Sektion: {prim['section']}")
                 if prim.get("source"):
-                    meta.append(f"Episode: {prim['source']}")
+                    meta.append(f"Quelle: {prim['source']}")
+                if prim.get("tier"):
+                    meta.append(f"Tier: {prim['tier']}")
+                confidence = prim.get("confidence") or td.get("confidence")
+                if confidence is not None:
+                    try:
+                        meta.append(f"Confidence: {float(confidence):.0%}")
+                    except (TypeError, ValueError):
+                        pass
                 if meta:
                     lines.append(f"    {'  ·  '.join(meta)}")
                     lines.append("")
@@ -3324,18 +3657,25 @@ def run_cli(args: argparse.Namespace) -> None:
     print("   JAFFA, KREE!  —  Goa'uld Linguistic Interface  v0.2")
     print("=" * 62)
 
-    # Lade Vokabular aus EN- und DE-Wörterbuch
+    # Lade bevorzugt YAML (+ Overlay); explizites --md erzwingt den Legacy-MD-Modus.
     hint = getattr(args, "md", None)
-    all_entries, found_paths = _load_mds(hint_en=hint)
+    if hint:
+        all_entries, _found_paths = _load_mds(hint_en=hint)
+    else:
+        all_entries, _found_paths, _de_map, _en_map, _sec_de, _sec_en = _load_lexicon()
     if not all_entries:
         log.error("Kein Vokabular geladen. Abbruch.")
         return
 
-    mapping = build_mapping(all_entries, args.dir)
+    engine = SearchEngine(all_entries)
+    analyzer = SentenceAnalyzer(engine)
+    lang_pref = getattr(args, "lang", "de")
+    mode = getattr(args, "mode", "extended")
     dir_name = "Goa'uld -> Deutsch/Englisch" if args.dir == "goa2de" else "Deutsch/Englisch -> Goa'uld"
 
     if args.text:
-        result = translate_text(args.text, mapping, direction=args.dir)
+        analysis = analyzer.analyze(args.text, args.dir, lang_pref=lang_pref)
+        result = analyzer.build_translation(analysis, direction=args.dir, mode=mode)
         print(f"[{dir_name}]  {args.text}  ->  {result}")
         return
 
@@ -3350,7 +3690,8 @@ def run_cli(args: argparse.Namespace) -> None:
                 break
             if not user_input:
                 continue
-            result = translate_text(user_input, mapping, direction=args.dir)
+            analysis = analyzer.analyze(user_input, args.dir, lang_pref=lang_pref)
+            result = analyzer.build_translation(analysis, direction=args.dir, mode=mode)
             print(f"  ->  {result}\n")
         except (KeyboardInterrupt, EOFError):
             print("\nTek'ma'te!")
@@ -3400,6 +3741,18 @@ Beispiele (CLI):
         type=str,
         default=None,
         help="Text direkt übersetzen (nur im CLI-Modus)",
+    )
+    parser.add_argument(
+        "--lang",
+        choices=["de", "en"],
+        default="de",
+        help="Quellsprache für DE/EN→Goa'uld im CLI-Modus",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["canonical", "extended", "literal", "goauld_style"],
+        default="extended",
+        help="Ausgabemodus für Übersetzungen (CLI)",
     )
     args = parser.parse_args()
 
