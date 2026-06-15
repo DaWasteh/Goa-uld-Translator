@@ -1,117 +1,1402 @@
-# Runtime correction overlay for the Goa'uld Translator.
+# Runtime and language-development overlay for the Goa'uld Translator.
 #
-# This file is intentionally small and curated. The app loads it after
-# goauld_lexicon.yaml so deterministic translation fixes remain data-driven
-# instead of being hidden as code-only gap-fills.
+# This file is curated by hand and loaded after goauld_lexicon.yaml.  It is
+# intentionally the place for deterministic corrections, core-grammar decisions,
+# reviewed fanon, and Egyptian-substrate candidates.  The four Markdown files are
+# historical/source documents; runtime behavior must be data-driven here or in
+# goauld_lexicon.yaml.
 metadata:
-  purpose: "Translation-quality runtime overrides"
+  purpose: "Canon-first language expansion, conflict resolution, and runtime lookup overrides"
   created: "2026-06-15"
-  source_plan: "plans/uebersetzungsqualitaet-app-plan.md"
+  updated: "2026-06-15"
+  source_plan: "plans/sprachausbau-und-woerterbuch-plan.md (implemented; plan file deleted per user request)"
+  schema_note: "Unknown fields are documentary; yaml_loader consumes entries.*.senses.*.glosses/source/priority."
+  language_principles:
+    - "Canon entries stay dominant unless a reviewed fanon specialization is explicitly requested."
+    - "Fanon terms must document roots, literal meaning, target meaning, register, source tier, and examples."
+    - "Egyptian substrate terms are low-priority etymological roots and must not override canon/fanon defaults."
+    - "DE and EN glosses are kept together on the same Goa'uld sense to prevent drift."
+
+phonology:
+  goauld_style:
+    preferred_segments: [k, t, r, sh, ch, gh, a, e]
+    syllable_shapes: [CV, CVC, "CVC'CVC"]
+    apostrophe_policy: "Use apostrophe only for morpheme boundary or glottal stop."
+  egyptian_to_goauld_mapping:
+    "ꜣ": a
+    "ꜥ": a
+    "ḥ": h
+    "ḫ": kh
+    "ẖ": kh
+    "š": sh
+    "ṯ": tj
+    "ḏ": dj
+    "j": i
+    "w": u
+    "y": i
+
+# Curated substrate reservoir.  These are etymological candidates, not normal
+# high-priority translations.  TLA numeric IDs must be filled during philological
+# review before a candidate can be promoted above egyptian_substrate priority.
+egyptian_substrate:
+  rn:
+    transliteration: rn
+    egyptological_reading: ren
+    meaning: [name, identity]
+    tla_id: "pending_verified_tla_id:rn"
+    goauld_candidate_root: Ren
+    status: approved_candidate
+    notes: "Supports fanon Ren breath/name/identity domain without displacing canon shal mak for 'name'."
+  nTr:
+    transliteration: nṯr
+    egyptological_reading: netjer
+    meaning: [god, divine]
+    tla_id: "pending_verified_tla_id:nTr"
+    goauld_candidate_root: Netjer
+    status: reservoir_only
+    notes: "Do not use for default 'god'; canon Onak/Goa'uld remain primary."
+  pr:
+    transliteration: pr
+    egyptological_reading: per
+    meaning: [house, domain]
+    tla_id: "pending_verified_tla_id:pr"
+    goauld_candidate_root: Per
+    status: reservoir_only
+    notes: "House/domain substrate; existing Nona'kor remains the active house word."
+  ib:
+    transliteration: ib
+    egyptological_reading: ib
+    meaning: [heart, mind]
+    tla_id: "pending_verified_tla_id:ib"
+    goauld_candidate_root: Ib
+    status: reservoir_only
+    notes: "Conceptual heart/mind substrate; Kal/Kal'tal remains active."
+  ankh:
+    transliteration: anx
+    egyptological_reading: ankh
+    meaning: [life, live]
+    tla_id: "pending_verified_tla_id:anx"
+    goauld_candidate_root: Ankh
+    status: reservoir_only
+    notes: "Life substrate; active Goa'uld root is Ska/Met'ska."
+  ra:
+    transliteration: ra
+    egyptological_reading: ra
+    meaning: [sun, solar power]
+    tla_id: "pending_verified_tla_id:ra"
+    goauld_candidate_root: Ra
+    status: canon_name
+    notes: "Canon proper name/divine solar reference; do not generalize where Cha'mel suffices."
+  sbA:
+    transliteration: sbꜣ
+    egyptological_reading: seba
+    meaning: [star, gate, teaching]
+    tla_id: "pending_verified_tla_id:sbA"
+    goauld_candidate_root: Seba
+    status: reservoir_only
+    notes: "Useful only as annotated etymology for star/gate/learning concepts."
+  mAat:
+    transliteration: mꜣꜥt
+    egyptological_reading: maat
+    meaning: [truth, order]
+    tla_id: "pending_verified_tla_id:mAat"
+    goauld_candidate_root: Maat
+    status: reservoir_only
+    notes: "Truth/order substrate; active truth root remains Dan."
+  sxm:
+    transliteration: sxm
+    egyptological_reading: sekhem
+    meaning: [power, authority]
+    tla_id: "pending_verified_tla_id:sxm"
+    goauld_candidate_root: Sekhem
+    status: reservoir_only
+    notes: "Authority substrate; canon Onak remains primary for divine power."
+  mdw:
+    transliteration: mdw
+    egyptological_reading: medu
+    meaning: [word, speech]
+    tla_id: "pending_verified_tla_id:mdw"
+    goauld_candidate_root: Medu
+    status: reservoir_only
+    notes: "Speech substrate; active Goa'uld uses Meta."
 
 entries:
   app_override_tau_ri_humans:
     term: "Tau'ri"
     variants: ["tau'ri"]
     register: canon
+    dialect: standard_goauld
     priority: 110
     morphology:
       type: compound
       components: [tau, ri]
+      literal: "First World / people of Earth"
+    review_status: approved
+    register_usage:
+      goauld_imperial: preferred
+      jaffa_military: allowed
+      tokra_resistance: allowed
+      modern_fanon: preferred
     senses:
       - id: app-human-earth-default
         pos: noun
-        category: "Runtime translation overrides"
+        category: "Conflict resolution: humans"
         context: "Default Stargate-context rendering for Earth humans / people of Earth."
         glosses:
           de: [mensch, menschen, erdmensch, erdmenschen, menschen der erde]
           en: [human, humans, earth human, earth humans, people of earth]
+        avoid_for:
+          de: [menschheit als abstraktes Konzept, generischer Sklave]
+          en: [humanity as abstract concept, generic slave]
         source:
           tier: canon_series
-          ref: "App override: prefer canon Tau'ri for default human lookup"
+          ref: "Canon-first override: prefer Tau'ri for Earth-human default lookup"
         priority: 110
+        examples:
+          - goauld: "Tau'ri kree."
+            de: "Mensch der Erde, hör zu."
+            en: "Human of Earth, listen."
+            mode: canon
 
   app_override_tar_generic_human:
     term: Tar
     variants: [tar]
     register: canon
-    priority: 84
+    dialect: standard_goauld
+    priority: 94
     morphology:
       type: root
+      literal: "human/person root"
+    review_status: approved
     senses:
       - id: app-human-generic
         pos: noun
-        category: "Runtime translation overrides"
-        context: "Generic/neutral human or human slave, not specifically Tau'ri."
+        category: "Conflict resolution: humans"
+        context: "Generic/neutral human as species/person; not specifically Tau'ri and not Lo'taur slave status."
         glosses:
-          de: [menschlich, generischer mensch, menschlicher sklave, sklave]
-          en: [generic human, human slave, slave, human (generic)]
+          de: [menschlich, generischer mensch, mensch als gattung, person]
+          en: [generic human, human as species, human person, person]
+        avoid_for:
+          de: [menschen der erde, menschheit, menschlicher sklave]
+          en: [earth humans, humanity, human slave]
         source:
           tier: canon_rpg
-          ref: "App override: keep Tar for generic/slave contexts"
-        priority: 84
+          ref: "RPG root specialized by language plan: Tar = generic human/person"
+        priority: 94
+        examples:
+          - goauld: "Tar ia onak."
+            de: "Ein Mensch ist kein Gott."
+            en: "A human is not a god."
+            mode: literal
 
   app_override_tap_tar_humanity:
     term: "Tap'tar"
     variants: ["tap'tar"]
     register: fanon
+    dialect: standard_goauld
     priority: 95
     morphology:
       type: compound
       components: [tap, tar]
+      literal: "we-human / the human people"
+    derivation:
+      roots: [tap, tar]
+      target_meaning: "collective humanity / humankind"
+      rationale: "Plural first-person root plus Tar avoids collision with Tau'ri."
+    review_status: approved
     senses:
       - id: app-humanity-collective
         pos: noun
-        category: "Runtime translation overrides"
+        category: "Conflict resolution: humans"
         context: "Collective humanity, humankind, or a people/race as a whole."
         glosses:
           de: [menschheit, menschenvolk, volk der menschen, menschliche rasse]
           en: [humanity, humankind, human race, human people]
         source:
           tier: fanon_strict
-          ref: "App override: Tap'tar is collective humanity/people"
+          ref: "Tap + Tar, reviewed conflict resolution"
         priority: 95
+        examples:
+          - goauld: "Tap'tar nem ron."
+            de: "Die Menschheit ist frei."
+            en: "Humanity is free."
+            mode: literal
+
+  app_override_lo_taur_slave:
+    term: "Lo'taur"
+    variants: ["lo'taur", "lo taur"]
+    register: canon
+    dialect: standard_goauld
+    priority: 108
+    morphology:
+      type: compound
+      components: [lo, taur]
+      literal: "you, human"
+    review_status: approved
+    senses:
+      - id: app-human-slave-status
+        pos: noun
+        category: "Conflict resolution: humans"
+        context: "Human slave/status term, especially in Goa'uld hierarchy."
+        glosses:
+          de: [menschlicher sklave, sklave, diener]
+          en: [human slave, slave, servant]
+        source:
+          tier: canon_series
+          ref: "Summit; plan decision: human slave = Lo'taur"
+        priority: 108
+        examples:
+          - goauld: "Lo'taur, kree!"
+            de: "Sklave, Achtung!"
+            en: "Slave, attention!"
+            mode: canon
+
+  app_override_pronoun_ta:
+    term: Ta
+    variants: [ta]
+    register: canon
+    dialect: standard_goauld
+    priority: 106
+    morphology:
+      type: root
+      literal: "first-person pronoun"
+    review_status: approved
+    senses:
+      - id: app-pronoun-first-person-normal
+        pos: pronoun
+        category: "Core grammar: pronouns"
+        context: "Normal first-person pronoun in sentence translation."
+        glosses:
+          de: [ich, mich, mir, ich selbst]
+          en: [i, me, myself]
+        avoid_for:
+          de: [ich habe, ich als Sprecher in kanonischer Spezialphrase]
+          en: [i have, speaker-identifying canonical phrase]
+        source:
+          tier: canon_rda
+          ref: "Plan decision: Ta is default I/me; Tel is specialized."
+        priority: 106
+        examples:
+          - goauld: "Ta ia Jaffa."
+            de: "Ich bin kein Jaffa."
+            en: "I am not Jaffa."
+            mode: literal
+
+  app_override_pronoun_tel_special:
+    term: Tel
+    variants: [tel]
+    register: canon
+    dialect: standard_goauld
+    priority: 104
+    morphology:
+      type: root
+      literal: "speaker-possession / speaker-presence marker"
+    review_status: approved
+    senses:
+      - id: app-pronoun-tel-special
+        pos: pronoun
+        category: "Core grammar: pronouns"
+        context: "Special first-person form for 'I have', speaker-identification, and preserved canon phrases."
+        glosses:
+          de: [ich habe, ich hab, ich als sprecher, ich bin hier]
+          en: [i have, i've, i as speaker, i am here]
+        avoid_for:
+          de: [einfaches ich]
+          en: [plain i]
+        source:
+          tier: canon_guide
+          ref: "Ultimate Visual Guide; narrowed by language plan"
+        priority: 104
+        examples:
+          - goauld: "Tel ran el."
+            de: "Ich habe dir etwas zu zeigen."
+            en: "I have something to show you."
+            mode: canon
+
+  app_override_pronouns_second_plural:
+    term: Lo
+    variants: [lo]
+    register: canon
+    dialect: standard_goauld
+    priority: 94
+    morphology:
+      type: root
+      literal: "second-person pronoun"
+    review_status: approved
+    senses:
+      - id: app-pronoun-second-person
+        pos: pronoun
+        category: "Core grammar: pronouns"
+        glosses:
+          de: [du, dich, dir]
+          en: [you, thee]
+        source: {tier: canon_rda, ref: "Canonical pronoun root"}
+        priority: 94
+        examples:
+          - goauld: "Lo Shol'va."
+            de: "Du bist ein Verräter."
+            en: "You are a traitor."
+            mode: literal
+
+  app_override_pronoun_tap:
+    term: Tap
+    variants: [tap]
+    register: canon
+    dialect: standard_goauld
+    priority: 94
+    morphology:
+      type: derived
+      components: [ta, "-p"]
+      literal: "I + plural"
+    review_status: approved
+    senses:
+      - id: app-pronoun-first-plural
+        pos: pronoun
+        category: "Core grammar: pronouns"
+        glosses:
+          de: [wir, uns]
+          en: [we, us]
+        source: {tier: canon_rda, ref: "Ta + plural -p"}
+        priority: 94
+        examples:
+          - goauld: "Tap re dan'kal'sha."
+            de: "Wir kommen in Frieden."
+            en: "We come in peace."
+            mode: literal
+
+  app_override_pronoun_lop:
+    term: Lop
+    variants: [lop]
+    register: canon
+    dialect: standard_goauld
+    priority: 94
+    morphology:
+      type: derived
+      components: [lo, "-p"]
+      literal: "you + plural"
+    review_status: approved
+    senses:
+      - id: app-pronoun-second-plural
+        pos: pronoun
+        category: "Core grammar: pronouns"
+        glosses:
+          de: [ihr, euch]
+          en: [you all, you plural, y'all]
+        source: {tier: canon_rda, ref: "Lo + plural -p"}
+        priority: 94
+        examples:
+          - goauld: "Lop kree."
+            de: "Ihr hört zu."
+            en: "You all listen."
+            mode: literal
+
+  app_override_pronoun_ol:
+    term: Ol
+    variants: [ol]
+    register: fanon
+    dialect: modern_fanon
+    priority: 58
+    morphology:
+      type: derived
+      components: [onak]
+      literal: "absent/third being"
+    review_status: needs_review
+    senses:
+      - id: app-pronoun-third-person-fanon
+        pos: pronoun
+        category: "Core grammar: pronouns"
+        context: "Third-person pronoun only when a proper name cannot be used; canon style should prefer names/titles."
+        glosses:
+          de: [er, sie, es]
+          en: [he, she, it]
+        source: {tier: fanon_derived, ref: "Fictionary third-person gap fill; canon has no regular third person"}
+        priority: 58
+        examples:
+          - goauld: "Ol ia onak."
+            de: "Er ist kein Gott."
+            en: "He is not a god."
+            mode: modern_fanon
+
+  app_override_demonstratives:
+    term: Haka
+    variants: [haka]
+    register: fanon
+    dialect: standard_goauld
+    priority: 72
+    morphology:
+      type: root
+      literal: "near-this"
+    review_status: approved
+    senses:
+      - id: app-demonstrative-proximal
+        pos: demonstrative
+        category: "Core grammar: demonstratives"
+        glosses:
+          de: [dies, dieser, diese, dieses, hier]
+          en: [this, this one, here]
+        source: {tier: fanon_strict, ref: "hak- proximity with a-vowel near deixis"}
+        priority: 72
+        examples:
+          - goauld: "Haka Chappa'ai."
+            de: "Dieses Sternentor."
+            en: "This Stargate."
+            mode: literal
+
+  app_override_demonstrative_hako:
+    term: Hako
+    variants: [hako]
+    register: fanon
+    dialect: standard_goauld
+    priority: 72
+    morphology:
+      type: vowel_shift
+      literal: "far-that"
+    review_status: approved
+    senses:
+      - id: app-demonstrative-distal
+        pos: demonstrative
+        category: "Core grammar: demonstratives"
+        glosses:
+          de: [jenes, jener, jene, das dort, dort]
+          en: [that, that one, there]
+        source: {tier: fanon_strict, ref: "hak- with a→o distance shift"}
+        priority: 72
+        examples:
+          - goauld: "Hako ha'tak."
+            de: "Jenes Ha'tak."
+            en: "That Ha'tak."
+            mode: literal
+
+  app_override_interrogative_who:
+    term: "Kel'tar"
+    variants: ["kel'tar"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 96
+    morphology:
+      type: compound
+      components: [kel, tar]
+      literal: "question-human"
+    review_status: approved
+    senses:
+      - id: app-question-who-precise
+        pos: interrogative
+        category: "Core grammar: precise questions"
+        context: "Precise extended mode; canonical compact mode may still use Kel/Shal."
+        glosses:
+          de: [wer, "wer?"]
+          en: [who, "who?"]
+        source: {tier: fanon_strict, ref: "Kel + Tar; reviewed precise interrogative"}
+        priority: 96
+        examples:
+          - goauld: "Kel'tar Shol'va?"
+            de: "Wer ist der Verräter?"
+            en: "Who is the traitor?"
+            mode: precise
+
+  app_override_interrogative_what:
+    term: "Kel'shak"
+    variants: ["kel'shak"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 96
+    morphology:
+      type: compound
+      components: [kel, shak]
+      literal: "question-event/act"
+    review_status: approved
+    senses:
+      - id: app-question-what-precise
+        pos: interrogative
+        category: "Core grammar: precise questions"
+        context: "Precise extended mode; canonical compact mode may still use Kel/Shal."
+        glosses:
+          de: [was, "was?", was ist, was passiert]
+          en: [what, "what?", what is, what happens]
+        source: {tier: fanon_strict, ref: "Kel + Shak; reviewed precise interrogative"}
+        priority: 96
+        examples:
+          - goauld: "Kel'shak nok?"
+            de: "Was geschieht jetzt?"
+            en: "What happens now?"
+            mode: precise
+
+  app_override_interrogative_where:
+    term: "Kel'pac"
+    variants: ["kel'pac"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 96
+    morphology:
+      type: compound
+      components: [kel, pac]
+      literal: "question-place/path"
+    review_status: approved
+    senses:
+      - id: app-question-where-precise
+        pos: interrogative
+        category: "Core grammar: precise questions"
+        glosses:
+          de: [wo, "wo?", wohin]
+          en: [where, "where?", whither]
+        source: {tier: fanon_strict, ref: "Kel + Pac; reviewed precise interrogative"}
+        priority: 96
+        examples:
+          - goauld: "Kel'pac Chappa'ai?"
+            de: "Wo ist das Sternentor?"
+            en: "Where is the Stargate?"
+            mode: precise
+
+  app_override_interrogative_when:
+    term: "Kel'nok"
+    variants: ["kel'nok"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 96
+    morphology:
+      type: compound
+      components: [kel, nok]
+      literal: "question-time"
+    review_status: approved
+    senses:
+      - id: app-question-when-precise
+        pos: interrogative
+        category: "Core grammar: precise questions"
+        glosses:
+          de: [wann, "wann?"]
+          en: [when, "when?"]
+        source: {tier: fanon_strict, ref: "Kel + Nok; reviewed precise interrogative"}
+        priority: 96
+        examples:
+          - goauld: "Kel'nok tap re?"
+            de: "Wann kommen wir?"
+            en: "When do we come?"
+            mode: precise
+
+  app_override_interrogative_how:
+    term: "Kel'met"
+    variants: ["kel'met"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 96
+    morphology:
+      type: compound
+      components: [kel, met]
+      literal: "question-condition/substance"
+    review_status: approved
+    senses:
+      - id: app-question-how-precise
+        pos: interrogative
+        category: "Core grammar: precise questions"
+        glosses:
+          de: [wie, "wie?", in welchem zustand]
+          en: [how, "how?", in what condition]
+        source: {tier: fanon_strict, ref: "Kel + Met; reviewed precise interrogative"}
+        priority: 96
+        examples:
+          - goauld: "Kel'met lo?"
+            de: "Wie geht es dir?"
+            en: "How are you?"
+            mode: precise
 
   app_override_negation_ia:
     term: ia
     variants: [ia]
     register: canon
+    dialect: standard_goauld
     priority: 105
+    review_status: approved
     senses:
       - id: app-sentence-negation
         pos: negation
-        category: "Runtime translation overrides"
-        context: "Sentence negation before verb or predicate."
+        category: "Core grammar: negation"
+        context: "Sentence/predicate negation before verb or predicate."
         glosses:
           de: [nicht]
           en: [not, "don't", dont, do not, does not, did not]
         source:
           tier: canon_rda
-          ref: "App override: preserve sentence negation"
+          ref: "Plan decision: ia = sentence negation"
         priority: 105
+        examples:
+          - goauld: "Ta ia Shol'va."
+            de: "Ich bin kein Verräter."
+            en: "I am not a traitor."
+            mode: literal
 
   app_override_negation_ka:
     term: Ka
     variants: [ka]
     register: canon
+    dialect: standard_goauld
     priority: 102
+    review_status: approved
     senses:
       - id: app-nominal-negation
         pos: negation
-        category: "Runtime translation overrides"
+        category: "Core grammar: negation"
         context: "No/none/kein in nominal contexts and standalone answers."
         glosses:
           de: [kein, keine, keinen, keinem, keiner, keines, nein]
           en: ["no", none, not any]
         source:
           tier: canon_rda
-          ref: "App override: keep nominal negation distinct from sentence negation"
+          ref: "Plan decision: Ka = nominal negation / refusal"
         priority: 102
+        examples:
+          - goauld: "Ka onak."
+            de: "Kein Gott."
+            en: "No god."
+            mode: literal
+
+  app_override_negation_prefix_na:
+    term: "na-"
+    variants: ["na", "na-"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 38
+    morphology:
+      type: prefix
+      literal: "lexical not-/un-"
+    review_status: approved
+    senses:
+      - id: app-derivational-negation-prefix
+        pos: prefix
+        category: "Core grammar: derivation"
+        context: "Derivational prefix for lexical antonyms only; not used for ordinary sentence negation."
+        glosses:
+          de: [negationspräfix, un-, nicht-]
+          en: [negation prefix, un-, non-]
+        source: {tier: fanon_strict, ref: "Plan decision: na- only lexical derivation"}
+        priority: 38
+        examples:
+          - goauld: "Na'dan."
+            de: "Falsch; nicht-wahr."
+            en: "False; un-true."
+            mode: derivation
+
+  app_override_onak_divine_power:
+    term: Onak
+    variants: [onak]
+    register: canon
+    dialect: standard_goauld
+    priority: 108
+    review_status: approved
+    senses:
+      - id: app-onak-divine-power
+        pos: noun
+        category: "Conflict resolution: size/power"
+        context: "God, Goa'uld, divine power, and religious/imperial greatness."
+        glosses:
+          de: [gott, goa'uld, göttlich, macht, mächtig, göttliche macht, großer herr]
+          en: [god, goa'uld, divine, power, powerful, divine power, great one]
+        avoid_for:
+          de: [physisch groß]
+          en: [physically large]
+        source: {tier: canon_series, ref: "Onak kept for divinity/authority, not physical size"}
+        priority: 108
+        examples:
+          - goauld: "Onak ia tar."
+            de: "Ein Gott ist kein Mensch."
+            en: "A god is not human."
+            mode: canon
+
+  app_override_tunle_physical_size:
+    term: "Tun'le"
+    variants: ["tun'le"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 109
+    morphology:
+      type: derived
+      components: [tun, "-le"]
+      literal: "many/large + augmentative"
+    review_status: approved
+    senses:
+      - id: app-tunle-physical-large
+        pos: adjective
+        category: "Conflict resolution: size/power"
+        context: "Physical largeness, size, volume."
+        glosses:
+          de: [groß, grosse, große, physisch groß, riesig]
+          en: [large, big, physically large, huge]
+        avoid_for:
+          de: [göttlich groß, mächtig]
+          en: [divinely great, powerful]
+        source: {tier: fanon_strict, ref: "Plan decision: Tun'le = physical large"}
+        priority: 109
+        examples:
+          - goauld: "Tun'le ha'tak."
+            de: "Ein großes Ha'tak."
+            en: "A large Ha'tak."
+            mode: literal
+
+  app_override_sha_feeling_root:
+    term: Sha
+    variants: [sha]
+    register: fanon
+    dialect: standard_goauld
+    priority: 72
+    morphology:
+      type: root
+      literal: "inner state / felt perception"
+    review_status: approved
+    senses:
+      - id: app-sha-inner-state
+        pos: noun
+        category: "Core vocabulary: emotion roots"
+        glosses:
+          de: [gefühl, innerer zustand, empfindung]
+          en: [feeling, inner state, emotion]
+        source: {tier: fanon_strict, ref: "Derived from Kel'sha as internal acceptance root"}
+        priority: 72
+        examples:
+          - goauld: "Sha lo?"
+            de: "Dein Gefühl?"
+            en: "Your feeling?"
+            mode: root
+
+  app_override_kalsha_love:
+    term: "Kal'sha"
+    variants: ["kal'sha"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 97
+    morphology:
+      type: compound
+      components: [kal, sha]
+      literal: "soul-feeling"
+    review_status: approved
+    senses:
+      - id: app-love-soulbond
+        pos: noun
+        category: "Conflict resolution: love/emotions"
+        context: "Love as inner soul-bond; default modern/all-purpose 'love/love someone'."
+        glosses:
+          de: [liebe, lieben, zuneigung, seelenbindung, wertschätzen]
+          en: [love, to love, affection, soul-bond, cherish]
+        avoid_for:
+          de: [kanonische feste Liebesphrase]
+          en: [fixed canonical love phrase]
+        source: {tier: fanon_strict, ref: "Kal + Sha; reviewed emotion root"}
+        priority: 97
+        examples:
+          - goauld: "Ta Kal'sha Lo."
+            de: "Ich liebe dich."
+            en: "I love you."
+            mode: literal
+
+  app_override_pal_canon_love_phrase:
+    term: Pal
+    variants: [pal]
+    register: canon
+    dialect: standard_goauld
+    priority: 92
+    review_status: approved
+    senses:
+      - id: app-pal-canon-affection
+        pos: noun
+        category: "Conflict resolution: love/emotions"
+        context: "Canonical/ritual affection root preserved in fixed phrases."
+        glosses:
+          de: [kanonische liebe, herzbindung]
+          en: [canonical love, heart bond]
+        source: {tier: canon_guide, ref: "Preserve Pal in attested phrases like Pal tiem shree tal ma"}
+        priority: 92
+        examples:
+          - goauld: "Pal tiem shree tal ma."
+            de: "Unsere Liebe endet nicht mit dem Tod."
+            en: "Our love does not end in death."
+            mode: canon
+
+  app_core_verb_go:
+    term: "Kree hol"
+    variants: ["kree hol"]
+    register: canon
+    dialect: jaffa_military
+    priority: 101
+    morphology:
+      type: phrase
+      components: [kree, hol]
+      literal: "command-move"
+    review_status: approved
+    senses:
+      - id: app-core-go-proceed
+        pos: verb
+        category: "Core vocabulary: verbs"
+        context: "Go/proceed, especially command or group movement."
+        glosses:
+          de: [gehen, losgehen, los, aufbrechen]
+          en: [go, proceed, move out, let's go]
+        source: {tier: canon_series, ref: "Kree hol; canon phrase specialized for movement"}
+        priority: 101
+        examples:
+          - goauld: "Tap Kree hol."
+            de: "Wir gehen."
+            en: "We go."
+            mode: literal
+
+  app_core_verb_come:
+    term: Re
+    variants: [re]
+    register: canon
+    dialect: standard_goauld
+    priority: 92
+    review_status: approved
+    senses:
+      - id: app-core-come
+        pos: verb
+        category: "Core vocabulary: verbs"
+        glosses:
+          de: [kommen, komme, komm, kommt]
+          en: [come, to come]
+        source: {tier: canon_rda, ref: "StargateWiki/RDA"}
+        priority: 92
+        examples:
+          - goauld: "Re nok."
+            de: "Komm jetzt."
+            en: "Come now."
+            mode: literal
+
+  app_core_verb_see:
+    term: "Yu'yu"
+    variants: ["yu'yu"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 86
+    morphology:
+      type: reduplication
+      literal: "sight/seeing action"
+    review_status: approved
+    senses:
+      - id: app-core-see
+        pos: verb
+        category: "Core vocabulary: verbs"
+        glosses:
+          de: [sehen, sehe, siehst, sieht]
+          en: [see, to see, sees]
+        source: {tier: fanon_strict, ref: "Existing Fictionary root; promoted for core coverage"}
+        priority: 86
+        examples:
+          - goauld: "Ta Yu'yu Chappa'ai."
+            de: "Ich sehe das Sternentor."
+            en: "I see the Stargate."
+            mode: literal
+
+  app_core_verb_hear:
+    term: Leaa
+    variants: [leaa]
+    register: canon
+    dialect: jaffa_military
+    priority: 107
+    review_status: approved
+    senses:
+      - id: app-core-hear-listen
+        pos: verb
+        category: "Core vocabulary: verbs"
+        glosses:
+          de: [hören, höre, hörst, hört, zuhören]
+          en: [hear, listen, to hear, to listen]
+        source: {tier: canon_rpg, ref: "RPG/RDA Leaa = listen/hear"}
+        priority: 107
+        examples:
+          - goauld: "Lo Leaa Kree."
+            de: "Du hörst den Befehl."
+            en: "You hear the command."
+            mode: literal
+
+  app_core_verb_know:
+    term: Eetium
+    variants: [eetium]
+    register: fanon
+    dialect: modern_fanon
+    priority: 86
+    review_status: approved
+    senses:
+      - id: app-core-know-understand
+        pos: verb
+        category: "Core vocabulary: verbs"
+        glosses:
+          de: [wissen, kenne, kennen, verstehen, begreifen]
+          en: [know, to know, understand, to understand]
+        source: {tier: fanon_strict, ref: "Existing Fictionary root; promoted for core coverage"}
+        priority: 86
+        examples:
+          - goauld: "Ta Eetium."
+            de: "Ich weiß."
+            en: "I know."
+            mode: literal
+
+  app_core_verb_want:
+    term: "Kel'sha"
+    variants: ["kel'sha"]
+    register: canon
+    dialect: standard_goauld
+    priority: 91
+    morphology:
+      type: semantic_extension
+      literal: "as you will / so be it"
+    review_status: needs_review
+    senses:
+      - id: app-core-want-will
+        pos: modal
+        category: "Core vocabulary: modality"
+        context: "Will/wish/want as volition; keep canon phrase meaning intact."
+        glosses:
+          de: [wollen, will, wünsche, wünschen]
+          en: [want, wish, will, to want]
+        source: {tier: canon_series, ref: "Semantic extension from Kel'sha = as you will"}
+        priority: 91
+        examples:
+          - goauld: "Ta Kel'sha nem ron."
+            de: "Ich will Freiheit."
+            en: "I want freedom."
+            mode: literal
+
+  app_core_modal_must:
+    term: Kree
+    variants: [kree]
+    register: canon
+    dialect: jaffa_military
+    priority: 93
+    review_status: approved
+    senses:
+      - id: app-core-must-obligation
+        pos: modal
+        category: "Core vocabulary: modality"
+        context: "Obligation/imperative force; not a polite modal."
+        glosses:
+          de: [müssen, muss, musst, müsst, soll, sollen]
+          en: [must, have to, shall]
+        source: {tier: canon_series, ref: "Kree as command/imperative force"}
+        priority: 93
+        examples:
+          - goauld: "Lo Kree Leaa."
+            de: "Du musst zuhören."
+            en: "You must listen."
+            mode: goauld_style
+
+  app_core_modal_can:
+    term: "Dan'ryn"
+    variants: ["dan'ryn"]
+    register: fanon
+    dialect: modern_fanon
+    priority: 62
+    morphology:
+      type: compound
+      components: [dan, ryn]
+      literal: "true/fit + motion/capacity"
+    derivation:
+      roots: [dan, ryn]
+      target_meaning: "ability / can"
+      rationale: "Low-priority modern fanon gap fill; does not override canon commands."
+    review_status: needs_review
+    senses:
+      - id: app-core-can-ability
+        pos: modal
+        category: "Core vocabulary: modality"
+        glosses:
+          de: [können, kann, kannst, könnt]
+          en: [can, be able to]
+        source: {tier: fanon_derived, ref: "Reviewed as low-priority ability modal gap fill"}
+        priority: 62
+        examples:
+          - goauld: "Ta Dan'ryn Yu'yu."
+            de: "Ich kann sehen."
+            en: "I can see."
+            mode: literal
+
+  app_core_verb_give_take:
+    term: Ko
+    variants: [ko]
+    register: fanon
+    dialect: standard_goauld
+    priority: 84
+    review_status: approved
+    senses:
+      - id: app-core-give-take
+        pos: verb
+        category: "Core vocabulary: verbs"
+        context: "Transfer root; direction resolved by context."
+        glosses:
+          de: [geben, nimm, nehmen, gib, gebe]
+          en: [give, take, to give, to take]
+        source: {tier: fanon_derived, ref: "Existing Unas-root transfer term"}
+        priority: 84
+        examples:
+          - goauld: "Ko hako."
+            de: "Gib das. / Nimm das."
+            en: "Give/take that."
+            mode: context
+
+  app_core_verb_make_do:
+    term: Shak
+    variants: [shak]
+    register: fanon
+    dialect: standard_goauld
+    priority: 82
+    morphology:
+      type: root
+      literal: "act/event"
+    review_status: approved
+    senses:
+      - id: app-core-do-make
+        pos: verb
+        category: "Core vocabulary: verbs"
+        glosses:
+          de: [machen, tun, macht, tue]
+          en: [do, make, to do, to make]
+        source: {tier: fanon_strict, ref: "Productive Shak root from Kel'shak and action/event compounds"}
+        priority: 82
+        examples:
+          - goauld: "Shak nok."
+            de: "Tu es jetzt."
+            en: "Do it now."
+            mode: literal
+
+  app_core_verb_say_speak:
+    term: Meta
+    variants: [meta]
+    register: fanon
+    dialect: standard_goauld
+    priority: 84
+    review_status: approved
+    senses:
+      - id: app-core-say-speak
+        pos: verb
+        category: "Core vocabulary: verbs"
+        glosses:
+          de: [sagen, sage, sagt, sprechen, sprich, sprichst]
+          en: [say, speak, tell, to say, to speak]
+        source: {tier: fanon_strict, ref: "Extracted from Lo tak meta satak"}
+        priority: 84
+        examples:
+          - goauld: "Lo Meta dan."
+            de: "Du sagst die Wahrheit."
+            en: "You speak truth."
+            mode: literal
+
+  app_core_numerals_one:
+    term: Wata
+    variants: [wata]
+    register: fanon
+    dialect: standard_goauld
+    priority: 66
+    review_status: approved
+    senses:
+      - id: app-number-one
+        pos: numeral
+        category: "Core vocabulary: numerals"
+        glosses:
+          de: [eins, ein, eine, einer]
+          en: [one, a single]
+        source: {tier: fanon_derived, ref: "Existing base-five numeral"}
+        priority: 66
+        examples: [{goauld: "Wata Jaffa.", de: "Ein Jaffa.", en: "One Jaffa.", mode: literal}]
+
+  app_core_numerals_two:
+    term: Noka
+    variants: [noka]
+    register: fanon
+    dialect: standard_goauld
+    priority: 66
+    review_status: approved
+    senses:
+      - id: app-number-two
+        pos: numeral
+        category: "Core vocabulary: numerals"
+        glosses:
+          de: [zwei]
+          en: [two]
+        source: {tier: fanon_derived, ref: "Existing base-five numeral"}
+        priority: 66
+        examples: [{goauld: "Noka Jaffa.", de: "Zwei Jaffa.", en: "Two Jaffa.", mode: literal}]
+
+  app_core_numerals_three:
+    term: Reka
+    variants: [reka]
+    register: fanon
+    dialect: standard_goauld
+    priority: 66
+    review_status: approved
+    senses:
+      - id: app-number-three
+        pos: numeral
+        category: "Core vocabulary: numerals"
+        glosses:
+          de: [drei]
+          en: [three]
+        source: {tier: fanon_strict, ref: "Existing base-five numeral"}
+        priority: 66
+        examples: [{goauld: "Reka Jaffa.", de: "Drei Jaffa.", en: "Three Jaffa.", mode: literal}]
+
+  app_core_numerals_four:
+    term: "Pak'a"
+    variants: ["pak'a"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 66
+    review_status: approved
+    senses:
+      - id: app-number-four
+        pos: numeral
+        category: "Core vocabulary: numerals"
+        glosses:
+          de: [vier]
+          en: [four]
+        source: {tier: fanon_strict, ref: "Existing base-five numeral"}
+        priority: 66
+        examples: [{goauld: "Pak'a Jaffa.", de: "Vier Jaffa.", en: "Four Jaffa.", mode: literal}]
+
+  app_core_numerals_five:
+    term: "Shem'a"
+    variants: ["shem'a"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 66
+    review_status: approved
+    senses:
+      - id: app-number-five
+        pos: numeral
+        category: "Core vocabulary: numerals"
+        glosses:
+          de: [fünf, fuenf]
+          en: [five]
+        source: {tier: fanon_derived, ref: "Existing base-five numeral"}
+        priority: 66
+        examples: [{goauld: "Shem'a Jaffa.", de: "Fünf Jaffa.", en: "Five Jaffa.", mode: literal}]
+
+  app_core_time_now_before_later:
+    term: Nok
+    variants: [nok]
+    register: canon
+    dialect: standard_goauld
+    priority: 93
+    review_status: approved
+    senses:
+      - id: app-time-now-here
+        pos: adverb
+        category: "Core vocabulary: time"
+        glosses:
+          de: [jetzt, nun, sofort, hier]
+          en: [now, currently, immediately, here]
+        source: {tier: canon_guide, ref: "Nok = now/currently; also here in RDA lists"}
+        priority: 93
+        examples: [{goauld: "Nok, kree!", de: "Jetzt, Achtung!", en: "Now, attention!", mode: canon}]
+
+  app_core_time_before:
+    term: nokia
+    variants: [nokia]
+    register: canon
+    dialect: standard_goauld
+    priority: 77
+    review_status: approved
+    senses:
+      - id: app-time-before-not-now
+        pos: adverb
+        category: "Core vocabulary: time"
+        glosses:
+          de: [früher, vorher, bevor]
+          en: [before, earlier, formerly]
+        source: {tier: canon_rda, ref: "Nok + -ia; not-now = before"}
+        priority: 77
+        examples: [{goauld: "nokia Ta Jaffa.", de: "Früher war ich Jaffa.", en: "Before, I was Jaffa.", mode: literal}]
+
+  app_core_time_later:
+    term: Melnok
+    variants: [melnok]
+    register: fanon
+    dialect: standard_goauld
+    priority: 68
+    review_status: approved
+    senses:
+      - id: app-time-later-after-now
+        pos: adverb
+        category: "Core vocabulary: time"
+        glosses:
+          de: [später, danach, bald]
+          en: [later, afterwards, soon]
+        source: {tier: fanon_strict, ref: "Mel + Nok = after now"}
+        priority: 68
+        examples: [{goauld: "Melnok re.", de: "Komm später.", en: "Come later.", mode: literal}]
+
+  app_core_life_root:
+    term: Ska
+    variants: [ska]
+    register: fanon
+    dialect: standard_goauld
+    priority: 74
+    morphology:
+      type: root
+      literal: "life / preservation"
+    review_status: approved
+    senses:
+      - id: app-core-life-root
+        pos: noun
+        category: "Core vocabulary: life/death"
+        glosses:
+          de: [leben, lebenskraft, das leben]
+          en: [life, life force]
+        source: {tier: fanon_strict, ref: "From Unas ska nat / preserve life; active life root"}
+        priority: 74
+        examples: [{goauld: "Ska nem ron.", de: "Leben in Freiheit.", en: "Life in freedom.", mode: literal}]
+
+  app_core_live_verb:
+    term: "Met'ska"
+    variants: ["met'ska"]
+    register: fanon
+    dialect: standard_goauld
+    priority: 86
+    morphology:
+      type: compound
+      components: [met, ska]
+      literal: "moving/flowing life"
+    review_status: approved
+    senses:
+      - id: app-core-live-breathe
+        pos: verb
+        category: "Core vocabulary: life/death"
+        glosses:
+          de: [leben, lebe, lebst, lebt, atmen]
+          en: [live, to live, breathe, to breathe]
+        source: {tier: fanon_strict, ref: "Existing Neologikum/Fictionary verb; promoted for core coverage"}
+        priority: 86
+        examples: [{goauld: "Tap Met'ska nem ron.", de: "Wir leben frei.", en: "We live free.", mode: literal}]
+
+  app_core_death_root:
+    term: Kek
+    variants: [kek]
+    register: canon
+    dialect: standard_goauld
+    priority: 101
+    review_status: approved
+    senses:
+      - id: app-core-death-weakness
+        pos: noun
+        category: "Core vocabulary: life/death"
+        glosses:
+          de: [tod, tot, schwäche, tödlich]
+          en: [death, dead, weakness, lethal]
+        source: {tier: canon_series, ref: "Kek = death and weakness; cultural metaphor preserved"}
+        priority: 101
+        examples: [{goauld: "Kek ia nem ron.", de: "Tod ist keine Freiheit.", en: "Death is not freedom.", mode: literal}]
+
+  app_core_name_substrate:
+    term: Ren
+    variants: [ren]
+    register: egyptian_substrate
+    dialect: abydonian
+    priority: 45
+    morphology:
+      type: substrate_root
+      literal: "name / breath / identity"
+    review_status: needs_tla_id
+    senses:
+      - id: app-egyptian-ren-name-identity
+        pos: noun
+        category: "Egyptian substrate"
+        context: "Low-priority etymology for name/identity; does not override canon shal mak."
+        glosses:
+          de: [name als identität, namenswurzel, identität]
+          en: [name as identity, name-root, identity]
+        source: {tier: egyptian_substrate, ref: "Egyptian rn; TLA ID pending verification"}
+        priority: 45
+        examples: [{goauld: "Ren Kal.", de: "Name und Seele.", en: "Name and soul.", mode: etymology}]
+
+  app_core_heart_soul:
+    term: Kal
+    variants: [kal]
+    register: fanon
+    dialect: standard_goauld
+    priority: 78
+    morphology:
+      type: root
+      literal: "essence / soul"
+    review_status: approved
+    senses:
+      - id: app-core-soul-essence
+        pos: noun
+        category: "Core vocabulary: body/identity"
+        glosses:
+          de: [seele, essenz, herz im übertragenen sinn]
+          en: [soul, essence, heart figurative]
+        source: {tier: fanon_strict, ref: "Productive Kal root in Kalach/Kal'sha/Delmac'kal"}
+        priority: 78
+        examples: [{goauld: "Kal'sha.", de: "Seelengefühl; Liebe.", en: "Soul-feeling; love.", mode: derivation}]
+
+  app_core_gate:
+    term: "Chappa'ai"
+    variants: ["chappa'ai", "chappa ai"]
+    register: canon
+    dialect: standard_goauld
+    priority: 106
+    morphology:
+      type: compound
+      components: [chappa, ai]
+      literal: "gate of heaven/star"
+    review_status: approved
+    senses:
+      - id: app-core-gate-stargate
+        pos: noun
+        category: "Core vocabulary: Stargate technology"
+        glosses:
+          de: [tor, sternentor, stargate]
+          en: [gate, stargate]
+        source: {tier: canon_series, ref: "Chappa'ai; canon Stargate term, generalized only to gate in SG context"}
+        priority: 106
+        examples: [{goauld: "Chappa'ai nok.", de: "Das Sternentor ist hier.", en: "The Stargate is here.", mode: canon}]
+
+  app_core_command:
+    term: Kree
+    variants: [kree]
+    register: canon
+    dialect: jaffa_military
+    priority: 104
+    review_status: approved
+    senses:
+      - id: app-core-command-attention
+        pos: interjection
+        category: "Core vocabulary: command"
+        glosses:
+          de: [befehl, achtung, hört zu, gehorche]
+          en: [command, attention, listen, obey]
+        source: {tier: canon_series, ref: "Kree polysemy preserved as command/attention root"}
+        priority: 104
+        examples: [{goauld: "Jaffa, kree!", de: "Jaffa, Achtung!", en: "Jaffa, attention!", mode: canon}]
+
+  app_core_rule_dominion:
+    term: "Onak'dan'lok"
+    variants: ["onak'dan'lok"]
+    register: fanon
+    dialect: goauld_imperial
+    priority: 64
+    morphology:
+      type: compound
+      components: [onak, dan, lok]
+      literal: "divine true order"
+    derivation:
+      roots: [onak, dan, lok]
+      target_meaning: "imperial dominion/rule"
+      rationale: "Culturally Goa'uld: rule is divine possession/order, not neutral administration."
+    review_status: approved
+    senses:
+      - id: app-core-dominion-rule
+        pos: noun
+        category: "Core vocabulary: authority"
+        glosses:
+          de: [herrschaft, göttliche herrschaft, imperiale ordnung]
+          en: [dominion, divine rule, imperial order]
+        source: {tier: fanon_strict, ref: "Onak + Dan'lok; culture-driven semantic compound"}
+        priority: 64
+        examples: [{goauld: "Onak'dan'lok kree.", de: "Göttliche Herrschaft befiehlt.", en: "Divine rule commands.", mode: goauld_imperial}]
 
   app_override_attack_phrase:
     term: "Tal shak!"
     variants: ["tal shak"]
     register: canon
+    dialect: jaffa_military
     priority: 86
+    review_status: approved
     senses:
       - id: app-attack-imperative
         pos: verb
@@ -125,12 +1410,15 @@ entries:
           tier: canon_series
           ref: "App override: attack imperative"
         priority: 86
+        examples: [{goauld: "Jaffa Tal shak!", de: "Jaffa, greift an!", en: "Jaffa, attack!", mode: canon}]
 
   app_override_peace_phrase:
     term: "Re Dan'kal'sha"
     variants: ["re dan'kal'sha"]
     register: fanon
+    dialect: tokra_resistance
     priority: 72
+    review_status: approved
     senses:
       - id: app-come-in-peace
         pos: phrase
@@ -138,9 +1426,10 @@ entries:
         context: "Useful literal transfer phrase for 'come in peace'."
         phrase_exact: true
         glosses:
-          de: [kommen in frieden, wir kommen in frieden]
+          de: [kommen in frieden]
           en: [come in peace, we come in peace]
         source:
           tier: fanon_strict
-          ref: "App override: literal phrase transfer"
+          ref: "Re + Dan'kal'sha; literal phrase transfer"
         priority: 72
+        examples: [{goauld: "Re Dan'kal'sha.", de: "Kommen in Frieden.", en: "Come in peace.", mode: literal}]

@@ -1,0 +1,557 @@
+# Goa'uld Root Registry
+#
+# Stable registry for productive roots used by goauld_lexicon.yaml and the
+# curated overlay goauld_overrides.yaml.  New fanon terms should cite these roots
+# instead of inventing unrelated forms.
+meta:
+  version: 1
+  created: "2026-06-15"
+  updated: "2026-06-15"
+  companion_docs:
+    - GOAULD_GRAMMAR.md
+    - goauld_lexicon.yaml
+    - goauld_overrides.yaml
+  policy:
+    - "Canon roots are protected."
+    - "Fanon roots need derivation, DE+EN glosses, register, status, and example."
+    - "Egyptian-substrate roots stay low priority until philologically reviewed."
+
+status_values:
+  canon: "Attested in canon/guide/RDA-derived lists."
+  canon_derived: "Directly derived from attested canon morphology."
+  fanon_strict: "Productive fanon built from attested roots."
+  fanon_derived: "Plausible but less directly attested."
+  egyptian_substrate: "Curated Egyptian etymological reservoir; not a default runtime lookup."
+  deprecated: "Do not use for new words."
+
+roots:
+  kree:
+    core_meaning:
+      de: [befehl, achtung, hören, imperativ]
+      en: [command, attention, listen, imperative]
+    status: canon
+    source_tier: canon_series
+    productive: true
+    domains: [command, military, attention]
+    notes: "Extremely polysemous; do not overuse for every verb. Use for command-force and attention."
+    examples: ["Jaffa, kree!"]
+
+  kek:
+    core_meaning:
+      de: [tod, schwäche, tödlich]
+      en: [death, weakness, lethal]
+    status: canon
+    source_tier: canon_series
+    productive: true
+    domains: [death, war, weakness]
+    cultural_note: "Goa'uld metaphor: weakness is near-death."
+    examples: ["Kek ia nem ron."]
+
+  kel:
+    core_meaning:
+      de: [frage, interrogativ]
+      en: [question, interrogative]
+    status: canon
+    source_tier: canon_guide
+    productive: true
+    domains: [questions, grammar]
+    notes: "Compact canon interrogative; precise fanon compounds use Kel + semantic root."
+    examples: ["Kel'tar", "Kel'pac", "Kel'nok"]
+
+  shal:
+    core_meaning:
+      de: [was, welcher, ritueller fragekern]
+      en: [what, which, ritual question root]
+    status: canon
+    source_tier: canon_guide
+    productive: limited
+    domains: [questions, ritual]
+    notes: "Do not use as universal question root where Kel compounds are clearer."
+
+  ta:
+    core_meaning:
+      de: [ich, mich, mir]
+      en: [i, me]
+    status: canon
+    source_tier: canon_rda
+    productive: true
+    domains: [pronouns]
+    notes: "Default first-person pronoun in app grammar."
+
+  tel:
+    core_meaning:
+      de: [ich habe, sprecherpräsenz]
+      en: [i have, speaker presence]
+    status: canon
+    source_tier: canon_guide
+    productive: limited
+    domains: [pronouns, possession]
+    notes: "Specialized after conflict review; plain 'I' should prefer Ta."
+
+  lo:
+    core_meaning:
+      de: [du, dich, dir]
+      en: [you]
+    status: canon
+    source_tier: canon_rda
+    productive: true
+    domains: [pronouns]
+    examples: ["Lo Shol'va."]
+
+  p_suffix:
+    written_form: "-p"
+    core_meaning:
+      de: [plural]
+      en: [plural]
+    status: canon_derived
+    source_tier: canon_rda
+    productive: reviewed_only
+    domains: [morphology]
+    examples: ["Ta → Tap", "Lo → Lop"]
+
+  ia:
+    core_meaning:
+      de: [nicht, satznegation]
+      en: [not, sentence negation]
+    status: canon
+    source_tier: canon_rda
+    productive: true
+    domains: [negation, grammar]
+    notes: "Use before predicate/action."
+
+  ka:
+    core_meaning:
+      de: [nein, kein]
+      en: [no, none]
+    status: canon
+    source_tier: canon_rda
+    productive: true
+    domains: [negation, refusal]
+    notes: "Nominal negation and standalone refusal."
+
+  na_prefix:
+    written_form: "na-"
+    core_meaning:
+      de: [un, nicht, lexikalische_negation]
+      en: [un, non, lexical_negation]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: reviewed_only
+    domains: [derivation]
+    notes: "Only lexical antonyms, never ordinary sentence negation."
+
+  tok:
+    core_meaning:
+      de: [gegen, widerstand]
+      en: [against, resistance]
+    status: canon
+    source_tier: canon_series
+    productive: true
+    domains: [resistance, opposition, tokra]
+    examples: ["Tok'ra", "Tok'tar"]
+
+  onak:
+    core_meaning:
+      de: [gott, goauld, göttliche_macht]
+      en: [god, goauld, divine_power]
+    status: canon
+    source_tier: canon_series
+    productive: true
+    domains: [religion, authority, imperial]
+    notes: "Use for divine/imperial greatness, not physical size."
+
+  tun:
+    core_meaning:
+      de: [viel, zahlreich]
+      en: [many, numerous]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [quantity, size]
+    derived: ["Tun'le"]
+
+  le_suffix:
+    written_form: "-le"
+    core_meaning:
+      de: [intensiv, augmentativ]
+      en: [intensive, augmentative]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: reviewed_only
+    domains: [morphology]
+    notes: "Do not attach mechanically to unreviewed roots."
+
+  tar:
+    core_meaning:
+      de: [mensch, person]
+      en: [human, person]
+    status: canon
+    source_tier: canon_rpg
+    productive: true
+    domains: [people, identity]
+    notes: "Generic human/person; Tau'ri is Earth-human default."
+
+  tau_ri:
+    written_form: "Tau'ri"
+    core_meaning:
+      de: [menschen_der_erde]
+      en: [people_of_earth]
+    status: canon
+    source_tier: canon_series
+    productive: false
+    domains: [people, stargate]
+
+  tap:
+    core_meaning:
+      de: [wir, uns]
+      en: [we, us]
+    status: canon_derived
+    source_tier: canon_rda
+    productive: true
+    domains: [pronouns, collectives]
+    derived: ["Tap'tar"]
+
+  taur:
+    core_meaning:
+      de: [menschlicher_status]
+      en: [human_status]
+    status: canon_derived
+    source_tier: canon_series
+    productive: limited
+    domains: [hierarchy, people]
+    derived: ["Lo'taur", "Hok'taur"]
+
+  sha:
+    core_meaning:
+      de: [gefühl, innerer_zustand]
+      en: [feeling, inner_state]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [emotion, psychology]
+    notes: "Derived from Kel'sha; pair with causal roots for emotions."
+
+  kal:
+    core_meaning:
+      de: [seele, essenz]
+      en: [soul, essence]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [identity, emotion, data]
+    derived: ["Kal'sha", "Delmac'kal"]
+
+  pal:
+    core_meaning:
+      de: [kanonische_liebe, herzbindung]
+      en: [canonical_love, heart_bond]
+    status: canon
+    source_tier: canon_guide
+    productive: limited
+    domains: [emotion, ritual]
+    notes: "Preserve in fixed canon phrases."
+
+  ren:
+    core_meaning:
+      de: [atem, name, identität]
+      en: [breath, name, identity]
+    status: egyptian_substrate
+    source_tier: egyptian_substrate
+    productive: reviewed_only
+    domains: [identity, body, substrate]
+    egyptian:
+      transliteration: rn
+      meaning: [name]
+      tla_id: "pending_verified_tla_id:rn"
+    notes: "Do not override canon shal mak for ordinary 'name'."
+
+  vol:
+    core_meaning:
+      de: [farbe, sichtqualität]
+      en: [color, visible_quality]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [colors, vision]
+    notes: "Derived from Vo'cume; color classifier."
+
+  delmac:
+    core_meaning:
+      de: [steuerungskristall]
+      en: [control_crystal]
+    status: canon
+    source_tier: canon_series
+    productive: true
+    domains: [technology, data, control]
+    derived: ["Delmac'kal", "Delmac'tal"]
+
+  chappa:
+    core_meaning:
+      de: [tor, verbindung]
+      en: [gate, connection]
+    status: canon_derived
+    source_tier: canon_series
+    productive: true
+    domains: [stargate, travel, network]
+    derived: ["Chappa'ai", "Chappa'ko", "Chappa'mel"]
+
+  ai:
+    core_meaning:
+      de: [himmel, stern]
+      en: [heaven, star]
+    status: canon_derived
+    source_tier: canon_series
+    productive: limited
+    domains: [stargate, sky]
+    notes: "Best kept inside Chappa'ai unless reviewed."
+
+  cha:
+    core_meaning:
+      de: [licht, stern]
+      en: [light, star]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [nature, light, astronomy]
+    derived: ["Cha'mel"]
+
+  mel:
+    core_meaning:
+      de: [sterben, enden, feuer, nach]
+      en: [die, end, fire, after]
+    status: canon
+    source_tier: canon_guide
+    productive: true
+    domains: [death, fire, time]
+    notes: "Polysemous; split senses in examples."
+
+  nok:
+    core_meaning:
+      de: [jetzt, hier, aktuell]
+      en: [now, here, currently]
+    status: canon
+    source_tier: canon_guide
+    productive: true
+    domains: [time, deixis]
+    derived: [nokia, Melnok, "Kel'nok"]
+
+  pac:
+    core_meaning:
+      de: [ort, richtung, weg]
+      en: [place, direction, path]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [space, geography, questions]
+    derived: ["Kel'pac"]
+
+  met:
+    core_meaning:
+      de: [zustand, substanz, bewegung]
+      en: [condition, substance, motion]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [condition, body, process]
+    derived: ["Kel'met", "Met'ska"]
+
+  shak:
+    core_meaning:
+      de: [tat, handlung, ereignis]
+      en: [act, action, event]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [verbs, events, questions]
+    derived: ["Kel'shak", "Tal shak"]
+
+  hol:
+    core_meaning:
+      de: [gehen, bewegen, stehen_bleiben_kontextuell]
+      en: [go, move, stand_contextual]
+    status: canon
+    source_tier: canon_rda
+    productive: true
+    domains: [movement, commands]
+    derived: ["Kree hol", "Hol'ryn"]
+
+  re:
+    core_meaning:
+      de: [kommen]
+      en: [come]
+    status: canon
+    source_tier: canon_rda
+    productive: true
+    domains: [movement]
+
+  leaa:
+    core_meaning:
+      de: [hören, zuhören]
+      en: [hear, listen]
+    status: canon
+    source_tier: canon_rpg
+    productive: true
+    domains: [perception, command]
+
+  yu_yu:
+    written_form: "Yu'yu"
+    core_meaning:
+      de: [sehen]
+      en: [see]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [perception]
+
+  eetium:
+    core_meaning:
+      de: [wissen, verstehen]
+      en: [know, understand]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [knowledge]
+
+  ko:
+    core_meaning:
+      de: [geben, nehmen, transfer]
+      en: [give, take, transfer]
+    status: fanon_derived
+    source_tier: fanon_derived
+    productive: true
+    domains: [transfer, possession]
+    notes: "Direction is contextual."
+
+  meta:
+    core_meaning:
+      de: [sprechen, sagen]
+      en: [speak, say]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [speech, communication]
+    notes: "Extracted from Lo tak meta satak."
+
+  dan:
+    core_meaning:
+      de: [gut, wahr, richtig]
+      en: [good, true, correct]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [truth, morality]
+
+  lok:
+    core_meaning:
+      de: [ordnung, bindung, kontrolle]
+      en: [order, binding, control]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [law, control, society]
+    derived: ["Dan'lok", "Onak'dan'lok"]
+
+  kor:
+    core_meaning:
+      de: [hart, eisen, stein]
+      en: [hard, iron, stone]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [materials, defense, construction]
+
+  tal:
+    core_meaning:
+      de: [teil, fläche, warten_kontextuell]
+      en: [part, surface, wait_contextual]
+    status: canon
+    source_tier: canon_guide
+    productive: true
+    domains: [body, place, command]
+    notes: "Sense-split carefully; do not use as generic 'big'."
+
+  nem_ron:
+    written_form: "nem ron"
+    core_meaning:
+      de: [frei]
+      en: [free]
+    status: canon
+    source_tier: canon_rda
+    productive: limited
+    domains: [freedom, jaffa]
+
+  shel:
+    core_meaning:
+      de: [bewachen, schützen, frei_kontextuell]
+      en: [guard, protect, free_contextual]
+    status: canon_derived
+    source_tier: canon_series
+    productive: true
+    domains: [protection, freedom, ritual]
+
+  ska:
+    core_meaning:
+      de: [leben, bewahren]
+      en: [life, preserve]
+    status: fanon_strict
+    source_tier: fanon_strict
+    productive: true
+    domains: [life, medicine, biology]
+    derived: ["Met'ska", "Ska'nat"]
+
+  peltac:
+    core_meaning:
+      de: [brücke, kontrollraum]
+      en: [bridge, control_room]
+    status: canon
+    source_tier: canon_series
+    productive: true
+    domains: [ships, navigation, command]
+
+  ha_tak:
+    written_form: "Ha'tak"
+    core_meaning:
+      de: [mutterschiff, kriegsschiff]
+      en: [mothership, warship]
+    status: canon
+    source_tier: canon_series
+    productive: false
+    domains: [ships, military]
+
+  zat_nik_tel:
+    written_form: "Zat'nik'tel"
+    core_meaning:
+      de: [energiewaffe]
+      en: [energy_weapon]
+    status: canon
+    source_tier: canon_series
+    productive: false
+    domains: [weapons, technology]
+
+  maat_substrate:
+    written_form: Maat
+    core_meaning:
+      de: [wahrheit, ordnung]
+      en: [truth, order]
+    status: egyptian_substrate
+    source_tier: egyptian_substrate
+    productive: no
+    domains: [substrate, truth]
+    egyptian:
+      transliteration: "mꜣꜥt"
+      tla_id: "pending_verified_tla_id:mAat"
+    notes: "Reservoir only; active truth root is Dan."
+
+  netjer_substrate:
+    written_form: Netjer
+    core_meaning:
+      de: [göttlich]
+      en: [divine]
+    status: egyptian_substrate
+    source_tier: egyptian_substrate
+    productive: no
+    domains: [substrate, religion]
+    egyptian:
+      transliteration: "nṯr"
+      tla_id: "pending_verified_tla_id:nTr"
+    notes: "Reservoir only; active divine root is Onak."

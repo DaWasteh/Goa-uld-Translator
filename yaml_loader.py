@@ -137,6 +137,7 @@ _TIER_TO_SOURCE = {
     "fanon_strict":     "Fanon",           # priority 2
     "fanon_derived":    "Fanon",           # priority 2
     "fanon_synonym":    "Fanon",           # priority 2
+    "egyptian_substrate": "Egyptian-Substrate",  # priority 1, etymology only
     "user_contributed": "Gap-Fill",        # priority 2
 }
 

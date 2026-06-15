@@ -2,7 +2,7 @@ cases:
   - text: "Ich bin nicht Jaffa"
     direction: de2goa
     lang: de
-    expected: "Tel ia Jaffa"
+    expected: "Ta ia Jaffa"
     must_contain: ["ia", "Jaffa"]
     forbidden: ["Koracca aseemu", "Tak mal tiak"]
 
@@ -22,7 +22,7 @@ cases:
   - text: "I am not Jaffa"
     direction: de2goa
     lang: en
-    expected: "Tel ia Jaffa"
+    expected: "Ta ia Jaffa"
     must_contain: ["ia", "Jaffa"]
     forbidden: ["Koracca aseemu"]
 
@@ -54,17 +54,77 @@ cases:
   - text: "human slave"
     direction: de2goa
     lang: en
+    expected: "Lo'taur"
+
+  - text: "menschlicher Sklave"
+    direction: de2goa
+    lang: de
+    expected: "Lo'taur"
+
+  - text: "generic human"
+    direction: de2goa
+    lang: en
     expected: "Tar"
 
   - text: "Ich liebe dich"
     direction: de2goa
     lang: de
-    expected: "Tel Kal'sha Lo"
+    expected: "Ta Kal'sha Lo"
 
   - text: "I love you"
     direction: de2goa
     lang: en
-    expected: "Tel Kal'sha Lo"
+    expected: "Ta Kal'sha Lo"
+
+  - text: "wer"
+    direction: de2goa
+    lang: de
+    expected: "Kel'tar"
+
+  - text: "what"
+    direction: de2goa
+    lang: en
+    expected: "Kel'shak"
+
+  - text: "where"
+    direction: de2goa
+    lang: en
+    expected: "Kel'pac"
+
+  - text: "wann"
+    direction: de2goa
+    lang: de
+    expected: "Kel'nok"
+
+  - text: "wie"
+    direction: de2goa
+    lang: de
+    expected: "Kel'met"
+
+  - text: "groß"
+    direction: de2goa
+    lang: de
+    expected: "Tun'le"
+
+  - text: "god"
+    direction: de2goa
+    lang: en
+    expected: "Onak"
+
+  - text: "gate"
+    direction: de2goa
+    lang: en
+    expected: "Chappa'ai"
+
+  - text: "Ich muss hören"
+    direction: de2goa
+    lang: de
+    expected: "Ta Kree Leaa"
+
+  - text: "I can see"
+    direction: de2goa
+    lang: en
+    expected: "Ta Dan'ryn Yu'yu"
 
   - text: "Jaffa, greift an"
     direction: de2goa

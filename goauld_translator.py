@@ -452,6 +452,7 @@ class SearchEngine:
         "Fanon/RPG": 2,
         "RPG-Lexikon": 2,
         "SG1-Kanon": 3,
+        "Egyptian-Substrate": 1,
     }
 
     def __init__(self, entries: list[dict]) -> None:
@@ -864,11 +865,14 @@ GERMAN_AUXILIARIES: frozenset[str] = frozenset({
     "bin", "bist", "ist", "sind", "seid", "sein", "sei", "war", "waren",
     "wart", "gewesen", "habe", "hast", "hat", "haben", "habt", "hatte",
     "hatten", "werde", "wirst", "wird", "werden", "werdet", "würde",
-    "würden", "kann", "kannst", "können", "könnt", "muss", "musst",
-    "müssen", "soll", "sollen", "sollst",
+    "würden",
+})
+GERMAN_MODAL_SEMANTIC: frozenset[str] = frozenset({
+    "kann", "kannst", "können", "könnt", "muss", "musst", "müssen",
+    "soll", "sollen", "sollst",
 })
 GERMAN_LIGHT_PARTICLES: frozenset[str] = frozenset({
-    "auch", "nur", "schon", "noch", "doch", "sondern", "denn", "als", "wie",
+    "auch", "nur", "schon", "noch", "doch", "sondern", "denn", "als",
     "sehr", "gar", "mal", "nun", "so",
 })
 GERMAN_STOP_WORDS: frozenset[str] = (
@@ -883,8 +887,10 @@ ENGLISH_PREPOSITIONS: frozenset[str] = frozenset({
 })
 ENGLISH_AUXILIARIES: frozenset[str] = frozenset({
     "am", "are", "is", "be", "being", "been", "was", "were", "do", "does",
-    "did", "have", "has", "had", "will", "would", "shall", "should", "can",
-    "could", "may", "might", "must",
+    "did", "have", "has", "had", "will", "would",
+})
+ENGLISH_MODAL_SEMANTIC: frozenset[str] = frozenset({
+    "shall", "should", "can", "could", "may", "might", "must",
 })
 ENGLISH_LIGHT_PARTICLES: frozenset[str] = frozenset({"just", "very", "already", "still"})
 ENGLISH_STOP_WORDS: frozenset[str] = (
@@ -1008,13 +1014,16 @@ class SentenceAnalyzer:
             "humanity", "humankind", "human race", "human people", "race", "rasse",
         }
         generic = {
-            "menschlich", "generischer mensch", "menschlicher sklave", "sklave",
-            "generic human", "human slave", "slave", "human (generic)",
+            "menschlich", "generischer mensch", "mensch als gattung", "person",
+            "generic human", "human as species", "human person", "person", "human (generic)",
         }
+        slave_status = {"menschlicher sklave", "sklave", "diener", "human slave", "slave", "servant"}
         human_default = {"mensch", "menschen", "human", "humans", "erdmensch", "erdmenschen"}
         if key in collective or ctx.intersection(collective):
             return "Tap'tar"
-        if key in generic or ctx.intersection({"sklave", "slave"}):
+        if key in slave_status or ctx.intersection(slave_status):
+            return "Lo'taur"
+        if key in generic:
             return "Tar"
         if key in human_default:
             return "Tau'ri"
